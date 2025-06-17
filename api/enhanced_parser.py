@@ -29,7 +29,17 @@ class EnhancedQueryParser:
     def _load_airports_data(self) -> List:
         """Load airports data from JSON file."""
         try:
-            with open('api/airports-code@public.json', 'r', encoding='utf-8') as f:
+            # The airport codes file is stored in the repository as
+            # ``airports-code.json``. The previous path used an
+            # ``@public`` suffix which does not exist and resulted in the
+            # parser failing to load the full airport database.  Attempting
+            # to open the missing file caused an exception and left
+            # ``self.airports`` empty, so lookups relied solely on the small
+            # ``major_airports_filtered.json`` dataset.  This led to
+            # incorrect matches such as returning ``VGT`` for queries about
+            # Las Vegas.  Use the correct file name instead so the full
+            # airport list is available as a fallback.
+            with open('api/airports-code.json', 'r', encoding='utf-8') as f:
                 self.airports = json.load(f)
                 
             # Log data structure analysis
@@ -173,8 +183,11 @@ class EnhancedQueryParser:
             country = airport.get('country_name', '')
             
             # Analyze the airport name for patterns
+            # Detect common keywords that indicate the airport's type.  In
+            # addition to the full word ``international`` we also consider
+            # the abbreviation ``intl`` which appears in many datasets.
             name_patterns = {
-                'international': 'international' in name,
+                'international': 'international' in name or 'intl' in name,
                 'hub': 'hub' in name,
                 'terminal': 'terminal' in name,
                 'regional': 'regional' in name,
@@ -224,11 +237,16 @@ class EnhancedQueryParser:
             
             # Base scoring from patterns
             if analysis['patterns']['international']:
-                score += 3.0
+                # International airports are typically the primary choice for
+                # commercial flights, so give them extra weight.
+                score += 5.0
             if analysis['patterns']['hub']:
                 score += 2.0
             if analysis['patterns']['terminal']:
-                score += 1.0
+                # Facilities described only as terminals are usually secondary
+                # or regional airports, so slightly penalize them instead of
+                # providing a bonus.
+                score -= 1.0
                 
             # Major airport indicators
             score += analysis['major_indicators'] * 1.0
