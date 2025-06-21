@@ -226,6 +226,7 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                                 
                                 formatted_leg = {
                                     "departure": {
+                                        "date": datetime.fromisoformat(first_segment.get("departure")).strftime('%Y-%m-%d'),
                                         "time": first_segment.get("departure"),
                                         "airport": {
                                             "code": first_segment.get("origin", {}).get("displayCode"),
@@ -235,6 +236,7 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                                         }
                                     },
                                     "arrival": {
+                                        "date": datetime.fromisoformat(last_segment.get("arrival")).strftime('%Y-%m-%d'),
                                         "time": last_segment.get("arrival"),
                                         "airport": {
                                             "code": last_segment.get("destination", {}).get("displayCode"),
@@ -273,6 +275,7 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                                 
                             formatted_flight = {
                                 "id": flight.get("id"),
+                                "date": outbound_leg['departure']['date'],
                                 "trip_type": "round_trip",
                                 "price": {
                                     "amount": flight.get("price", {}).get("raw", 0),
@@ -297,6 +300,7 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                                 
                             formatted_flight = {
                                 "id": flight.get("id"),
+                                "date": outbound_leg['departure']['date'],
                                 "trip_type": "one_way",
                                 "price": {
                                     "amount": flight.get("price", {}).get("raw", 0),
@@ -319,6 +323,13 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                 # Return the formatted response
                 return {
                     "status": "success",
+                    "query_details": {
+                        "origin": query.origin,
+                        "destination": query.destination,
+                        "date": query.date,
+                        "return_date": query.return_date,
+                        "natural_query": query.query
+                    },
                     "results": {
                         "fastest": sorted(formatted_results, key=lambda x: (
                             x["outbound"]["duration"] + 
