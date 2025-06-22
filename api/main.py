@@ -189,81 +189,48 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                         
                         # Calculate layover times for each leg
                         def format_leg(leg):
-                            try:
-                                layover_times = []
-                                segments = leg.get("segments", [])
-                                if not segments:
-                                    logger.warning("No segments found in leg during formatting")
-                                    return None
-                                    
-                                for i in range(1, len(segments)):
-                                    prev_arrival = segments[i-1].get("arrival")
-                                    curr_departure = segments[i].get("departure")
-                                    if not prev_arrival or not curr_departure:
-                                        continue
-                                    prev_arrival_dt = datetime.fromisoformat(prev_arrival)
-                                    curr_departure_dt = datetime.fromisoformat(curr_departure)
-                                    layover = int((curr_departure_dt - prev_arrival_dt).total_seconds() // 60)
-                                    layover_times.append(layover)
-
-                                first_segment = segments[0]
-                                last_segment = segments[-1]
-                                
-                                # Safely get carrier information
-                                carriers = leg.get("carriers", {}).get("marketing", [{}])[0]
-                                
-                                # Get duration with fallback
-                                duration = leg.get("durationInMinutes")
-                                if duration is None:
-                                    # Calculate duration from first and last segment times
-                                    try:
-                                        departure_time = datetime.fromisoformat(first_segment.get("departure"))
-                                        arrival_time = datetime.fromisoformat(last_segment.get("arrival"))
-                                        duration = int((arrival_time - departure_time).total_seconds() // 60)
-                                    except Exception as e:
-                                        logger.error(f"Error calculating duration: {str(e)}")
-                                        duration = 0
-                                
-                                formatted_leg = {
-                                    "departure": {
-                                        "date": datetime.fromisoformat(first_segment.get("departure")).strftime('%Y-%m-%d'),
-                                        "time": first_segment.get("departure"),
-                                        "airport": {
-                                            "code": first_segment.get("origin", {}).get("displayCode"),
-                                            "name": first_segment.get("origin", {}).get("name"),
-                                            "city": first_segment.get("origin", {}).get("parent", {}).get("name"),
-                                            "country": first_segment.get("origin", {}).get("country")
-                                        }
-                                    },
-                                    "arrival": {
-                                        "date": datetime.fromisoformat(last_segment.get("arrival")).strftime('%Y-%m-%d'),
-                                        "time": last_segment.get("arrival"),
-                                        "airport": {
-                                            "code": last_segment.get("destination", {}).get("displayCode"),
-                                            "name": last_segment.get("destination", {}).get("name"),
-                                            "city": last_segment.get("destination", {}).get("parent", {}).get("name"),
-                                            "country": last_segment.get("destination", {}).get("country")
-                                        }
-                                    },
-                                    "duration": duration,
-                                    "stops": leg.get("stopCount", 0),
-                                    "layover_times": layover_times,
-                                    "flight_number": first_segment.get("flightNumber"),
-                                    "operating_carrier": {
-                                        "name": first_segment.get("operatingCarrier", {}).get("name"),
-                                        "code": first_segment.get("operatingCarrier", {}).get("alternateId")
-                                    },
-                                    "airline": {
-                                        "name": carriers.get("name"),
-                                        "code": carriers.get("alternateId"),
-                                        "logo": carriers.get("logoUrl", "")
-                                    }
-                                }
-                                logger.debug(f"Formatted leg: {json.dumps(formatted_leg, indent=2)}")
-                                return formatted_leg
-                            except Exception as e:
-                                logger.error(f"Error formatting leg: {str(e)}")
+                            segments = leg.get("segments", [])
+                            if not segments:
                                 return None
+
+                            # Overall timing
+                            first_segment = segments[0]
+                            last_segment = segments[-1]
+                            duration = leg.get("durationInMinutes", 0)
+
+                            # Layover calculations
+                            layovers = []
+                            if leg.get("stopCount", 0) > 0 and len(segments) > 1:
+                                for i in range(len(segments) - 1):
+                                    arrival_time = datetime.fromisoformat(segments[i].get("arrival"))
+                                    departure_time = datetime.fromisoformat(segments[i+1].get("departure"))
+                                    layover_duration = departure_time - arrival_time
+                                    
+                                    layover_hours = layover_duration.seconds // 3600
+                                    layover_minutes = (layover_duration.seconds % 3600) // 60
+                                    
+                                    layovers.append({
+                                        "duration_str": f"{layover_hours}h {layover_minutes}m",
+                                        "airport": segments[i+1]['origin'].get('name', 'N/A')
+                                    })
+
+                            return {
+                                "departure": {
+                                    "time": first_segment.get("departure"),
+                                    "airport": { "code": first_segment.get("origin", {}).get("displayCode") }
+                                },
+                                "arrival": {
+                                    "time": last_segment.get("arrival"),
+                                    "airport": { "code": last_segment.get("destination", {}).get("displayCode") }
+                                },
+                                "duration": duration,
+                                "stops": leg.get("stopCount", 0),
+                                "layovers": layovers,
+                                "airline": {
+                                    "name": leg.get("carriers", {}).get("marketing", [{}])[0].get("name"),
+                                    "logo": leg.get("carriers", {}).get("marketing", [{}])[0].get("logoUrl")
+                                }
+                            }
 
                         # Handle round-trip (2 legs) and one-way (1 leg)
                         if len(legs) == 2:
@@ -275,7 +242,7 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                                 
                             formatted_flight = {
                                 "id": flight.get("id"),
-                                "date": outbound_leg['departure']['date'],
+                                "date": outbound_leg['departure']['time'],
                                 "trip_type": "round_trip",
                                 "price": {
                                     "amount": flight.get("price", {}).get("raw", 0),
@@ -300,7 +267,7 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
                                 
                             formatted_flight = {
                                 "id": flight.get("id"),
-                                "date": outbound_leg['departure']['date'],
+                                "date": outbound_leg['departure']['time'],
                                 "trip_type": "one_way",
                                 "price": {
                                     "amount": flight.get("price", {}).get("raw", 0),

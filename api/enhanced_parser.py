@@ -287,7 +287,8 @@ class EnhancedQueryParser:
         """Score an airport using detailed information from the full database."""
         score = 0.0
         name = airport.get('airport_name', '').lower()
-        
+        iata_code = airport.get('column_1', '').lower()
+
         # Major international indicators
         if 'international' in name:
             score += 2000.0
@@ -297,8 +298,8 @@ class EnhancedQueryParser:
             score += 1500.0
         
         # Major hub indicators
-        major_hubs = ['heathrow', 'jfk', 'charles de gaulle', 'changi', 'incheon', 'dubai', 'amsterdam', 'frankfurt', 'tokyo haneda', 'orly', 'peking', 'beijing capital', 'pudong']
-        if any(hub in name for hub in major_hubs):
+        major_hubs = ['heathrow', 'jfk', 'lga', 'charles de gaulle', 'changi', 'incheon', 'dubai', 'amsterdam', 'frankfurt', 'tokyo haneda', 'orly', 'peking', 'beijing capital', 'pudong']
+        if any(hub in name for hub in major_hubs) or iata_code in major_hubs:
             score += 2000.0
         
         # Major city names in airport names
