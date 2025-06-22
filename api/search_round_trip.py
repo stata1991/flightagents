@@ -3,17 +3,90 @@ import json
 from typing import Dict, List
 from api.utils import generate_flexible_dates
 import httpx
+import time
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-API_URL = "https://Skyscanner.proxy-production.allthingsdev.co/search"
-API_HEADERS = {
-    'Accept': 'application/json',
-    'x-apihub-key': 'Njuc82BYStFO0rzRK8PkKmdMGP-SMgDdHYt5keHLsriWbZhe1t',
-    'x-apihub-host': 'Skyscanner.allthingsdev.co',
-    'x-apihub-endpoint': '0e8a330d-269e-42cc-a1a8-fde0445ee552'
-}
+# Skyscanner API configuration
+SKYSCANNER_API_HOST = "Skyscanner.proxy-production.allthingsdev.co"
+SKYSCANNER_API_KEY = "Njuc82BYStFO0rzRK8PkKmdMGP-SMgDdHYt5keHLsriWbZhe1t"
+POLLING_INTERVAL = 2
+MAX_POLLS = 15
 
+def _get_api_headers() -> Dict[str, str]:
+    return {
+        'Accept': 'application/json',
+        'x-apihub-key': SKYSCANNER_API_KEY,
+        'x-apihub-host': SKYSCANNER_API_HOST,
+        'x-apihub-endpoint': '0e8a330d-269e-42cc-a1a8-fde0445ee552'
+    }
+
+def create_search(params: Dict) -> str:
+    """Initiates a search and returns a session token."""
+    with httpx.Client() as client:
+        response = client.get(f"https://{SKYSCANNER_API_HOST}/search", params=params, headers=_get_api_headers(), timeout=30.0)
+        response.raise_for_status()
+        data = response.json()
+        session_id = data.get('context', {}).get('sessionId')
+        if not session_id:
+            raise ValueError("No session ID found in initial response")
+        logger.info(f"Created search session: {session_id}")
+        return session_id
+
+def poll_results(session_id: str) -> Dict:
+    """Polls for results using the session token."""
+    with httpx.Client() as client:
+        for i in range(MAX_POLLS):
+            response = client.get(f"https://{SKYSCANNER_API_HOST}/search", params={'sessionId': session_id}, headers=_get_api_headers(), timeout=30.0)
+            response.raise_for_status()
+            data = response.json()
+            status = data.get('context', {}).get('status', 'unknown')
+            logger.info(f"Polling attempt {i + 1}/{MAX_POLLS}: Status is '{status}'")
+            if status == 'complete' or data.get('itineraries', {}).get('buckets'):
+                logger.info("Search complete.")
+                return data
+            time.sleep(POLLING_INTERVAL)
+    logger.warning("Polling timed out.")
+    return {}
+
+def extract_leg_details(leg: Dict) -> Dict:
+    """Extracts and formats details from a flight leg."""
+    duration_min = leg.get('durationInMinutes', 0)
+    hours = duration_min // 60
+    minutes = duration_min % 60
+
+    layovers = []
+    if leg.get('stopCount', 0) > 0 and len(leg.get('segments', [])) > 1:
+        for i in range(len(leg['segments']) - 1):
+            arrival_str = leg['segments'][i]['arrival']
+            departure_str = leg['segments'][i+1]['departure']
+            arrival_time = datetime.fromisoformat(arrival_str)
+            departure_time = datetime.fromisoformat(departure_str)
+            layover_duration = departure_time - arrival_time
+            
+            layover_hours = layover_duration.seconds // 3600
+            layover_minutes = (layover_duration.seconds % 3600) // 60
+            
+            layovers.append({
+                "duration_str": f"{layover_hours}h {layover_minutes}m",
+                "airport": leg['segments'][i+1]['origin'].get('name', 'N/A')
+            })
+
+    marketing_carrier = leg.get('carriers', {}).get('marketing', [{}])[0]
+
+    return {
+        "departure_time": leg.get('departure'),
+        "arrival_time": leg.get('arrival'),
+        "duration": f"{hours}h {minutes}m" if minutes else f"{hours}h",
+        "raw_duration_minutes": duration_min,
+        "stops": leg.get('stopCount', 0),
+        "layovers": layovers,
+        "airline": {
+            "name": marketing_carrier.get('name', 'N/A'),
+            "logo": marketing_carrier.get('logoUrl', '')
+        }
+    }
 
 def search_round_trip_flights(payload: Dict) -> Dict:
     origin = payload["origin"]
@@ -45,14 +118,10 @@ def search_round_trip_flights(payload: Dict) -> Dict:
             }
 
             try:
-                response = httpx.get(API_URL, params=params, headers=API_HEADERS, timeout=30.0)
-                response.raise_for_status()
-                data = response.json()
-                logger.info(f"Skyscanner raw response for {out_date} to {ret_date}: {json.dumps(data)[:1000]}")
+                session_id = create_search(params)
+                data = poll_results(session_id)
 
-                # Process the response
-                if response.status_code == 200:
-                    data = response.json()
+                if data:
                     itineraries = data.get('itineraries', {})
                     buckets = itineraries.get('buckets', [])
                     if buckets and len(buckets) > 0:
@@ -62,11 +131,16 @@ def search_round_trip_flights(payload: Dict) -> Dict:
                             if len(legs) == 2:
                                 outbound_leg = legs[0]
                                 inbound_leg = legs[1]
+                                
+                                outbound_details = extract_leg_details(outbound_leg)
+                                inbound_details = extract_leg_details(inbound_leg)
+
                                 result = {
                                     "trip_type": "round_trip",
                                     "price": item['price'],
-                                    "outbound": extract_leg_details(outbound_leg),
-                                    "inbound": extract_leg_details(inbound_leg),
+                                    "outbound": outbound_details,
+                                    "inbound": inbound_details,
+                                    "raw_duration_minutes": outbound_details['raw_duration_minutes'] + inbound_details['raw_duration_minutes'],
                                     "booking_url": item.get('deeplink', ''),
                                     "fare_policy": item.get('farePolicy', {}),
                                     "tags": item.get('tags', [])
