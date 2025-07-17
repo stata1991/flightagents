@@ -94,13 +94,13 @@ def _resolve_relative_dates(query: str) -> str:
     return query_lower
 
 class EnhancedQueryParser:
-    def __init__(self, api_key: str):
-        """Initialize the parser with API key."""
-        self.api_key = api_key
+    def __init__(self, api_key: str = None):
+        """Initialize the parser (no API key required anymore)."""
+        self.api_key = None
         self.airports = self._load_airports_data()
         self.major_airports = self._load_major_airports()
         self.airport_importance = self._calculate_airport_importance()
-        logger.info(f"Initialized parser with API key: {api_key[:10]}...")
+        logger.info(f"Initialized parser (no API key required)")
         logger.info(f"Loaded {len(self.airports)} airports from full database")
         logger.info(f"Loaded {len(self.major_airports)} airports from major airports database")
         logger.info(f"Calculated importance scores for {len(self.airport_importance)} airports.")

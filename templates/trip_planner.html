@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trip Planner - FlightTickets.ai</title>
+            <link rel="stylesheet" href="/static/styles.css">
+        <link rel="stylesheet" href="/static/comprehensive_styles.css">
+    <style>
+        .chat-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #f9f9f9;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .ai-message {
+            background: white;
+            border: 1px solid #ddd;
+        }
+        
+        .agent-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-left: 4px solid #28a745;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-container input, .input-container select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .input-container button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .input-container button:hover {
+            background: #0056b3;
+        }
+        
+        .itinerary-display {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .day-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+        
+        .day-header {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .activity {
+            margin: 5px 0;
+            padding: 5px 0;
+        }
+        
+        .refinement-controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .agent-system {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .agent-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .agent-card {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .agent-insights {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .insight-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #007bff;
+        }
+        
+        .confidence-score {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .budget-breakdown {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .budget-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .cultural-insights {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .transportation-plan {
+            background: #d1ecf1;
+            border: 1px solid #17a2b8;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .transport-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+        }
+        
+        /* Enhanced Form Styles */
+        .trip-form {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .form-section h4 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="number"] {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+        
+        /* Traveler Counter */
+        .traveler-counter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .counter-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .counter-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .counter-btn:hover {
+            background: #007bff;
+            color: white;
+        }
+        
+        .counter-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        #travelers {
+            width: 80px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        /* Interests Grid */
+        .interests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .interest-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .interest-item:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .interest-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .interest-item input[type="checkbox"]:checked + span {
+            color: #007bff;
+            font-weight: 600;
+        }
+        
+        /* Budget Controls */
+        .budget-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .budget-slider {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .budget-slider label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        #budgetSlider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e9ecef;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        #budgetSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+        
+        #budgetSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .budget-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        .budget-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .budget-option:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .budget-option input[type="radio"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .budget-option input[type="radio"]:checked + span {
+            color: #007bff;
+            font-weight: 600;
+        }
+        
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Searchable Dropdown Styles */
+        .searchable-dropdown {
+            position: relative;
+        }
+        
+        .dropdown-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dropdown-results.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .dropdown-item.selected {
+            background-color: #e3f2fd;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-item .city-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .dropdown-item .airport-code {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+        
+        .dropdown-item .country {
+            color: #999;
+            font-size: 0.8em;
+            display: block;
+            margin-top: 2px;
+        }
+        
+        .dropdown-item .popular-badge {
+            background: #007bff;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: 8px;
+        }
+        
+        .no-results {
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .loading-results {
+            padding: 15px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .loading-results::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .interests-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .budget-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .dropdown-results {
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>🤖 AI Trip Planner</h1>
+        <p>Plan your perfect trip with our team of specialized AI agents!</p>
+        
+        <div class="agent-system" id="agentSystem" style="display: none;">
+            <h3>🧠 AI Agent Team</h3>
+            <p>Your itinerary is being crafted by our specialized AI agents:</p>
+            <div class="agent-list" id="agentList">
+                <!-- Agent cards will be populated here -->
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai-message">
+                Hi! I'm your AI travel assistant. Let's plan your perfect trip! 
+                Fill out the form below to get started.
+            </div>
+        </div>
+
+        <!-- Comprehensive Plan Container -->
+        <div id="comprehensivePlanContainer" class="d-none"></div>
+        
+        <!-- Enhanced Trip Planning Form -->
+        <div class="trip-form" id="tripForm" style="display: block !important;">
+            <h3>🎯 Trip Details</h3>
+            
+            <!-- Origin and Destination -->
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="origin">📍 From (Origin)</label>
+                        <div class="searchable-dropdown">
+                            <input type="text" id="origin" placeholder="Search for departure city..." required autocomplete="off">
+                            <div class="dropdown-results" id="originResults"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="destination">🎯 To (Destination)</label>
+                        <div class="searchable-dropdown">
+                            <input type="text" id="destination" placeholder="Search for destination city..." required autocomplete="off">
+                            <div class="dropdown-results" id="destinationResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Date Selection -->
+            <div class="form-section">
+                <h4>📅 Travel Dates</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="departureDate">✈️ Departure Date</label>
+                        <input type="date" id="departureDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="returnDate">🏠 Return Date</label>
+                        <input type="date" id="returnDate" required>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Travelers -->
+            <div class="form-section">
+                <h4>👥 Travelers</h4>
+                <div class="traveler-counter">
+                    <label for="travelers">Number of Travelers</label>
+                    <div class="counter-controls">
+                        <button type="button" onclick="decrementTravelers()" class="counter-btn">-</button>
+                        <input type="number" id="travelers" value="1" min="1" max="10" readonly>
+                        <button type="button" onclick="incrementTravelers()" class="counter-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interests -->
+            <div class="form-section">
+                <h4>🎨 Interests & Activities</h4>
+                <div class="interests-grid">
+                    <label class="interest-item">
+                        <input type="checkbox" value="food" name="interests">
+                        <span>🍽️ Food & Dining</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="art" name="interests">
+                        <span>🎨 Art & Culture</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="shopping" name="interests">
+                        <span>🛍️ Shopping</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="history" name="interests">
+                        <span>🏛️ History & Museums</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="nature" name="interests">
+                        <span>🌲 Nature & Outdoors</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="entertainment" name="interests">
+                        <span>🎭 Entertainment</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="beach" name="interests">
+                        <span>🏖️ Beach & Relaxation</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="adventure" name="interests">
+                        <span>🏔️ Adventure & Sports</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="nightlife" name="interests">
+                        <span>🎪 Nightlife</span>
+                    </label>
+                    <label class="interest-item">
+                        <input type="checkbox" value="architecture" name="interests">
+                        <span>🏗️ Architecture</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Budget -->
+            <div class="form-section">
+                <h4>💰 Budget Range</h4>
+                <div class="budget-controls">
+                    <div class="budget-slider">
+                        <label for="budgetSlider">Budget Range: <span id="budgetValue">$1,000 - $3,000</span></label>
+                        <input type="range" id="budgetSlider" min="500" max="10000" step="500" value="2000">
+                    </div>
+                    <div class="budget-options">
+                        <label class="budget-option">
+                            <input type="radio" name="budgetRange" value="budget">
+                            <span>💰 Budget (Low)</span>
+                        </label>
+                        <label class="budget-option">
+                            <input type="radio" name="budgetRange" value="moderate" checked>
+                            <span>💳 Moderate (Medium)</span>
+                        </label>
+                        <label class="budget-option">
+                            <input type="radio" name="budgetRange" value="luxury">
+                            <span>💎 Luxury (High)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="form-section">
+                <button type="button" onclick="submitTripForm()" class="submit-btn">
+                    🚀 Plan My Trip with AI Agents
+                </button>
+            </div>
+        </div>
+        
+        <!-- Fallback Text Input (hidden by default) -->
+        <div class="input-container" id="textInput" style="display: none !important;">
+            <input type="text" id="userInput" placeholder="e.g., Plan a trip from Dallas to Italy for 7 days" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        
+        <div id="itineraryDisplay" class="itinerary-display" style="display: none;">
+            <h2>Your AI-Generated Itinerary</h2>
+            <div id="itineraryContent"></div>
+            
+            <div class="refinement-controls">
+                <h3>Want to make changes?</h3>
+                <input type="text" id="refinementInput" placeholder="e.g., Change Rome to 4 nights, add Milan" />
+                <button onclick="refineItinerary()">Refine with AI Agents</button>
+                <button onclick="finalizeItinerary()" style="background: #28a745;">Finalize & Book</button>
+                <button onclick="showAgentInsights()" style="background: #6f42c1;">View Agent Insights</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let currentItinerary = null;
+        
+        // Initialize form when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing form...');
+            initializeForm();
+            initializeSearchableDropdowns();
+            console.log('Form initialization complete');
+            
+            // Ensure form is visible
+            const tripForm = document.getElementById('tripForm');
+            if (tripForm) {
+                tripForm.style.display = 'block';
+                console.log('Trip form is visible');
+            } else {
+                console.error('Trip form not found!');
+            }
+        });
+        
+        function initializeForm() {
+            console.log('Initializing form...');
+            
+            // Set minimum dates for date pickers
+            const today = new Date().toISOString().split('T')[0];
+            const departureDateInput = document.getElementById('departureDate');
+            const returnDateInput = document.getElementById('returnDate');
+            
+            if (departureDateInput && returnDateInput) {
+                departureDateInput.min = today;
+                returnDateInput.min = today;
+                console.log('Date inputs initialized');
+            } else {
+                console.error('Date inputs not found!');
+            }
+            
+            // Set default departure date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            if (departureDateInput) {
+                departureDateInput.value = tomorrow.toISOString().split('T')[0];
+            }
+            
+            // Set default return date to 7 days later
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 8);
+            if (returnDateInput) {
+                returnDateInput.value = nextWeek.toISOString().split('T')[0];
+            }
+            
+            // Update return date minimum when departure date changes
+            if (departureDateInput) {
+                departureDateInput.addEventListener('change', function() {
+                    const departureDate = this.value;
+                    const returnDateInput = document.getElementById('returnDate');
+                    if (returnDateInput) {
+                        const minReturnDate = new Date(departureDate);
+                        minReturnDate.setDate(minReturnDate.getDate() + 1);
+                        returnDateInput.min = minReturnDate.toISOString().split('T')[0];
+                        
+                        // If current return date is before new minimum, update it
+                        if (returnDateInput.value < minReturnDate.toISOString().split('T')[0]) {
+                            returnDateInput.value = minReturnDate.toISOString().split('T')[0];
+                        }
+                    }
+                });
+                console.log('Departure date event listener added');
+            }
+            
+            // Update budget value display when slider changes
+            const budgetSlider = document.getElementById('budgetSlider');
+            if (budgetSlider) {
+                budgetSlider.addEventListener('input', function() {
+                    updateBudgetDisplay(this.value);
+                });
+                console.log('Budget slider event listener added');
+            } else {
+                console.error('Budget slider not found!');
+            }
+            
+            // Sync budget slider with radio buttons
+            const budgetRadios = document.querySelectorAll('input[name="budgetRange"]');
+            if (budgetRadios.length > 0) {
+                budgetRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        syncBudgetSlider(this.value);
+                    });
+                });
+                console.log('Budget radio buttons event listeners added');
+            } else {
+                console.error('Budget radio buttons not found!');
+            }
+            
+            // Initialize budget display
+            if (budgetSlider) {
+                updateBudgetDisplay(budgetSlider.value);
+                console.log('Budget display initialized');
+            }
+        }
+        
+        function updateBudgetDisplay(value) {
+            const budgetValue = document.getElementById('budgetValue');
+            const min = parseInt(value) * 0.5;
+            const max = parseInt(value) * 1.5;
+            budgetValue.textContent = `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+        }
+        
+        function syncBudgetSlider(budgetRange) {
+            const slider = document.getElementById('budgetSlider');
+            switch(budgetRange) {
+                case 'budget':
+                    slider.value = 1000;
+                    break;
+                case 'moderate':
+                    slider.value = 2000;
+                    break;
+                case 'luxury':
+                    slider.value = 5000;
+                    break;
+            }
+            updateBudgetDisplay(slider.value);
+        }
+        
+        function incrementTravelers() {
+            const travelersInput = document.getElementById('travelers');
+            const currentValue = parseInt(travelersInput.value);
+            if (currentValue < 10) {
+                travelersInput.value = currentValue + 1;
+            }
+        }
+        
+        function decrementTravelers() {
+            const travelersInput = document.getElementById('travelers');
+            const currentValue = parseInt(travelersInput.value);
+            if (currentValue > 1) {
+                travelersInput.value = currentValue - 1;
+            }
+        }
+        
+        function submitTripForm() {
+            // Validate form
+            if (!validateForm()) {
+                return;
+            }
+            
+            // Collect form data
+            const formData = collectFormData();
+            
+            // Check if form data collection failed
+            if (!formData) {
+                return; // collectFormData already showed an alert
+            }
+            
+            // Hide form and show comprehensive plan container
+            document.getElementById('tripForm').style.display = 'none';
+            document.getElementById('comprehensivePlanContainer').classList.remove('d-none');
+            
+            // Start comprehensive trip planning
+            comprehensivePlanner.createComprehensivePlan(formData);
+        }
+        
+        function validateForm() {
+            console.log('validateForm called');
+            console.log('selectedOrigin:', selectedOrigin);
+            console.log('selectedDestination:', selectedDestination);
+            
+            const origin = document.getElementById('origin').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+            const departureDate = document.getElementById('departureDate').value;
+            const returnDate = document.getElementById('returnDate').value;
+            
+            console.log('Form values:', { origin, destination, departureDate, returnDate });
+            
+            if (!origin) {
+                alert('Please enter your departure city.');
+                return false;
+            }
+            
+            if (!destination || destination === 'undefined' || destination.trim() === '') {
+                alert('Please select a destination city from the dropdown or enter a valid destination.');
+                return false;
+            }
+            
+            // Allow form submission even if dropdown selection wasn't made
+            // The backend will handle the parsing
+            if (!selectedOrigin) {
+                console.log('Warning: No selectedOrigin, but allowing form submission');
+            }
+            
+            if (!selectedDestination) {
+                console.log('Warning: No selectedDestination, but allowing form submission');
+            }
+            
+            if (!departureDate) {
+                alert('Please select a departure date.');
+                return false;
+            }
+            
+            if (!returnDate) {
+                alert('Please select a return date.');
+                return false;
+            }
+            
+            if (departureDate >= returnDate) {
+                alert('Return date must be after departure date.');
+                return false;
+            }
+            
+            const selectedInterests = document.querySelectorAll('input[name="interests"]:checked');
+            if (selectedInterests.length === 0) {
+                alert('Please select at least one interest.');
+                return false;
+            }
+            
+            console.log('Form validation passed');
+            return true;
+        }
+        
+        function collectFormData() {
+            console.log('collectFormData called');
+            console.log('selectedOrigin:', selectedOrigin);
+            console.log('selectedDestination:', selectedDestination);
+            console.log('Origin input value:', document.getElementById('origin').value);
+            console.log('Destination input value:', document.getElementById('destination').value);
+            
+            const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
+                .map(checkbox => checkbox.value);
+            
+            const budgetRange = document.querySelector('input[name="budgetRange"]:checked').value;
+            
+            // Get origin and destination from selected objects or fallback to input values
+            let origin = '';
+            let destination = '';
+            
+            if (selectedOrigin && selectedOrigin.city) {
+                origin = selectedOrigin.city;
+                console.log('Using selectedOrigin.city:', origin);
+            } else {
+                // Extract city name from the input value (format: "City, Country (CODE)")
+                const originInput = document.getElementById('origin').value.trim();
+                if (originInput) {
+                    // Try to extract just the city name before the comma
+                    const cityMatch = originInput.match(/^([^,]+)/);
+                    origin = cityMatch ? cityMatch[1].trim() : originInput;
+                }
+                console.log('Using extracted origin from input:', origin);
+            }
+            
+            if (selectedDestination && selectedDestination.city) {
+                destination = selectedDestination.city;
+                console.log('Using selectedDestination.city:', destination);
+            } else {
+                // Extract city name from the input value (format: "City, Country (CODE)")
+                const destInput = document.getElementById('destination').value.trim();
+                if (destInput && destInput !== 'undefined') {
+                    // Try to extract just the city name before the comma
+                    const cityMatch = destInput.match(/^([^,]+)/);
+                    destination = cityMatch ? cityMatch[1].trim() : destInput;
+                    console.log('Using extracted destination from input:', destination);
+                } else {
+                    console.error('Destination input is empty or undefined');
+                    destination = '';
+                }
+            }
+            
+            // Final validation to prevent sending undefined values
+            if (!origin || origin === 'undefined' || origin.trim() === '') {
+                alert('Please select an origin city.');
+                return null;
+            }
+            
+            if (!destination || destination === 'undefined' || destination.trim() === '') {
+                alert('Please select a destination city.');
+                return null;
+            }
+            
+            const formData = {
+                origin: origin,
+                destination: destination,
+                start_date: document.getElementById('departureDate').value,
+                return_date: document.getElementById('returnDate').value,
+                travelers: parseInt(document.getElementById('travelers').value),
+                interests: interests,
+                budget_range: budgetRange
+            };
+            
+            console.log('Final formData:', formData);
+            return formData;
+        }
+        
+        async function startTripPlanningWithForm(formData) {
+            try {
+                // Create a natural language query from form data
+                const query = createNaturalLanguageQuery(formData);
+                
+                // Start trip planning
+                const response = await fetch('/trip-planner/start-natural', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+                
+                const result = await response.json();
+                removeLastMessage();
+                
+                // If the response is gathering_info, it means the backend needs more information
+                // But since we have a complete form, let's try to generate the itinerary directly
+                if (result.status === 'gathering_info') {
+                    addMessage('I have all the information I need from your form! Let me generate your complete itinerary with our AI agent team...', 'ai', true);
+                    
+                    // Try to generate the itinerary directly
+                    await generateItineraryDirectly(formData);
+                } else {
+                    handleTripPlanningResponse(result);
+                }
+                
+            } catch (error) {
+                removeLastMessage();
+                addMessage('Sorry, I encountered an error. Please try again.', 'ai');
+                console.error('Error:', error);
+                // Show form again on error
+                document.getElementById('tripForm').style.display = 'block';
+            }
+        }
+        
+        async function continueTripPlanning() {
+            try {
+                // Continue with the trip planning process
+                const response = await fetch(`/trip-planner/${currentSessionId}/continue`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                removeLastMessage();
+                handleTripPlanningResponse(result);
+                
+            } catch (error) {
+                removeLastMessage();
+                addMessage('Sorry, I encountered an error continuing the planning process. Please try again.', 'ai');
+                console.error('Error:', error);
+                // Show form again on error
+                document.getElementById('tripForm').style.display = 'block';
+            }
+        }
+        
+        async function generateItineraryDirectly(formData) {
+            try {
+                // Create a comprehensive query that includes all form data
+                const comprehensiveQuery = createComprehensiveQuery(formData);
+                
+                // Use the existing start-natural endpoint with the comprehensive query
+                const response = await fetch('/trip-planner/start-natural', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        query: comprehensiveQuery
+                    })
+                });
+                
+                const result = await response.json();
+                removeLastMessage();
+                
+                if (result.status === 'itinerary_ready') {
+                    addMessage('Perfect! Your AI-generated itinerary is ready!', 'agent');
+                    currentItinerary = result.itinerary;
+                    displayItinerary(result.itinerary);
+                    displayAgentSystem(result.agents_used);
+                } else {
+                    // Fallback to the original response handling
+                    handleTripPlanningResponse(result);
+                }
+                
+            } catch (error) {
+                removeLastMessage();
+                addMessage('Sorry, I encountered an error generating your itinerary. Please try again.', 'ai');
+                console.error('Error:', error);
+                // Show form again on error
+                document.getElementById('tripForm').style.display = 'block';
+            }
+        }
+        
+        function createNaturalLanguageQuery(formData) {
+            console.log('Form data being sent:', formData);
+            
+            const interestsText = formData.interests.join(', ');
+            const duration = calculateDuration(formData.start_date, formData.return_date);
+            
+            const query = `Plan a ${duration}-day trip from ${formData.origin} to ${formData.destination} starting on ${formData.start_date} for ${formData.travelers} traveler${formData.travelers > 1 ? 's' : ''}. 
+                    Interests include: ${interestsText}. 
+                    Budget preference: ${formData.budget_range} range.`;
+            
+            console.log('Generated query:', query);
+            return query;
+        }
+        
+        function createComprehensiveQuery(formData) {
+            console.log('Creating comprehensive query with form data:', formData);
+            
+            const interestsText = formData.interests.join(', ');
+            const duration = calculateDuration(formData.start_date, formData.return_date);
+            
+            const query = `Generate a complete ${duration}-day itinerary for a trip from ${formData.origin} to ${formData.destination} starting on ${formData.start_date} for ${formData.travelers} traveler${formData.travelers > 1 ? 's' : ''}. 
+                    Traveler interests: ${interestsText}. 
+                    Budget range: ${formData.budget_range}. 
+                    Please include day-by-day activities, accommodation recommendations, transportation options, cultural insights, and budget breakdown. 
+                    Also search for available flights and provide booking links.`;
+            
+            console.log('Generated comprehensive query:', query);
+            return query;
+        }
+        
+        function calculateDuration(startDate, returnDate) {
+            const start = new Date(startDate);
+            const end = new Date(returnDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+        
+        // Searchable Dropdown Functionality
+        let searchTimeout = null;
+        let selectedOrigin = null;
+        let selectedDestination = null;
+        
+        function initializeSearchableDropdowns() {
+            const originInput = document.getElementById('origin');
+            const destinationInput = document.getElementById('destination');
+            
+            // Origin dropdown
+            originInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchDestinations(this.value, 'origin');
+                }, 300);
+            });
+            
+            originInput.addEventListener('focus', function() {
+                if (this.value.length >= 2) {
+                    searchDestinations(this.value, 'origin');
+                } else {
+                    showPopularDestinations('origin');
+                }
+            });
+            
+            originInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    hideDropdown('origin');
+                }, 200);
+            });
+            
+            // Destination dropdown
+            destinationInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchDestinations(this.value, 'destination');
+                }, 300);
+            });
+            
+            destinationInput.addEventListener('focus', function() {
+                if (this.value.length >= 2) {
+                    searchDestinations(this.value, 'destination');
+                } else {
+                    showPopularDestinations('destination');
+                }
+            });
+            
+            destinationInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    hideDropdown('destination');
+                }, 200);
+            });
+            
+            // Keyboard navigation
+            originInput.addEventListener('keydown', function(e) {
+                handleDropdownKeydown(e, 'origin');
+            });
+            
+            destinationInput.addEventListener('keydown', function(e) {
+                handleDropdownKeydown(e, 'destination');
+            });
+        }
+        
+        async function searchDestinations(query, type) {
+            if (!query || query.length < 2) {
+                hideDropdown(type);
+                return;
+            }
+            
+            const resultsContainer = document.getElementById(`${type}Results`);
+            resultsContainer.innerHTML = '<div class="loading-results">Searching...</div>';
+            showDropdown(type);
+            
+            try {
+                const response = await fetch(`/api/destinations/search?q=${encodeURIComponent(query)}&limit=8`);
+                const data = await response.json();
+                
+                if (data.destinations && data.destinations.length > 0) {
+                    displaySearchResults(data.destinations, type);
+                } else {
+                    resultsContainer.innerHTML = '<div class="no-results">No destinations found</div>';
+                }
+            } catch (error) {
+                console.error('Error searching destinations:', error);
+                resultsContainer.innerHTML = '<div class="no-results">Error searching destinations</div>';
+            }
+        }
+        
+        async function showPopularDestinations(type) {
+            const resultsContainer = document.getElementById(`${type}Results`);
+            resultsContainer.innerHTML = '<div class="loading-results">Loading popular destinations...</div>';
+            showDropdown(type);
+            
+            try {
+                const response = await fetch('/api/destinations/popular');
+                const data = await response.json();
+                
+                if (data.destinations && data.destinations.length > 0) {
+                    displaySearchResults(data.destinations, type, true);
+                }
+            } catch (error) {
+                console.error('Error loading popular destinations:', error);
+                resultsContainer.innerHTML = '<div class="no-results">Error loading destinations</div>';
+            }
+        }
+        
+        function displaySearchResults(destinations, type, isPopular = false) {
+            const resultsContainer = document.getElementById(`${type}Results`);
+            
+            let html = '';
+            destinations.forEach((dest, index) => {
+                html += `
+                    <div class="dropdown-item" data-index="${index}" data-destination='${JSON.stringify(dest)}'>
+                        <span class="city-name">${dest.city}</span>
+                        <span class="airport-code">${dest.iata_code}</span>
+                        ${isPopular ? '<span class="popular-badge">Popular</span>' : ''}
+                        <span class="country">${dest.country}</span>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+            
+            // Add click event listeners
+            resultsContainer.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    selectDestination(JSON.parse(this.dataset.destination), type);
+                });
+            });
+        }
+        
+        function selectDestination(destination, type) {
+            const input = document.getElementById(type);
+            input.value = `${destination.city}, ${destination.country} (${destination.iata_code})`;
+            
+            if (type === 'origin') {
+                selectedOrigin = destination;
+                console.log('Selected origin:', selectedOrigin);
+            } else {
+                selectedDestination = destination;
+                console.log('Selected destination:', selectedDestination);
+            }
+            
+            hideDropdown(type);
+        }
+        
+        function showDropdown(type) {
+            const resultsContainer = document.getElementById(`${type}Results`);
+            resultsContainer.classList.add('show');
+        }
+        
+        function hideDropdown(type) {
+            const resultsContainer = document.getElementById(`${type}Results`);
+            resultsContainer.classList.remove('show');
+        }
+        
+        function handleDropdownKeydown(e, type) {
+            const resultsContainer = document.getElementById(`${type}Results`);
+            const items = resultsContainer.querySelectorAll('.dropdown-item');
+            const selectedItem = resultsContainer.querySelector('.dropdown-item.selected');
+            
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (items.length === 0) return;
+                    
+                    if (!selectedItem) {
+                        items[0].classList.add('selected');
+                    } else {
+                        const currentIndex = Array.from(items).indexOf(selectedItem);
+                        const nextIndex = (currentIndex + 1) % items.length;
+                        selectedItem.classList.remove('selected');
+                        items[nextIndex].classList.add('selected');
+                    }
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (items.length === 0) return;
+                    
+                    if (!selectedItem) {
+                        items[items.length - 1].classList.add('selected');
+                    } else {
+                        const currentIndex = Array.from(items).indexOf(selectedItem);
+                        const prevIndex = currentIndex === 0 ? items.length - 1 : currentIndex - 1;
+                        selectedItem.classList.remove('selected');
+                        items[prevIndex].classList.add('selected');
+                    }
+                    break;
+                    
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedItem) {
+                        const destination = JSON.parse(selectedItem.dataset.destination);
+                        selectDestination(destination, type);
+                    }
+                    break;
+                    
+                case 'Escape':
+                    hideDropdown(type);
+                    break;
+            }
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Show loading
+            addMessage('Processing your response...', 'ai', true);
+            
+            try {
+                if (!currentSessionId) {
+                    // Start new trip planning with natural language
+                    const response = await startTripPlanningNatural(message);
+                    handleTripPlanningResponse(response);
+                } else {
+                    // Continue with follow-up questions
+                    const response = await answerFollowUp(message);
+                    handleTripPlanningResponse(response);
+                }
+            } catch (error) {
+                removeLastMessage();
+                addMessage('Sorry, I encountered an error. Please try again.', 'ai');
+                console.error('Error:', error);
+            }
+        }
+        
+        async function startTripPlanningNatural(message) {
+            const response = await fetch('/trip-planner/start-natural', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: message })
+            });
+            
+            return await response.json();
+        }
+        
+        async function startTripPlanning(message) {
+            // Parse the message to extract trip details
+            const tripRequest = parseTripRequest(message);
+            
+            const response = await fetch('/trip-planner/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(tripRequest)
+            });
+            
+            return await response.json();
+        }
+        
+        async function answerFollowUp(message) {
+            // Parse the message to extract field values - prioritize by confidence
+            const answers = {};
+            const messageLower = message.toLowerCase();
+            
+            // Priority 1: Date patterns (highest confidence)
+            const dateMatch = message.match(/(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/);
+            if (dateMatch) {
+                let date = dateMatch[1];
+                // Convert to YYYY-MM-DD format
+                if (date.includes('/')) {
+                    const parts = date.split('/');
+                    if (parts[0].length === 4) {
+                        // YYYY/MM/DD
+                        date = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    } else {
+                        // MM/DD/YYYY
+                        date = `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                answers.start_date = date;
+            }
+            
+            // If no numeric date found, try natural language date parsing
+            if (!answers.start_date) {
+                const monthNames = {
+                    'january': '01', 'jan': '01',
+                    'february': '02', 'feb': '02',
+                    'march': '03', 'mar': '03',
+                    'april': '04', 'apr': '04',
+                    'may': '05',
+                    'june': '06', 'jun': '06',
+                    'july': '07', 'jul': '07',
+                    'august': '08', 'aug': '08',
+                    'september': '09', 'sep': '09', 'sept': '09',
+                    'october': '10', 'oct': '10',
+                    'november': '11', 'nov': '11',
+                    'december': '12', 'dec': '12'
+                };
+                
+                const monthPattern = Object.keys(monthNames).join('|');
+                
+                // Pattern for "20th August 2025" or "August 20, 2025" or "August 20th 2025"
+                const naturalDatePatterns = [
+                    new RegExp(`(\\d{1,2})(?:st|nd|rd|th)?\\s+(${monthPattern})\\s+(\\d{4})`, 'i'),  // 20th August 2025
+                    new RegExp(`(${monthPattern})\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})`, 'i'),  // August 20, 2025
+                    new RegExp(`(${monthPattern})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\s+(\\d{4})`, 'i'),  // August 20th 2025
+                ];
+                
+                for (const pattern of naturalDatePatterns) {
+                    const match = message.match(pattern);
+                    if (match) {
+                        const groups = match.slice(1);
+                        if (groups.length === 3) {
+                            let day, month, year;
+                            if (groups[0].match(/^\d+$/)) {
+                                // Format: "20th August 2025"
+                                day = groups[0].padStart(2, '0');
+                                month = monthNames[groups[1].toLowerCase()];
+                                year = groups[2];
+                            } else {
+                                // Format: "August 20, 2025"
+                                month = monthNames[groups[0].toLowerCase()];
+                                day = groups[1].padStart(2, '0');
+                                year = groups[2];
+                            }
+                            answers.start_date = `${year}-${month}-${day}`;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Priority 2: Budget (high confidence - numeric amounts are very specific)
+            if (!answers.budget_range) {
+                const amountMatch = message.match(/(\d+)\s*\$?/);
+                if (amountMatch) {
+                    const amount = parseInt(amountMatch[1]);
+                    // Categorize based on amount ranges
+                    if (amount <= 1000) {
+                        answers.budget_range = 'budget';
+                    } else if (amount <= 3000) {
+                        answers.budget_range = 'moderate';
+                    } else {
+                        answers.budget_range = 'luxury';
+                    }
+                }
+            }
+            
+            // If no numeric budget, check for keyword-based budget preferences
+            if (!answers.budget_range) {
+                const budgetKeywords = {
+                    'budget': ['budget', 'cheap', 'affordable', 'economical', 'low cost', 'inexpensive'],
+                    'luxury': ['luxury', 'expensive', 'premium', 'high end', 'upscale', 'deluxe', 'fancy'],
+                    'moderate': ['moderate', 'medium', 'reasonable', 'mid range', 'standard']
+                };
+                
+                for (const [budgetType, keywords] of Object.entries(budgetKeywords)) {
+                    if (keywords.some(keyword => messageLower.includes(keyword))) {
+                        answers.budget_range = budgetType;
+                        break;
+                    }
+                }
+            }
+            
+            // Priority 3: Travelers (medium confidence - but specific patterns)
+            const travelersPatterns = [
+                /(\d+)\s*(?:travelers?|people|persons?|guests?)/i,
+                /(\d+)\s*(?:of us|traveling|going)/i,
+                /travelers?:\s*(\d+)/i,
+                /people:\s*(\d+)/i
+            ];
+            
+            for (const pattern of travelersPatterns) {
+                const travelersMatch = message.match(pattern);
+                if (travelersMatch) {
+                    answers.travelers = parseInt(travelersMatch[1]);
+                    break;
+                }
+            }
+            
+            // Only use simple number for travelers if no other field was detected
+            if (!answers.travelers && Object.keys(answers).length === 0) {
+                const simpleNumberMatch = message.match(/(\d+)/);
+                if (simpleNumberMatch && parseInt(simpleNumberMatch[1]) <= 10) {
+                    // If it's a reasonable number (1-10) and no other field detected, assume it's travelers
+                    answers.travelers = parseInt(simpleNumberMatch[1]);
+                }
+            }
+            
+            // Priority 4: Interests (lowest priority - can be mixed with other content)
+            const interestsKeywords = [
+                'food', 'cuisine', 'restaurants', 'dining',
+                'art', 'museums', 'galleries', 'artistic',
+                'history', 'historical', 'heritage', 'ancient',
+                'nature', 'outdoors', 'hiking', 'parks', 'wildlife',
+                'shopping', 'retail', 'markets', 'stores',
+                'culture', 'cultural', 'local', 'traditions',
+                'adventure', 'thrilling', 'exciting', 'extreme',
+                'relaxation', 'spa', 'wellness', 'peaceful',
+                'architecture', 'buildings', 'landmarks',
+                'music', 'concerts', 'festivals',
+                'sports', 'activities', 'fitness'
+            ];
+            const foundInterests = interestsKeywords.filter(keyword => 
+                messageLower.includes(keyword)
+            );
+            if (foundInterests.length > 0) {
+                answers.interests = foundInterests;
+            }
+            
+            const response = await fetch(`/trip-planner/${currentSessionId}/answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(answers)
+            });
+            
+            return await response.json();
+        }
+        
+        function parseTripRequest(message) {
+            // Simple parsing - in production, you'd use NLP
+            const lowerMessage = message.toLowerCase();
+            
+            // Extract origin and destination
+            const fromMatch = message.match(/from\s+([a-zA-Z\s]+?)\s+to/i);
+            const toMatch = message.match(/to\s+([a-zA-Z\s]+?)\s+(?:for|in|days)/i);
+            
+            // Extract duration
+            const durationMatch = message.match(/(\d+)\s*days?/i);
+            
+            return {
+                origin: fromMatch ? fromMatch[1].trim() : "Dallas",
+                destination: toMatch ? toMatch[1].trim() : "Italy",
+                duration_days: durationMatch ? parseInt(durationMatch[1]) : 7,
+                travelers: 2,
+                trip_type: "leisure",
+                budget_range: "moderate",
+                interests: [],
+                special_requirements: null
+            };
+        }
+        
+        function handleTripPlanningResponse(response) {
+            // Remove loading message
+            removeLastMessage();
+            
+            if (response.session_id) {
+                currentSessionId = response.session_id;
+            }
+            
+            if (response.status === 'gathering_info') {
+                addMessage(response.message, 'ai');
+                
+                // Show extracted information if available
+                if (response.extracted_info) {
+                    const info = response.extracted_info;
+                    let infoText = 'I extracted: ';
+                    const parts = [];
+                    if (info.origin && info.origin !== 'Unknown') parts.push(`from ${info.origin}`);
+                    if (info.destination && info.destination !== 'Unknown') parts.push(`to ${info.destination}`);
+                    if (info.duration_days) parts.push(`${info.duration_days} days`);
+                    if (info.start_date) parts.push(`starting ${info.start_date}`);
+                    
+                    if (parts.length > 0) {
+                        addMessage(infoText + parts.join(', '), 'ai');
+                    }
+                }
+                
+                // Add follow-up questions
+                response.follow_up_questions.forEach(q => {
+                    addMessage(`Q: ${q.question}`, 'ai');
+                });
+                
+                // For form-based flow, we should continue with AI planning instead of showing text input
+                // The form already has all the information, so let's proceed with the planning
+                addMessage('Processing your complete trip request with our AI agent team...', 'ai', true);
+                
+                // Continue with the planning process
+                continueTripPlanning();
+                
+            } else if (response.status === 'itinerary_ready') {
+                addMessage(response.message, 'agent');
+                currentItinerary = response.itinerary;
+                displayItinerary(response.itinerary);
+                displayAgentSystem(response.agents_used);
+                
+                // Hide text input when itinerary is ready
+                document.getElementById('textInput').style.display = 'none';
+            }
+        }
+        
+        function displayAgentSystem(agents) {
+            const agentSystem = document.getElementById('agentSystem');
+            const agentList = document.getElementById('agentList');
+            
+            if (agents && agents.length > 0) {
+                agentList.innerHTML = agents.map(agent => `
+                    <div class="agent-card">
+                        <strong>${agent.split(' - ')[0]}</strong><br>
+                        <small>${agent.split(' - ')[1]}</small>
+                    </div>
+                `).join('');
+                agentSystem.style.display = 'block';
+            }
+        }
+        
+        function displayItinerary(itinerary) {
+            const display = document.getElementById('itineraryDisplay');
+            const content = document.getElementById('itineraryContent');
+            
+            let html = '';
+            
+            // Overview section
+            if (itinerary.overview && Object.keys(itinerary.overview).length > 0) {
+                html += `
+                    <div class="overview">
+                        <h3>📋 Trip Overview</h3>
+                        <p><strong>Cities:</strong> ${itinerary.overview.route_sequence ? itinerary.overview.route_sequence.join(' → ') : 'TBD'}</p>
+                        <p><strong>Style:</strong> ${itinerary.overview.travel_style || 'Relaxed exploration'}</p>
+                        <p><strong>Best Time:</strong> ${itinerary.overview.best_time || 'Year-round'}</p>
+                    </div>
+                `;
+            }
+            
+            // Budget breakdown
+            if (itinerary.budget_breakdown) {
+                html += `
+                    <div class="budget-breakdown">
+                        <h3>💰 Budget Breakdown</h3>
+                        ${Object.entries(itinerary.budget_breakdown).map(([category, details]) => `
+                            <div class="budget-item">
+                                <span><strong>${category.charAt(0).toUpperCase() + category.slice(1)}:</strong></span>
+                                <span>${typeof details === 'object' ? details.estimated_cost : details}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // Cultural insights
+            if (itinerary.cultural_insights && Object.keys(itinerary.cultural_insights).length > 0) {
+                html += `
+                    <div class="cultural-insights">
+                        <h3>🌍 Cultural Insights</h3>
+                        <p><strong>Local Customs:</strong> ${itinerary.cultural_insights.local_customs ? itinerary.cultural_insights.local_customs.slice(0, 3).join(', ') : 'TBD'}</p>
+                        <p><strong>Language Tips:</strong> ${itinerary.cultural_insights.language_tips ? itinerary.cultural_insights.language_tips.slice(0, 2).join(', ') : 'TBD'}</p>
+                    </div>
+                `;
+            }
+            
+            // Transportation plan
+            if (itinerary.transportation_plan && Array.isArray(itinerary.transportation_plan) && itinerary.transportation_plan.length > 0) {
+                html += `
+                    <div class="transportation-plan">
+                        <h3>🚄 Transportation Plan</h3>
+                        ${itinerary.transportation_plan.map(transport => `
+                            <div class="transport-item">
+                                <strong>${transport.from} → ${transport.to}</strong><br>
+                                <small>${transport.method} • ${transport.duration} • ${transport.cost}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // Destination recommendations
+            if (itinerary.destination_recommendations && itinerary.destination_recommendations.must_see_attractions) {
+                html += `
+                    <div class="destination-recommendations">
+                        <h3>🏛️ Must-See Attractions</h3>
+                        ${itinerary.destination_recommendations.must_see_attractions.map(attraction => `
+                            <div class="attraction-item">
+                                <strong>${attraction.name}</strong> (${attraction.location})<br>
+                                <small>⏱️ ${attraction.time_needed} • 💡 ${attraction.tips}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            // Flight search results
+            if (itinerary.flight_search_results) {
+                html += `
+                    <div class="flight-results">
+                        <h3>✈️ Flight Search Results</h3>
+                        <p><strong>Route:</strong> ${itinerary.flight_search_results.origin} → ${itinerary.flight_search_results.destination}</p>
+                        <p><strong>Dates:</strong> ${itinerary.flight_search_results.departure_date} to ${itinerary.flight_search_results.return_date}</p>
+                        <p><strong>Flights Found:</strong> ${itinerary.flight_search_results.total_flights_found}</p>
+                        ${itinerary.flight_search_results.booking_links ? `
+                            <div class="booking-links">
+                                <a href="${itinerary.flight_search_results.booking_links.booking_url}" target="_blank" class="btn btn-primary">
+                                    🔗 Search Flights on Booking.com
+                                </a>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // Cost saving tips
+            if (itinerary.cost_saving_tips && itinerary.cost_saving_tips.length > 0) {
+                html += `
+                    <div class="cost-saving-tips">
+                        <h3>💰 Cost Saving Tips</h3>
+                        <ul>
+                            ${itinerary.cost_saving_tips.map(tip => `<li>${tip}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // Day-by-day itinerary
+            if (itinerary.itinerary && itinerary.itinerary.length > 0) {
+                itinerary.itinerary.forEach(day => {
+                    html += `
+                        <div class="day-card">
+                            <div class="day-header">Day ${day.day}: ${day.city}</div>
+                            
+                            ${day.morning ? `
+                                <div class="activity">
+                                    <strong>Morning (${day.morning.start_time}-${day.morning.end_time}):</strong> 
+                                    ${day.morning.activities ? day.morning.activities.join(', ') : 'TBD'}
+                                    ${day.morning.transportation ? `<br><small>🚌 ${day.morning.transportation}</small>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.lunch ? `
+                                <div class="activity">
+                                    <strong>Lunch (${day.lunch.time || 'TBD'}):</strong> 
+                                    ${day.lunch.recommendations ? day.lunch.recommendations.join(', ') : 'TBD'}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.afternoon ? `
+                                <div class="activity">
+                                    <strong>Afternoon (${day.afternoon.start_time}-${day.afternoon.end_time}):</strong> 
+                                    ${day.afternoon.activities ? day.afternoon.activities.join(', ') : 'TBD'}
+                                    ${day.afternoon.transportation ? `<br><small>🚌 ${day.afternoon.transportation}</small>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.dinner ? `
+                                <div class="activity">
+                                    <strong>Dinner (${day.dinner.time || 'TBD'}):</strong> 
+                                    ${day.dinner.recommendations ? day.dinner.recommendations.join(', ') : 'TBD'}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.evening ? `
+                                <div class="activity">
+                                    <strong>Evening (${day.evening.start_time}-${day.evening.end_time}):</strong> 
+                                    ${day.evening.activities ? day.evening.activities.join(', ') : 'TBD'}
+                                    ${day.evening.transportation ? `<br><small>🚌 ${day.evening.transportation}</small>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.accommodation ? `
+                                <div class="activity">
+                                    <strong>🏨 Accommodation:</strong> 
+                                    ${day.accommodation.area || 'TBD'}
+                                    ${day.accommodation.recommendations ? `<br><small>${day.accommodation.recommendations.join(', ')}</small>` : ''}
+                                    ${day.accommodation.booking_tip ? `<br><small>💡 ${day.accommodation.booking_tip}</small>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.transportation ? `
+                                <div class="activity">
+                                    <strong>🚄 Transportation:</strong> 
+                                    ${day.transportation.within_city || 'TBD'}
+                                    ${day.transportation.tips ? `<br><small>💡 ${day.transportation.tips.join(', ')}</small>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.cultural_notes && day.cultural_notes.length > 0 ? `
+                                <div class="activity">
+                                    <strong>🌍 Cultural Notes:</strong> 
+                                    ${day.cultural_notes.join(', ')}
+                                </div>
+                            ` : ''}
+                            
+                            ${day.practical_tips && day.practical_tips.length > 0 ? `
+                                <div class="activity">
+                                    <strong>💡 Practical Tips:</strong> 
+                                    ${day.practical_tips.join(', ')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+            }
+            
+            content.innerHTML = html;
+            display.style.display = 'block';
+        }
+        
+        async function refineItinerary() {
+            const input = document.getElementById('refinementInput');
+            const changes = input.value.trim();
+            
+            if (!changes || !currentSessionId) return;
+            
+            addMessage(`Refinement: ${changes}`, 'user');
+            addMessage('Processing your changes with specialized AI agents...', 'ai', true);
+            
+            try {
+                const response = await fetch(`/trip-planner/${currentSessionId}/refine`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        changes: { request: changes },
+                        reason: changes
+                    })
+                });
+                
+                const result = await response.json();
+                removeLastMessage();
+                addMessage(`${result.message} (Agents involved: ${result.agents_involved.join(', ')})`, 'agent');
+                
+                if (result.refined_itinerary) {
+                    currentItinerary = result.refined_itinerary;
+                    displayItinerary(result.refined_itinerary);
+                }
+                
+                input.value = '';
+            } catch (error) {
+                removeLastMessage();
+                addMessage('Sorry, I encountered an error processing your refinement.', 'ai');
+            }
+        }
+        
+        async function showAgentInsights() {
+            if (!currentSessionId) return;
+            
+            try {
+                const response = await fetch(`/trip-planner/${currentSessionId}/agents`);
+                const insights = await response.json();
+                
+                addMessage('Here are the insights from our AI agent team:', 'agent');
+                
+                if (insights.agent_insights) {
+                    Object.entries(insights.agent_insights).forEach(([agent, data]) => {
+                        addMessage(`${agent}: ${data.reasoning} (Confidence: ${Math.round(data.confidence * 100)}%)`, 'ai');
+                    });
+                }
+            } catch (error) {
+                addMessage('Sorry, I encountered an error retrieving agent insights.', 'ai');
+            }
+        }
+        
+        async function finalizeItinerary() {
+            if (!currentSessionId) return;
+            
+            addMessage('Finalizing your itinerary and preparing booking options...', 'ai', true);
+            
+            try {
+                const response = await fetch(`/trip-planner/${currentSessionId}/finalize`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                removeLastMessage();
+                addMessage(result.message, 'agent');
+                
+                // Display booking summary
+                if (result.booking_summary) {
+                    addMessage(`Booking Summary: ${result.booking_summary.itinerary_summary}`, 'ai');
+                }
+            } catch (error) {
+                removeLastMessage();
+                addMessage('Sorry, I encountered an error finalizing your itinerary.', 'ai');
+            }
+        }
+        
+        function addMessage(text, sender, isLoading = false) {
+            const messages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            if (isLoading) messageDiv.className += ' loading';
+            messageDiv.textContent = text;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        function removeLastMessage() {
+            const messages = document.getElementById('chatMessages');
+            const lastMessage = messages.lastElementChild;
+            if (lastMessage) {
+                messages.removeChild(lastMessage);
+            }
+        }
+        
+        // Allow Enter key to send message
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+    
+    <!-- Comprehensive Trip Planning Script -->
+    <script src="/static/comprehensive_plan.js"></script>
+</body>
+</html> 

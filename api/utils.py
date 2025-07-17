@@ -1,5 +1,22 @@
+import json
+import re
+from typing import Dict, List, Any, Optional, Union, Tuple
 from datetime import datetime, timedelta
-from typing import List, Tuple, Optional,Union
+import requests
+from anthropic import AsyncAnthropic
+import os
+
+# Rapid API Booking.com credentials
+RAPIDAPI_HOST = "booking-com15.p.rapidapi.com"
+RAPIDAPI_KEY = os.getenv('RAPID_API_KEY')
+
+# Claude API configuration
+CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
+CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
+
+# Initialize Claude client
+claude_client = AsyncAnthropic(api_key=CLAUDE_API_KEY)
+
 import logging
 
 logging.basicConfig(level=logging.INFO)

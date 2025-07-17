@@ -1,0 +1,837 @@
+{
+  "trip_summary": {
+    "origin": "New York",
+    "destination": "Paris",
+    "start_date": "2024-07-15",
+    "return_date": "2024-07-22",
+    "duration_days": 8,
+    "travelers": 2,
+    "budget_range": "moderate",
+    "trip_type": "leisure"
+  },
+  "itinerary": {
+    "overview": {},
+    "itinerary": [
+      {
+        "day": 1,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Arrive and check in",
+            "Walk along Seine River"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "Caf\u00e9 Saint-R\u00e9gis"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Explore \u00cele de la Cit\u00e9",
+            "Visit Sainte-Chapelle"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Le Procope"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Dinner in Latin Quarter"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 2,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Louvre Museum",
+            "Tuileries Garden walk"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "Loulou Tuileries"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Continue Louvre",
+            "Palais Royal gardens"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "L'Ami Jean"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Seine river cruise"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 3,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Mus\u00e9e d'Orsay",
+            "Walk across Pont Alexandre III"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "Caf\u00e9 de Flore"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Les Invalides",
+            "Napoleon's Tomb"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Le Jules Verne or nearby bistro"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Eiffel Tower at sunset"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 4,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Versailles Palace",
+            "Hall of Mirrors"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "La Petite Venise (Versailles)"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Versailles Gardens",
+            "Marie Antoinette's Estate"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Le Comptoir du Relais"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Return to Paris",
+            "Rest"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 5,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Montmartre",
+            "Sacr\u00e9-C\u0153ur Basilica"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "La Maison Rose"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Place du Tertre",
+            "Moulin Rouge area"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Le Consulat"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Cabaret show or wine bar"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 6,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "March\u00e9 des Enfants Rouges",
+            "Le Marais exploration"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "L'As du Fallafel"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Jewish quarter",
+            "Place des Vosges"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Breizh Caf\u00e9"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Trendy bars in Marais"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 7,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Mus\u00e9e Rodin",
+            "Rodin sculpture garden"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "Le Procope"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Latin Quarter",
+            "Panth\u00e9on"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Le Train Bleu"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Food tour or cooking class"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      },
+      {
+        "day": 8,
+        "city": "Destination",
+        "morning": {
+          "activities": [
+            "Last-minute shopping",
+            "Galeries Lafayette"
+          ],
+          "start_time": "09:00",
+          "end_time": "12:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "lunch": {
+          "recommendations": [
+            "Angelina"
+          ],
+          "time": "12:00-13:30"
+        },
+        "afternoon": {
+          "activities": [
+            "Mus\u00e9e Picasso or relaxed caf\u00e9 time"
+          ],
+          "start_time": "13:30",
+          "end_time": "18:00",
+          "transportation": "Walking/Public Transit"
+        },
+        "dinner": {
+          "recommendations": [
+            "Le Grand V\u00e9four"
+          ],
+          "time": "19:00-21:00"
+        },
+        "evening": {
+          "activities": [
+            "Farewell dinner"
+          ],
+          "start_time": "21:00",
+          "end_time": "23:00",
+          "transportation": "Walking/Taxi"
+        },
+        "accommodation": {
+          "area": "Saint-Germain-des-Pr\u00e9s",
+          "recommendations": [
+            "Boutique Hotel",
+            "Luxury Hotel",
+            "Budget Hotel"
+          ],
+          "booking_tip": "Book 2-3 months in advance for best rates"
+        },
+        "transportation": {
+          "within_city": "Public Transit/Walking",
+          "tips": [
+            "Get a city pass for attractions",
+            "Use ride-sharing for late night"
+          ]
+        },
+        "cultural_notes": [],
+        "practical_tips": [
+          "Wear comfortable walking shoes",
+          "Carry water and snacks",
+          "Check opening hours for attractions",
+          "Book popular attractions in advance"
+        ]
+      }
+    ],
+    "budget_breakdown": {
+      "accommodation": "$1,200-1,800",
+      "meals": "$800-1,200",
+      "activities": "$400-600",
+      "transportation": "$1,000-1,400"
+    },
+    "practical_tips": [],
+    "booking_notes": [],
+    "cultural_insights": {},
+    "agent_insights": {
+      "destination": {
+        "confidence": 0.95,
+        "reasoning": ""
+      },
+      "budget": {
+        "confidence": 0.85,
+        "reasoning": ""
+      },
+      "flight_search": {
+        "confidence": 0.3,
+        "reasoning": "Location ID lookup failed"
+      },
+      "hotel_search": {
+        "confidence": 0.9,
+        "reasoning": "Successfully found 0 hotels in Paris"
+      }
+    },
+    "destination_recommendations": {
+      "must_see_attractions": [
+        {
+          "name": "Louvre Museum",
+          "location": "1st arrondissement",
+          "time_needed": "4-6 hours",
+          "tips": "Book timed entry tickets online, visit Wednesday/Friday evenings for smaller crowds"
+        },
+        {
+          "name": "Mus\u00e9e d'Orsay",
+          "location": "7th arrondissement",
+          "time_needed": "3-4 hours",
+          "tips": "Best Impressionist collection in the world, less crowded than Louvre"
+        },
+        {
+          "name": "Notre-Dame Cathedral",
+          "location": "\u00cele de la Cit\u00e9",
+          "time_needed": "2-3 hours",
+          "tips": "Currently under restoration, exterior viewing and nearby Sainte-Chapelle are must-sees"
+        },
+        {
+          "name": "Sainte-Chapelle",
+          "location": "\u00cele de la Cit\u00e9",
+          "time_needed": "1-2 hours",
+          "tips": "Visit on sunny day for spectacular stained glass, combine with Conciergerie"
+        },
+        {
+          "name": "Versailles Palace",
+          "location": "Versailles (day trip)",
+          "time_needed": "6-8 hours",
+          "tips": "Take RER C train, arrive early, skip-the-line tickets essential"
+        }
+      ],
+      "day_by_day_suggestions": [
+        {
+          "day": 1,
+          "morning_activities": [
+            "Arrive and check in",
+            "Walk along Seine River"
+          ],
+          "afternoon_activities": [
+            "Explore \u00cele de la Cit\u00e9",
+            "Visit Sainte-Chapelle"
+          ],
+          "evening_activities": [
+            "Dinner in Latin Quarter"
+          ],
+          "lunch_spots": [
+            "Caf\u00e9 Saint-R\u00e9gis"
+          ],
+          "dinner_spots": [
+            "Le Procope"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 2,
+          "morning_activities": [
+            "Louvre Museum",
+            "Tuileries Garden walk"
+          ],
+          "afternoon_activities": [
+            "Continue Louvre",
+            "Palais Royal gardens"
+          ],
+          "evening_activities": [
+            "Seine river cruise"
+          ],
+          "lunch_spots": [
+            "Loulou Tuileries"
+          ],
+          "dinner_spots": [
+            "L'Ami Jean"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 3,
+          "morning_activities": [
+            "Mus\u00e9e d'Orsay",
+            "Walk across Pont Alexandre III"
+          ],
+          "afternoon_activities": [
+            "Les Invalides",
+            "Napoleon's Tomb"
+          ],
+          "evening_activities": [
+            "Eiffel Tower at sunset"
+          ],
+          "lunch_spots": [
+            "Caf\u00e9 de Flore"
+          ],
+          "dinner_spots": [
+            "Le Jules Verne or nearby bistro"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 4,
+          "morning_activities": [
+            "Versailles Palace",
+            "Hall of Mirrors"
+          ],
+          "afternoon_activities": [
+            "Versailles Gardens",
+            "Marie Antoinette's Estate"
+          ],
+          "evening_activities": [
+            "Return to Paris",
+            "Rest"
+          ],
+          "lunch_spots": [
+            "La Petite Venise (Versailles)"
+          ],
+          "dinner_spots": [
+            "Le Comptoir du Relais"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 5,
+          "morning_activities": [
+            "Montmartre",
+            "Sacr\u00e9-C\u0153ur Basilica"
+          ],
+          "afternoon_activities": [
+            "Place du Tertre",
+            "Moulin Rouge area"
+          ],
+          "evening_activities": [
+            "Cabaret show or wine bar"
+          ],
+          "lunch_spots": [
+            "La Maison Rose"
+          ],
+          "dinner_spots": [
+            "Le Consulat"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 6,
+          "morning_activities": [
+            "March\u00e9 des Enfants Rouges",
+            "Le Marais exploration"
+          ],
+          "afternoon_activities": [
+            "Jewish quarter",
+            "Place des Vosges"
+          ],
+          "evening_activities": [
+            "Trendy bars in Marais"
+          ],
+          "lunch_spots": [
+            "L'As du Fallafel"
+          ],
+          "dinner_spots": [
+            "Breizh Caf\u00e9"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 7,
+          "morning_activities": [
+            "Mus\u00e9e Rodin",
+            "Rodin sculpture garden"
+          ],
+          "afternoon_activities": [
+            "Latin Quarter",
+            "Panth\u00e9on"
+          ],
+          "evening_activities": [
+            "Food tour or cooking class"
+          ],
+          "lunch_spots": [
+            "Le Procope"
+          ],
+          "dinner_spots": [
+            "Le Train Bleu"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        },
+        {
+          "day": 8,
+          "morning_activities": [
+            "Last-minute shopping",
+            "Galeries Lafayette"
+          ],
+          "afternoon_activities": [
+            "Mus\u00e9e Picasso or relaxed caf\u00e9 time"
+          ],
+          "evening_activities": [
+            "Farewell dinner"
+          ],
+          "lunch_spots": [
+            "Angelina"
+          ],
+          "dinner_spots": [
+            "Le Grand V\u00e9four"
+          ],
+          "accommodation_area": "Saint-Germain-des-Pr\u00e9s"
+        }
+      ],
+      "confidence": 0.95
+    },
+    "cost_saving_tips": [
+      "Book flights 6-8 weeks in advance for better rates",
+      "Stay in neighborhoods like Belleville or R\u00e9publique for cheaper accommodation",
+      "Mix restaurant dining with picnics using local markets",
+      "Use museum passes for multiple attractions and skip-the-line access",
+      "Take advantage of free museum days (first Sunday mornings)"
+    ],
+    "flight_search_results": {},
+    "hotel_search_results": {
+      "destination": "Paris",
+      "check_in_date": "2024-07-15",
+      "check_out_date": "2024-07-23",
+      "total_hotels_found": 0,
+      "hotels": [],
+      "booking_urls": {},
+      "search_metadata": {
+        "total_results": 0,
+        "currency": "USD"
+      }
+    },
+    "agent_system": {
+      "description": "This itinerary was created by a team of specialized AI agents:",
+      "agents_used": [
+        "Coordinator Agent - Overall trip structure and coordination",
+        "Destination Specialist - Local attractions and hidden gems",
+        "Budget Analyst - Cost optimization and budget breakdown",
+        "Logistics Planner - Transportation and route optimization",
+        "Cultural Advisor - Local customs and cultural insights",
+        "Booking Agent - Booking strategies and recommendations"
+      ],
+      "confidence_scores": {
+        "destination": {
+          "confidence": 0.95,
+          "reasoning": ""
+        },
+        "budget": {
+          "confidence": 0.85,
+          "reasoning": ""
+        },
+        "flight_search": {
+          "confidence": 0.3,
+          "reasoning": "Location ID lookup failed"
+        },
+        "hotel_search": {
+          "confidence": 0.9,
+          "reasoning": "Successfully found 0 hotels in Paris"
+        }
+      }
+    }
+  },
+  "flights": {
+    "cheapest": [],
+    "fastest": [],
+    "best_value": [],
+    "total_flights_found": 0
+  },
+  "hotels": {
+    "budget": [],
+    "mid_range": [],
+    "luxury": [],
+    "total_hotels_found": 0
+  },
+  "budget_breakdown": {
+    "total_estimated_cost": 0,
+    "flight_cost": 0,
+    "hotel_cost": 0,
+    "activities_cost": 0,
+    "remaining_budget": 0
+  }
+}
