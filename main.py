@@ -27,3 +27,7 @@ async def read_root(request: Request):
 @app.get("/trip-planner", response_class=HTMLResponse)
 async def trip_planner_page(request: Request):
     return templates.TemplateResponse("trip_planner.html", {"request": request})
+
+@app.get("/enhanced-search", response_class=HTMLResponse)
+async def enhanced_search_page(request: Request):
+    return templates.TemplateResponse("enhanced_search.html", {"request": request})

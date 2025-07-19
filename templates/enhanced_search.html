@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Travel Search - FlightTickets.ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .search-header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .search-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-tab {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            background: var(--light-bg);
+            color: var(--secondary-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .search-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .search-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            grid-column: 1 / -1;
+        }
+
+        .search-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .filters-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .filters-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .filters-toggle {
+            background: var(--light-bg);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--secondary-color);
+        }
+
+        .filters-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group {
+            background: var(--light-bg);
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1e293b;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-option {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .filter-option.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .filter-option:hover {
+            border-color: var(--primary-color);
+        }
+
+        .price-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .results-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .results-count {
+            color: var(--secondary-color);
+            font-size: 16px;
+        }
+
+        .results-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .result-tab {
+            padding: 12px 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .result-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .result-card {
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .result-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .result-price {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--secondary-color);
+        }
+
+        .detail-icon {
+            color: var(--primary-color);
+            width: 16px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-outline {
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--secondary-color);
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .hotel-amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .amenity-tag {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .flight-stops {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .stops-0 {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .stops-1 {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .stops-2 {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .time-period {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .morning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .afternoon {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .evening {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Search Header -->
+        <div class="search-header">
+            <h1 class="text-center mb-4">
+                <i class="fas fa-plane-departure text-primary me-2"></i>
+                Enhanced Travel Search
+            </h1>
+            
+            <!-- Search Tabs -->
+            <div class="search-tabs">
+                <button class="search-tab active" onclick="switchTab('flights')">
+                    <i class="fas fa-plane me-2"></i>Flights
+                </button>
+                <button class="search-tab" onclick="switchTab('hotels')">
+                    <i class="fas fa-hotel me-2"></i>Hotels
+                </button>
+            </div>
+
+            <!-- Flight Search Form -->
+            <div id="flight-search" class="search-section">
+                <form id="flight-form" class="search-form">
+                    <div class="form-group">
+                        <label class="form-label">From</label>
+                        <input type="text" class="form-control" id="flight-origin" placeholder="City or Airport" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">To</label>
+                        <input type="text" class="form-control" id="flight-destination" placeholder="City or Airport" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Departure</label>
+                        <input type="date" class="form-control" id="flight-departure" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Return</label>
+                        <input type="date" class="form-control" id="flight-return" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Travelers</label>
+                        <select class="form-control" id="flight-travelers">
+                            <option value="1">1 Passenger</option>
+                            <option value="2" selected>2 Passengers</option>
+                            <option value="3">3 Passengers</option>
+                            <option value="4">4 Passengers</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search me-2"></i>Search Flights
+                    </button>
+                </form>
+            </div>
+
+            <!-- Hotel Search Form -->
+            <div id="hotel-search" class="search-section" style="display: none;">
+                <form id="hotel-form" class="search-form">
+                    <div class="form-group">
+                        <label class="form-label">Destination</label>
+                        <input type="text" class="form-control" id="hotel-destination" placeholder="City or Hotel" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Check-in</label>
+                        <input type="date" class="form-control" id="hotel-checkin" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Check-out</label>
+                        <input type="date" class="form-control" id="hotel-checkout" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Guests</label>
+                        <select class="form-control" id="hotel-guests">
+                            <option value="1">1 Guest</option>
+                            <option value="2" selected>2 Guests</option>
+                            <option value="3">3 Guests</option>
+                            <option value="4">4 Guests</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search me-2"></i>Search Hotels
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Flight Filters Panel -->
+        <div id="flight-filters" class="filters-panel" style="display: none;">
+            <div class="filters-header">
+                <h3 class="filters-title">Flight Filters</h3>
+                <button class="filters-toggle" onclick="toggleFilters('flight-filters')">
+                    <i class="fas fa-filter me-2"></i>Toggle Filters
+                </button>
+            </div>
+            <div class="filters-content">
+                <div class="filter-group">
+                    <div class="filter-title">Route Preferences</div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-filter="non_stop_only">Non-stop Only</div>
+                        <div class="filter-option" data-filter="preferred_airlines">Preferred Airlines</div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">Departure Time</div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-filter="morning">Morning (6AM-12PM)</div>
+                        <div class="filter-option" data-filter="afternoon">Afternoon (12PM-6PM)</div>
+                        <div class="filter-option" data-filter="evening">Evening (6PM-12AM)</div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">Price Range</div>
+                    <input type="range" class="price-slider" id="flight-price-slider" min="100" max="2000" value="500">
+                    <div class="d-flex justify-content-between">
+                        <span>$100</span>
+                        <span id="flight-price-value">$500</span>
+                        <span>$2000</span>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">Additional Options</div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-filter="baggage_included">Baggage Included</div>
+                        <div class="filter-option" data-filter="refundable_only">Refundable Only</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hotel Filters Panel -->
+        <div id="hotel-filters" class="filters-panel" style="display: none;">
+            <div class="filters-header">
+                <h3 class="filters-title">Hotel Filters</h3>
+                <button class="filters-toggle" onclick="toggleFilters('hotel-filters')">
+                    <i class="fas fa-filter me-2"></i>Toggle Filters
+                </button>
+            </div>
+            <div class="filters-content">
+                <div class="filter-group">
+                    <div class="filter-title">Amenities</div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-filter="breakfast">Breakfast Included</div>
+                        <div class="filter-option" data-filter="wifi">Free WiFi</div>
+                        <div class="filter-option" data-filter="pool">Swimming Pool</div>
+                        <div class="filter-option" data-filter="gym">Fitness Center</div>
+                        <div class="filter-option" data-filter="parking">Free Parking</div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">Location</div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-filter="city_center">City Center</div>
+                        <div class="filter-option" data-filter="airport">Near Airport</div>
+                        <div class="filter-option" data-filter="beachfront">Beachfront</div>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">Price Range</div>
+                    <input type="range" class="price-slider" id="hotel-price-slider" min="50" max="500" value="200">
+                    <div class="d-flex justify-content-between">
+                        <span>$50</span>
+                        <span id="hotel-price-value">$200</span>
+                        <span>$500</span>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <div class="filter-title">Rating</div>
+                    <div class="filter-options">
+                        <div class="filter-option" data-filter="rating_7">7+ Stars</div>
+                        <div class="filter-option" data-filter="rating_8">8+ Stars</div>
+                        <div class="filter-option" data-filter="rating_9">9+ Stars</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container" class="results-container" style="display: none;">
+            <div class="results-header">
+                <div>
+                    <h2 class="results-title" id="results-title">Flight Results</h2>
+                    <p class="results-count" id="results-count">0 results found</p>
+                </div>
+                <button class="btn btn-outline" onclick="clearResults()">
+                    <i class="fas fa-times me-2"></i>Clear Results
+                </button>
+            </div>
+
+            <!-- Flight Results Tabs -->
+            <div id="flight-results-tabs" class="results-tabs" style="display: none;">
+                <div class="result-tab active" onclick="switchResultTab('cheapest')">Cheapest</div>
+                <div class="result-tab" onclick="switchResultTab('fastest')">Fastest</div>
+                <div class="result-tab" onclick="switchResultTab('best_value')">Best Value</div>
+            </div>
+
+            <!-- Hotel Results Tabs -->
+            <div id="hotel-results-tabs" class="results-tabs" style="display: none;">
+                <div class="result-tab active" onclick="switchResultTab('budget')">Budget</div>
+                <div class="result-tab" onclick="switchResultTab('moderate')">Moderate</div>
+                <div class="result-tab" onclick="switchResultTab('luxury')">Luxury</div>
+            </div>
+
+            <!-- Results Grid -->
+            <div id="results-grid" class="results-grid">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentTab = 'flights';
+        let currentResultTab = 'cheapest';
+        let searchResults = {};
+
+        // Initialize date inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+
+            document.getElementById('flight-departure').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('flight-return').value = nextWeek.toISOString().split('T')[0];
+            document.getElementById('hotel-checkin').value = tomorrow.toISOString().split('T')[0];
+            document.getElementById('hotel-checkout').value = nextWeek.toISOString().split('T')[0];
+
+            // Initialize price sliders
+            initializePriceSliders();
+        });
+
+        function initializePriceSliders() {
+            const flightSlider = document.getElementById('flight-price-slider');
+            const flightValue = document.getElementById('flight-price-value');
+            const hotelSlider = document.getElementById('hotel-price-slider');
+            const hotelValue = document.getElementById('hotel-price-value');
+
+            flightSlider.addEventListener('input', function() {
+                flightValue.textContent = '$' + this.value;
+            });
+
+            hotelSlider.addEventListener('input', function() {
+                hotelValue.textContent = '$' + this.value;
+            });
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.search-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide search forms
+            document.getElementById('flight-search').style.display = tab === 'flights' ? 'block' : 'none';
+            document.getElementById('hotel-search').style.display = tab === 'hotels' ? 'block' : 'none';
+            
+            // Show/hide filter panels
+            document.getElementById('flight-filters').style.display = tab === 'flights' ? 'block' : 'none';
+            document.getElementById('hotel-filters').style.display = tab === 'hotels' ? 'block' : 'none';
+            
+            // Clear results
+            clearResults();
+        }
+
+        function toggleFilters(panelId) {
+            const panel = document.getElementById(panelId);
+            const content = panel.querySelector('.filters-content');
+            content.style.display = content.style.display === 'none' ? 'grid' : 'none';
+        }
+
+        function switchResultTab(tab) {
+            currentResultTab = tab;
+            
+            // Update tab buttons
+            const tabsContainer = currentTab === 'flights' ? 'flight-results-tabs' : 'hotel-results-tabs';
+            document.querySelectorAll(`#${tabsContainer} .result-tab`).forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Display results
+            displayResults();
+        }
+
+        // Flight search form handler
+        document.getElementById('flight-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            searchFlights();
+        });
+
+        // Hotel search form handler
+        document.getElementById('hotel-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            searchHotels();
+        });
+
+        async function searchFlights() {
+            showLoading('Searching for flights...');
+            
+            const formData = {
+                origin: document.getElementById('flight-origin').value,
+                destination: document.getElementById('flight-destination').value,
+                start_date: document.getElementById('flight-departure').value,
+                return_date: document.getElementById('flight-return').value,
+                travelers: parseInt(document.getElementById('flight-travelers').value),
+                filters: getFlightFilters()
+            };
+
+            try {
+                const response = await fetch('/trip-planner/search-flights-enhanced', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    searchResults = result;
+                    currentTab = 'flights';
+                    currentResultTab = 'cheapest';
+                    displayResults();
+                }
+            } catch (error) {
+                showError('Failed to search flights. Please try again.');
+            }
+        }
+
+        async function searchHotels() {
+            showLoading('Searching for hotels...');
+            
+            const formData = {
+                destination: document.getElementById('hotel-destination').value,
+                start_date: document.getElementById('hotel-checkin').value,
+                return_date: document.getElementById('hotel-checkout').value,
+                travelers: parseInt(document.getElementById('hotel-guests').value),
+                filters: getHotelFilters()
+            };
+
+            try {
+                const response = await fetch('/trip-planner/search-hotels-enhanced', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    searchResults = result;
+                    currentTab = 'hotels';
+                    currentResultTab = 'budget';
+                    displayResults();
+                }
+            } catch (error) {
+                showError('Failed to search hotels. Please try again.');
+            }
+        }
+
+        function getFlightFilters() {
+            const filters = {};
+            
+            // Get active filter options
+            document.querySelectorAll('#flight-filters .filter-option.active').forEach(option => {
+                const filter = option.dataset.filter;
+                
+                if (filter === 'non_stop_only') {
+                    filters.non_stop_only = true;
+                } else if (['morning', 'afternoon', 'evening'].includes(filter)) {
+                    if (!filters.departure_time_pref) filters.departure_time_pref = [];
+                    filters.departure_time_pref.push(filter);
+                } else if (filter === 'baggage_included') {
+                    filters.baggage_included = true;
+                } else if (filter === 'refundable_only') {
+                    filters.refundable_only = true;
+                }
+            });
+            
+            // Get price filter
+            const maxPrice = parseInt(document.getElementById('flight-price-slider').value);
+            if (maxPrice < 2000) {
+                filters.max_price = maxPrice;
+            }
+            
+            return filters;
+        }
+
+        function getHotelFilters() {
+            const filters = {};
+            
+            // Get active filter options
+            document.querySelectorAll('#hotel-filters .filter-option.active').forEach(option => {
+                const filter = option.dataset.filter;
+                
+                if (['breakfast', 'wifi', 'pool', 'gym', 'parking'].includes(filter)) {
+                    if (!filters.amenities) filters.amenities = [];
+                    filters.amenities.push(filter);
+                } else if (['city_center', 'airport', 'beachfront'].includes(filter)) {
+                    if (!filters.location_pref) filters.location_pref = [];
+                    filters.location_pref.push(filter);
+                } else if (filter.startsWith('rating_')) {
+                    const rating = parseInt(filter.split('_')[1]);
+                    filters.min_rating = rating;
+                }
+            });
+            
+            // Get price filter
+            const maxPrice = parseInt(document.getElementById('hotel-price-slider').value);
+            if (maxPrice < 500) {
+                filters.max_price = maxPrice;
+            }
+            
+            return filters;
+        }
+
+        function displayResults() {
+            const container = document.getElementById('results-container');
+            const title = document.getElementById('results-title');
+            const count = document.getElementById('results-count');
+            const grid = document.getElementById('results-grid');
+            
+            container.style.display = 'block';
+            
+            if (currentTab === 'flights') {
+                title.textContent = 'Flight Results';
+                document.getElementById('flight-results-tabs').style.display = 'flex';
+                document.getElementById('hotel-results-tabs').style.display = 'none';
+                
+                const flights = searchResults[currentResultTab] || [];
+                count.textContent = `${flights.length} flights found`;
+                
+                grid.innerHTML = flights.map(flight => createFlightCard(flight)).join('');
+            } else {
+                title.textContent = 'Hotel Results';
+                document.getElementById('flight-results-tabs').style.display = 'none';
+                document.getElementById('hotel-results-tabs').style.display = 'flex';
+                
+                const hotels = searchResults[currentResultTab] || [];
+                count.textContent = `${hotels.length} hotels found`;
+                
+                grid.innerHTML = hotels.map(hotel => createHotelCard(hotel)).join('');
+            }
+        }
+
+        function createFlightCard(flight) {
+            return `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-title">${flight.airline}</div>
+                        <div class="result-price">$${flight.price.toFixed(2)}</div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <i class="fas fa-plane-departure detail-icon"></i>
+                            <span>${formatTime(flight.departure_time)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-plane-arrival detail-icon"></i>
+                            <span>${formatTime(flight.arrival_time)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-clock detail-icon"></i>
+                            <span>${flight.duration}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="flight-stops stops-${flight.stops}">${flight.stops} stop${flight.stops !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="time-period ${flight.time_period}">${flight.time_period}</span>
+                        </div>
+                    </div>
+                    <div class="result-actions">
+                        <a href="${flight.booking_url}" target="_blank" class="btn-primary">
+                            <i class="fas fa-external-link-alt me-2"></i>Book Now
+                        </a>
+                        <button class="btn-outline" onclick="showFlightDetails('${flight.token}')">
+                            <i class="fas fa-info-circle me-2"></i>Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createHotelCard(hotel) {
+            const amenities = hotel.amenities ? hotel.amenities.slice(0, 3) : [];
+            
+            return `
+                <div class="result-card">
+                    <div class="result-header">
+                        <div class="result-title">${hotel.name}</div>
+                        <div class="result-price">$${hotel.average_price_per_night.toFixed(2)}/night</div>
+                    </div>
+                    <div class="result-details">
+                        <div class="detail-item">
+                            <i class="fas fa-star detail-icon"></i>
+                            <span>${hotel.star_rating || 'N/A'} stars</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-star-half-alt detail-icon"></i>
+                            <span>${hotel.rating || 'N/A'}/10</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-map-marker-alt detail-icon"></i>
+                            <span>${hotel.city}, ${hotel.country}</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-building detail-icon"></i>
+                            <span>${hotel.property_type || 'Hotel'}</span>
+                        </div>
+                    </div>
+                    ${amenities.length > 0 ? `
+                        <div class="hotel-amenities">
+                            ${amenities.map(amenity => `<span class="amenity-tag">${amenity}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="result-actions">
+                        <a href="${hotel.booking_url}" target="_blank" class="btn-primary">
+                            <i class="fas fa-external-link-alt me-2"></i>Book Now
+                        </a>
+                        <button class="btn-outline" onclick="showHotelDetails('${hotel.hotel_id}')">
+                            <i class="fas fa-info-circle me-2"></i>Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatTime(timeString) {
+            const date = new Date(timeString);
+            return date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+
+        function showLoading(message) {
+            const container = document.getElementById('results-container');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('results-container');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function clearResults() {
+            document.getElementById('results-container').style.display = 'none';
+            searchResults = {};
+        }
+
+        function showFlightDetails(token) {
+            // Implement flight details modal
+            alert('Flight details feature coming soon!');
+        }
+
+        function showHotelDetails(hotelId) {
+            // Implement hotel details modal
+            alert('Hotel details feature coming soon!');
+        }
+
+        // Filter option click handlers
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('filter-option')) {
+                e.target.classList.toggle('active');
+            }
+        });
+    </script>
+</body>
+</html> 

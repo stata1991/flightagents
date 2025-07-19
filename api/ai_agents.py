@@ -727,7 +727,7 @@ Provide booking strategy in JSON format:
             }
     
     async def _hotel_search_agent(self, task: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Hotel Search Agent that integrates with Booking.com API for real hotel searches"""
+        """Enhanced Hotel Search Agent with smart budget handling and destination fallback"""
         try:
             from api.hotel_client import HotelClient
             from api.models import HotelSearchRequest
@@ -776,8 +776,21 @@ Provide booking strategy in JSON format:
                 order="price" if budget_range == "budget" else "rating"
             )
             
-            # Search for hotels
-            hotel_results = hotel_client.search_hotels(hotel_request)
+            # Calculate max budget based on budget range
+            max_budget = None
+            if budget_range == "budget":
+                max_budget = 150  # Budget hotels under $150/night
+            elif budget_range == "moderate":
+                max_budget = 300  # Moderate hotels under $300/night
+            elif budget_range == "luxury":
+                max_budget = 500  # Luxury hotels under $500/night
+            
+            # Use smart hotel search with budget handling
+            hotel_results = hotel_client.smart_hotel_search(
+                request=hotel_request,
+                max_budget=max_budget,
+                budget_expansion_steps=3
+            )
             
             if hotel_results.search_metadata and "error" in hotel_results.search_metadata:
                 return {
@@ -786,10 +799,33 @@ Provide booking strategy in JSON format:
                     "reasoning": "Hotel search API error"
                 }
             
-            # Process and format hotel results
-            formatted_hotels = []
-            for hotel_result in hotel_results.hotels[:5]:  # Top 5 results
+            # Process and format hotel results with categorization
+            budget_hotels = []
+            moderate_hotels = []
+            luxury_hotels = []
+            
+            for hotel_result in hotel_results.hotels:
                 hotel = hotel_result.hotel
+                price_per_night = hotel_result.average_price_per_night or 0
+                currency = hotel_result.currency or "USD"
+                
+                # Convert price to USD for categorization using dynamic currency converter
+                price_usd = price_per_night
+                if currency != "USD":
+                    from api.currency_converter import currency_converter
+                    try:
+                        converted_price = await currency_converter.convert_price(price_per_night, currency, "USD")
+                        if converted_price is not None:
+                            price_usd = converted_price
+                        else:
+                            logger.error(f"Currency conversion failed for {currency} to USD")
+                            # If conversion fails, skip this hotel to avoid incorrect categorization
+                            continue
+                    except Exception as e:
+                        logger.error(f"Currency conversion error for {currency}: {e}")
+                        # If conversion fails, skip this hotel to avoid incorrect categorization
+                        continue
+                
                 formatted_hotel = {
                     "hotel_id": hotel.hotel_id,
                     "name": hotel.name,
@@ -803,18 +839,48 @@ Provide booking strategy in JSON format:
                     "property_type": hotel.property_type,
                     "amenities": hotel.amenities,
                     "photos": hotel.photos,
-                    "average_price_per_night": hotel_result.average_price_per_night,
+                    "average_price_per_night": price_per_night,
                     "total_price": hotel_result.total_price,
-                    "currency": hotel_result.currency,
+                    "currency": currency,
                     "availability": hotel_result.availability,
                     "rooms_available": len(hotel_result.rooms),
                     "booking_url": hotel.booking_url
                 }
-                formatted_hotels.append(formatted_hotel)
+                
+                # Categorize hotels by star rating AND price (using USD equivalent)
+                star_rating = hotel.star_rating or 0
+                
+                # Determine category based on star rating first, then price
+                if star_rating <= 2:
+                    # 1-2 stars = Budget
+                    budget_hotels.append(formatted_hotel)
+                elif star_rating == 3:
+                    # 3 stars = Moderate/Medium
+                    moderate_hotels.append(formatted_hotel)
+                elif star_rating >= 4:
+                    # 4-5 stars = Luxury
+                    luxury_hotels.append(formatted_hotel)
+                else:
+                    # If no star rating, categorize by price as fallback
+                    if destination.lower() in ['india', 'tirupati', 'hyderabad', 'delhi', 'mumbai', 'bangalore']:
+                        # Lower price ranges for Indian destinations
+                        budget_threshold = 50
+                        moderate_threshold = 150
+                    else:
+                        # Standard price ranges for other destinations
+                        budget_threshold = 150
+                        moderate_threshold = 300
+                    
+                    if price_usd <= budget_threshold:
+                        budget_hotels.append(formatted_hotel)
+                    elif price_usd <= moderate_threshold:
+                        moderate_hotels.append(formatted_hotel)
+                    else:
+                        luxury_hotels.append(formatted_hotel)
             
-            # Generate booking URLs for top hotels
+            # Generate booking URLs for top hotels in each category
             booking_urls = {}
-            for hotel in formatted_hotels[:3]:  # Top 3 hotels
+            for hotel in (budget_hotels[:2] + moderate_hotels[:2] + luxury_hotels[:2]):
                 booking_url = hotel_client.generate_hotel_booking_url(
                     hotel_id=hotel["hotel_id"],
                     check_in=start_date,
@@ -826,21 +892,36 @@ Provide booking strategy in JSON format:
                 )
                 booking_urls[hotel["hotel_id"]] = booking_url
             
+            # Prepare categorized results
+            categorized_hotels = {
+                "budget": budget_hotels[:3],
+                "moderate": moderate_hotels[:3],
+                "luxury": luxury_hotels[:3]
+            }
+            
+            # Smart search metadata
+            search_metadata = {
+                "total_results": hotel_results.total_results,
+                "currency": "USD",
+                "smart_search": True,
+                "search_attempts": hotel_results.search_metadata.get("search_attempts", 0),
+                "destinations_tried": hotel_results.search_metadata.get("destinations_tried", 0),
+                "budget_expansion_used": max_budget is not None,
+                "max_budget_applied": max_budget
+            }
+            
             return {
                 "hotel_search_results": {
                     "destination": destination,
                     "check_in_date": start_date,
                     "check_out_date": check_out_date,
-                    "total_hotels_found": len(formatted_hotels),
-                    "hotels": formatted_hotels,
+                    "total_hotels_found": len(hotel_results.hotels),
+                    "hotels": categorized_hotels,
                     "booking_urls": booking_urls,
-                    "search_metadata": {
-                        "total_results": hotel_results.total_results,
-                        "currency": "USD"
-                    }
+                    "search_metadata": search_metadata
                 },
                 "confidence": 0.9,
-                "reasoning": f"Successfully found {len(formatted_hotels)} hotels in {destination}"
+                "reasoning": f"Smart search found {len(hotel_results.hotels)} hotels across {hotel_results.search_metadata.get('destinations_tried', 0)} destinations"
             }
             
         except Exception as e:

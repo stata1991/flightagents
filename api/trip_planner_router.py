@@ -778,11 +778,20 @@ async def search_flights_comprehensive(origin: str, destination: str, start_date
         origin_search = booking_client.search_destination(origin_clean)
         dest_search = booking_client.search_destination(destination_clean)
         
-        if "error" in origin_search or "error" in dest_search:
-            return {"error": f"Failed to search destinations: {origin_search.get('error', '')} {dest_search.get('error', '')}"}
+        # Handle destination search errors
+        if "error" in origin_search:
+            logger.error(f"Origin destination search failed: {origin_search}")
+            return {"error": f"Failed to search origin destination '{origin_clean}': {origin_search.get('message', 'Unknown error')}"}
         
-        if not origin_search.get('destinations') or not dest_search.get('destinations'):
-            return {"error": f"No destinations found for {origin_clean} or {destination_clean}. Please check the city names."}
+        if "error" in dest_search:
+            logger.error(f"Destination search failed: {dest_search}")
+            return {"error": f"Failed to search destination '{destination_clean}': {dest_search.get('message', 'Unknown error')}"}
+        
+        if not origin_search.get('destinations'):
+            return {"error": f"No destinations found for origin '{origin_clean}'. Please check the city name."}
+        
+        if not dest_search.get('destinations'):
+            return {"error": f"No destinations found for destination '{destination_clean}'. Please check the city name."}
         
         origin_id = origin_search['destinations'][0].get('id')
         dest_id = dest_search['destinations'][0].get('id')
@@ -805,17 +814,38 @@ async def search_flights_comprehensive(origin: str, destination: str, start_date
         
         # Process and categorize flights based on actual API response structure
         all_flights = []
-        if flight_results.get('status') and flight_results.get('data', {}).get('flightOffers'):
-            flight_offers = flight_results['data']['flightOffers']
+        if flight_results.get('status') and flight_results.get('data'):
+            # Check for flight offers in the response
+            flight_offers = flight_results['data'].get('flightOffers', [])
+            logger.info(f"Found {len(flight_offers)} flight offers")
             
-            for flight_offer in flight_offers:
+            if not flight_offers:
+                # Check if there are flights in a different field
+                if flight_results['data'].get('flights'):
+                    flight_offers = flight_results['data']['flights']
+                elif isinstance(flight_results['data'], list):
+                    flight_offers = flight_results['data']
+                else:
+                    # Check aggregation data
+                    if 'aggregation' in flight_results['data']:
+                        total_count = flight_results['data']['aggregation'].get('totalCount', 0)
+                        if total_count > 0:
+                            return {"error": f"Found {total_count} flights but they require pagination. Please try a different search or contact support."}
+                    
+                    return {"error": f"No flights found from {origin_clean} to {destination_clean} for the specified dates. Try different dates or check if the route is available."}
+            
+            logger.info(f"Processing {len(flight_offers)} flight offers")
+            for i, flight_offer in enumerate(flight_offers):
                 try:
                     # Extract basic flight info
                     token = flight_offer.get('token', '')
                     segments = flight_offer.get('segments', [])
                     price_breakdown = flight_offer.get('priceBreakdown', {})
                     
+                    logger.info(f"Flight offer {i+1}: segments={len(segments)}, has_price_breakdown={'priceBreakdown' in flight_offer}")
+                    
                     if not segments:
+                        logger.warning(f"Flight offer {i+1} has no segments")
                         continue
                     
                     # Process outbound segment (first segment)
@@ -867,7 +897,10 @@ async def search_flights_comprehensive(origin: str, destination: str, start_date
                     logger.error(f"Error processing flight offer: {e}")
                     continue
         
+        logger.info(f"Successfully processed {len(all_flights)} flights")
+        
         if not all_flights:
+            logger.error("No flights were processed successfully")
             return {"error": f"No flights found from {origin_clean} to {destination_clean} for the specified dates. Try different dates or check if the route is available."}
         
         # Categorize flights
@@ -884,26 +917,38 @@ async def search_flights_comprehensive(origin: str, destination: str, start_date
         
         best_value = sorted(all_flights, key=calculate_value_score)[:3]
         
-        return {
+        result = {
             "cheapest": cheapest,
             "fastest": fastest,
             "best_value": best_value,
             "total_flights_found": len(all_flights)
         }
         
+        logger.info(f"Returning flight results: {len(cheapest)} cheapest, {len(fastest)} fastest, {len(best_value)} best value")
+        return result
+        
     except Exception as e:
         logger.error(f"Flight search error: {e}")
         return {"error": f"Flight search failed: {str(e)}"}
 
 async def search_hotels_comprehensive(destination: str, start_date: str, return_date: str, travelers: int, budget_range: str):
-    """Search hotels and categorize by budget range"""
+    """Enhanced hotel search with smart budget handling and destination fallback"""
     try:
         from api.hotel_client import HotelClient
         from api.models import HotelSearchRequest
         
         hotel_client = HotelClient()
         
-        # Search for hotels
+        # Calculate max budget based on budget range
+        max_budget = None
+        if budget_range == "budget":
+            max_budget = 150  # Budget hotels under $150/night
+        elif budget_range == "moderate":
+            max_budget = 300  # Moderate hotels under $300/night
+        elif budget_range == "luxury":
+            max_budget = 500  # Luxury hotels under $500/night
+        
+        # Create hotel search request
         hotel_request = HotelSearchRequest(
             location=destination,
             check_in=start_date,
@@ -916,7 +961,12 @@ async def search_hotels_comprehensive(destination: str, start_date: str, return_
             page_number=1
         )
         
-        hotel_results = hotel_client.search_hotels(hotel_request)
+        # Use smart hotel search with budget handling
+        hotel_results = hotel_client.smart_hotel_search(
+            request=hotel_request,
+            max_budget=max_budget,
+            budget_expansion_steps=3
+        )
         
         if hotel_results.search_metadata and "error" in hotel_results.search_metadata:
             return {"error": f"Hotel search failed: {hotel_results.search_metadata['error']}"}
@@ -924,110 +974,595 @@ async def search_hotels_comprehensive(destination: str, start_date: str, return_
         if hotel_results.total_results == 0:
             return {"error": "No hotels found for the specified criteria"}
         
-        # Categorize hotels by budget
-        all_hotels = []
-        for hotel_result in hotel_results.hotels:
-            hotel_data = {
-                "hotel_id": hotel_result.hotel.hotel_id,
-                "name": hotel_result.hotel.name,
-                "rating": hotel_result.hotel.rating,
-                "review_score": hotel_result.hotel.review_score,
-                "star_rating": hotel_result.hotel.star_rating,
-                "average_price_per_night": hotel_result.average_price_per_night,
-                "total_price": hotel_result.total_price,
-                "currency": hotel_result.currency,
-                "photos": hotel_result.hotel.photos,
-                "address": hotel_result.hotel.address
-            }
-            all_hotels.append(hotel_data)
-        
-        # Define budget ranges based on user selection
-        budget_ranges = {
-            "budget": {"min": 0, "max": 150},
-            "moderate": {"min": 150, "max": 400},
-            "luxury": {"min": 400, "max": float('inf')}
-        }
-        
-        selected_range = budget_ranges.get(budget_range, budget_ranges["moderate"])
-        
-        # Filter hotels by selected budget range
+        # Process and categorize hotels by price
         budget_hotels = []
-        mid_range_hotels = []
+        moderate_hotels = []
         luxury_hotels = []
         
-        for hotel in all_hotels:
-            price = hotel.get("average_price_per_night", 0)
-            if price <= 150:
-                budget_hotels.append(hotel)
-            elif price <= 400:
-                mid_range_hotels.append(hotel)
+        for hotel_result in hotel_results.hotels:
+            hotel = hotel_result.hotel
+            price_per_night = hotel_result.average_price_per_night or 0
+            currency = hotel_result.currency or "USD"
+            
+            # Convert price to USD for categorization using dynamic currency converter
+            price_usd = price_per_night
+            if currency != "USD":
+                from api.currency_converter import currency_converter
+                try:
+                    converted_price = await currency_converter.convert_price(price_per_night, currency, "USD")
+                    if converted_price is not None:
+                        price_usd = converted_price
+                    else:
+                        logger.error(f"Currency conversion failed for {currency} to USD")
+                        # If conversion fails, skip this hotel to avoid incorrect categorization
+                        continue
+                except Exception as e:
+                    logger.error(f"Currency conversion error for {currency}: {e}")
+                    # If conversion fails, skip this hotel to avoid incorrect categorization
+                    continue
+            
+            hotel_data = {
+                "hotel_id": hotel.hotel_id,
+                "name": hotel.name,
+                "rating": hotel.rating,
+                "review_score": hotel.review_score,
+                "star_rating": hotel.star_rating,
+                "average_price_per_night": price_per_night,
+                "total_price": hotel_result.total_price,
+                "currency": currency,
+                "photos": hotel.photos,
+                "address": hotel.address,
+                "city": hotel.city,
+                "country": hotel.country,
+                "property_type": hotel.property_type,
+                "amenities": hotel.amenities
+            }
+            
+            # Categorize by star rating AND price (using USD equivalent)
+            star_rating = hotel.star_rating or 0
+            
+            # Determine category based on star rating first, then price
+            if star_rating <= 2:
+                # 1-2 stars = Budget
+                budget_hotels.append(hotel_data)
+            elif star_rating == 3:
+                # 3 stars = Moderate/Medium
+                moderate_hotels.append(hotel_data)
+            elif star_rating >= 4:
+                # 4-5 stars = Luxury
+                luxury_hotels.append(hotel_data)
             else:
-                luxury_hotels.append(hotel)
+                # If no star rating, categorize by price as fallback
+                if destination.lower() in ['india', 'tirupati', 'hyderabad', 'delhi', 'mumbai', 'bangalore']:
+                    # Lower price ranges for Indian destinations
+                    budget_threshold = 50
+                    moderate_threshold = 150
+                else:
+                    # Standard price ranges for other destinations
+                    budget_threshold = 150
+                    moderate_threshold = 300
+                
+                if price_usd <= budget_threshold:
+                    budget_hotels.append(hotel_data)
+                elif price_usd <= moderate_threshold:
+                    moderate_hotels.append(hotel_data)
+                else:
+                    luxury_hotels.append(hotel_data)
         
-        # Return hotels based on selected budget range
-        if budget_range == "budget":
-            if budget_hotels:
-                return {
-                    "budget": budget_hotels[:5],
-                    "mid_range": [],
-                    "luxury": [],
-                    "total_hotels_found": len(budget_hotels),
-                    "message": f"Found {len(budget_hotels)} budget hotels for your selection"
-                }
-            else:
-                # If no budget hotels, expand to moderate
-                return {
-                    "budget": [],
-                    "mid_range": mid_range_hotels[:5],
-                    "luxury": [],
-                    "total_hotels_found": len(mid_range_hotels),
-                    "message": f"No budget hotels found. Showing moderate options instead."
-                }
-        elif budget_range == "moderate":
-            if mid_range_hotels:
-                return {
-                    "budget": [],
-                    "mid_range": mid_range_hotels[:5],
-                    "luxury": [],
-                    "total_hotels_found": len(mid_range_hotels),
-                    "message": f"Found {len(mid_range_hotels)} moderate hotels for your selection"
-                }
-            else:
-                # If no moderate hotels, show budget and luxury
-                return {
-                    "budget": budget_hotels[:3],
-                    "mid_range": [],
-                    "luxury": luxury_hotels[:3],
-                    "total_hotels_found": len(budget_hotels) + len(luxury_hotels),
-                    "message": f"No moderate hotels found. Showing budget and luxury options."
-                }
-        elif budget_range == "luxury":
-            if luxury_hotels:
-                return {
-                    "budget": [],
-                    "mid_range": [],
-                    "luxury": luxury_hotels[:5],
-                    "total_hotels_found": len(luxury_hotels),
-                    "message": f"Found {len(luxury_hotels)} luxury hotels for your selection"
-                }
-            else:
-                # If no luxury hotels, show moderate
-                return {
-                    "budget": [],
-                    "mid_range": mid_range_hotels[:5],
-                    "luxury": [],
-                    "total_hotels_found": len(mid_range_hotels),
-                    "message": f"No luxury hotels found. Showing moderate options instead."
-                }
+        # Generate booking URLs for top hotels in each category
+        booking_urls = {}
+        for hotel in (budget_hotels[:2] + moderate_hotels[:2] + luxury_hotels[:2]):
+            booking_url = hotel_client.generate_hotel_booking_url(
+                hotel_id=hotel["hotel_id"],
+                check_in=start_date,
+                check_out=return_date,
+                adults=travelers,
+                children=[],
+                rooms=1,
+                currency="USD"
+            )
+            booking_urls[hotel["hotel_id"]] = booking_url
         
-        # Default fallback
+        # Smart search metadata
+        search_metadata = {
+            "total_results": hotel_results.total_results,
+            "currency": "USD",
+            "smart_search": True,
+            "search_attempts": hotel_results.search_metadata.get("search_attempts", 0),
+            "destinations_tried": hotel_results.search_metadata.get("destinations_tried", 0),
+            "budget_expansion_used": max_budget is not None,
+            "max_budget_applied": max_budget
+        }
+        
+        # Return categorized results
         return {
             "budget": budget_hotels[:3],
-            "mid_range": mid_range_hotels[:3],
+            "moderate": moderate_hotels[:3],
             "luxury": luxury_hotels[:3],
-            "total_hotels_found": len(all_hotels)
+            "total_hotels_found": len(hotel_results.hotels),
+            "booking_urls": booking_urls,
+            "search_metadata": search_metadata,
+            "message": f"Smart search found {len(hotel_results.hotels)} hotels across {hotel_results.search_metadata.get('destinations_tried', 0)} destinations"
         }
         
     except Exception as e:
         logger.error(f"Hotel search error: {e}")
+        return {"error": f"Hotel search failed: {str(e)}"} 
+
+async def search_flights_with_filters(
+    origin: str, 
+    destination: str, 
+    start_date: str, 
+    return_date: str, 
+    travelers: int,
+    filters: dict = None
+):
+    """Enhanced flight search with inline filters"""
+    try:
+        from api.booking_client import booking_client
+        from api.enhanced_parser import EnhancedQueryParser
+        
+        # Set default filters if none provided
+        if filters is None:
+            filters = {}
+        
+        # Extract filter parameters
+        non_stop_only = filters.get('non_stop_only', False)
+        preferred_airlines = filters.get('preferred_airlines', [])
+        cabin_class = filters.get('cabin_class', 'ECONOMY')
+        departure_time_pref = filters.get('departure_time_pref', [])  # ['morning', 'afternoon', 'evening']
+        max_price = filters.get('max_price', None)
+        max_duration = filters.get('max_duration', None)  # in minutes
+        baggage_included = filters.get('baggage_included', False)
+        refundable_only = filters.get('refundable_only', False)
+        
+        # Clean city names
+        origin_clean = origin.split(',')[0].strip()
+        destination_clean = destination.split(',')[0].strip()
+        
+        # Get destination IDs
+        parser = EnhancedQueryParser()
+        origin_iata = parser._lookup_iata_code(origin_clean)
+        dest_iata = parser._lookup_iata_code(destination_clean)
+        
+        if not origin_iata or not dest_iata:
+            return {"error": f"Could not find airport codes for {origin_clean} or {destination_clean}"}
+        
+        # Search for destinations to get location IDs
+        origin_search = booking_client.search_destination(origin_clean)
+        dest_search = booking_client.search_destination(destination_clean)
+        
+        if "error" in origin_search or "error" in dest_search:
+            return {"error": "Destination search failed"}
+        
+        origin_id = origin_search['destinations'][0].get('id')
+        dest_id = dest_search['destinations'][0].get('id')
+        
+        # Search for flights
+        flight_results = booking_client.search_flights(
+            from_id=origin_id,
+            to_id=dest_id,
+            depart_date=start_date,
+            return_date=return_date,
+            adults=travelers,
+            cabin_class=cabin_class
+        )
+        
+        if "error" in flight_results:
+            return {"error": f"Flight search failed: {flight_results['error']}"}
+        
+        # Process flights with filters
+        all_flights = []
+        if flight_results.get('status') and flight_results.get('data'):
+            flight_offers = flight_results['data'].get('flightOffers', [])
+            
+            if not flight_offers:
+                return {"error": f"No flights found from {origin_clean} to {destination_clean}"}
+            
+            for flight_offer in flight_offers:
+                try:
+                    # Extract basic flight info
+                    token = flight_offer.get('token', '')
+                    segments = flight_offer.get('segments', [])
+                    price_breakdown = flight_offer.get('priceBreakdown', {})
+                    
+                    if not segments:
+                        continue
+                    
+                    # Process outbound segment
+                    outbound_segment = segments[0]
+                    outbound_legs = outbound_segment.get('legs', [])
+                    
+                    if not outbound_legs:
+                        continue
+                    
+                    outbound_leg = outbound_legs[0]
+                    
+                    # Extract airline info
+                    carriers_data = outbound_leg.get('carriersData', [])
+                    airline_name = carriers_data[0].get('name', 'Unknown') if carriers_data else 'Unknown'
+                    airline_code = carriers_data[0].get('code', '') if carriers_data else ''
+                    
+                    # Extract flight times
+                    departure_time = outbound_leg.get('departureTime', '')
+                    arrival_time = outbound_leg.get('arrivalTime', '')
+                    
+                    # Parse departure time for filtering
+                    from datetime import datetime
+                    try:
+                        dep_time = datetime.fromisoformat(departure_time.replace('Z', '+00:00'))
+                        hour = dep_time.hour
+                        if 6 <= hour < 12:
+                            time_period = 'morning'
+                        elif 12 <= hour < 18:
+                            time_period = 'afternoon'
+                        else:
+                            time_period = 'evening'
+                    except:
+                        time_period = 'unknown'
+                    
+                    # Calculate duration
+                    total_time_seconds = outbound_leg.get('totalTime', 0)
+                    duration_minutes = total_time_seconds // 60
+                    duration_str = f"{duration_minutes // 60}h {duration_minutes % 60}m"
+                    
+                    # Extract price info
+                    total_price = price_breakdown.get('total', {})
+                    price_amount = total_price.get('units', 0) + (total_price.get('nanos', 0) / 1_000_000_000)
+                    currency = total_price.get('currencyCode', 'USD')
+                    
+                    # Count stops
+                    flight_stops = outbound_leg.get('flightStops', [])
+                    stops_count = len(flight_stops)
+                    
+                    # Apply filters
+                    if non_stop_only and stops_count > 0:
+                        continue
+                    
+                    if preferred_airlines and airline_code not in preferred_airlines:
+                        continue
+                    
+                    if departure_time_pref and time_period not in departure_time_pref:
+                        continue
+                    
+                    if max_price and price_amount > max_price:
+                        continue
+                    
+                    if max_duration and duration_minutes > max_duration:
+                        continue
+                    
+                    # Extract baggage info (if available)
+                    baggage_info = outbound_leg.get('baggage', {})
+                    has_baggage = baggage_info.get('included', False) if baggage_info else False
+                    
+                    if baggage_included and not has_baggage:
+                        continue
+                    
+                    # Extract refundable info (if available)
+                    fare_info = flight_offer.get('fareInfo', {})
+                    is_refundable = fare_info.get('refundable', False) if fare_info else False
+                    
+                    if refundable_only and not is_refundable:
+                        continue
+                    
+                    formatted_flight = {
+                        "token": token,
+                        "airline": airline_name,
+                        "airline_code": airline_code,
+                        "departure_time": departure_time,
+                        "arrival_time": arrival_time,
+                        "time_period": time_period,
+                        "duration": duration_str,
+                        "duration_minutes": duration_minutes,
+                        "stops": stops_count,
+                        "price": price_amount,
+                        "currency": currency,
+                        "cabin_class": cabin_class,
+                        "has_baggage": has_baggage,
+                        "is_refundable": is_refundable,
+                        "booking_url": f"https://booking.com/flights?token={token}"
+                    }
+                    all_flights.append(formatted_flight)
+                    
+                except Exception as e:
+                    logger.error(f"Error processing flight offer: {e}")
+                    continue
+        
+        if not all_flights:
+            return {"error": "No flights match your filter criteria"}
+        
+        # Sort and categorize flights
+        cheapest = sorted(all_flights, key=lambda x: x["price"])[:3]
+        fastest = sorted(all_flights, key=lambda x: x["duration_minutes"])[:3]
+        
+        # Best value calculation
+        def calculate_value_score(flight):
+            price = flight["price"]
+            duration = flight["duration_minutes"]
+            return (price * 0.7) + (duration * 0.3)
+        
+        best_value = sorted(all_flights, key=calculate_value_score)[:3]
+        
+        # Apply additional sorting based on filters
+        if preferred_airlines:
+            # Sort preferred airlines first
+            def airline_priority(flight):
+                return flight["airline_code"] not in preferred_airlines
+            
+            cheapest = sorted(cheapest, key=airline_priority)
+            fastest = sorted(fastest, key=airline_priority)
+            best_value = sorted(best_value, key=airline_priority)
+        
+        result = {
+            "cheapest": cheapest,
+            "fastest": fastest,
+            "best_value": best_value,
+            "total_flights_found": len(all_flights),
+            "filters_applied": filters,
+            "search_metadata": {
+                "origin": origin_clean,
+                "destination": destination_clean,
+                "dates": f"{start_date} to {return_date}",
+                "travelers": travelers
+            }
+        }
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Enhanced flight search error: {e}")
+        return {"error": f"Flight search failed: {str(e)}"} 
+
+@router.post("/search-flights-enhanced")
+async def search_flights_enhanced(request: dict):
+    """Enhanced flight search with inline filters"""
+    try:
+        # Extract search parameters
+        origin = request.get('origin', '')
+        destination = request.get('destination', '')
+        start_date = request.get('start_date', '')
+        return_date = request.get('return_date', '')
+        travelers = request.get('travelers', 1)
+        filters = request.get('filters', {})
+        
+        # Validate required parameters
+        if not all([origin, destination, start_date, return_date]):
+            return {"error": "Missing required parameters: origin, destination, start_date, return_date"}
+        
+        # Call enhanced flight search
+        result = await search_flights_with_filters(
+            origin=origin,
+            destination=destination,
+            start_date=start_date,
+            return_date=return_date,
+            travelers=travelers,
+            filters=filters
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Enhanced flight search endpoint error: {e}")
+        return {"error": f"Flight search failed: {str(e)}"} 
+
+async def search_hotels_with_filters(
+    destination: str, 
+    start_date: str, 
+    return_date: str, 
+    travelers: int,
+    filters: dict = None
+):
+    """Enhanced hotel search with inline filters"""
+    try:
+        from api.hotel_client import HotelClient
+        from api.models import HotelSearchRequest
+        
+        # Set default filters if none provided
+        if filters is None:
+            filters = {}
+        
+        # Extract filter parameters
+        amenities = filters.get('amenities', [])  # ['breakfast', 'wifi', 'pool', 'gym', 'parking']
+        location_pref = filters.get('location_pref', [])  # ['city_center', 'airport', 'beachfront']
+        property_type = filters.get('property_type', [])  # ['hotel', 'resort', 'apartment']
+        min_rating = filters.get('min_rating', 0)
+        max_price = filters.get('max_price', None)
+        min_price = filters.get('min_price', None)
+        
+        hotel_client = HotelClient()
+        
+        # Create hotel search request
+        hotel_request = HotelSearchRequest(
+            location=destination,
+            check_in=start_date,
+            check_out=return_date,
+            adults=travelers,
+            children=[],
+            rooms=1,
+            currency="USD",
+            language="en-us",
+            page_number=1
+        )
+        
+        # Use smart hotel search
+        hotel_results = hotel_client.smart_hotel_search(
+            request=hotel_request,
+            max_budget=max_price,
+            budget_expansion_steps=3
+        )
+        
+        if hotel_results.search_metadata and "error" in hotel_results.search_metadata:
+            return {"error": f"Hotel search failed: {hotel_results.search_metadata['error']}"}
+        
+        if hotel_results.total_results == 0:
+            return {"error": "No hotels found for the specified criteria"}
+        
+        # Process and categorize hotels with filters
+        budget_hotels = []
+        moderate_hotels = []
+        luxury_hotels = []
+        
+        for hotel_result in hotel_results.hotels:
+            hotel = hotel_result.hotel
+            price_per_night = hotel_result.average_price_per_night or 0
+            currency = hotel_result.currency or "USD"
+            
+            # Convert price to USD for categorization
+            price_usd = price_per_night
+            if currency != "USD":
+                from api.currency_converter import currency_converter
+                try:
+                    converted_price = await currency_converter.convert_price(price_per_night, currency, "USD")
+                    if converted_price is not None:
+                        price_usd = converted_price
+                    else:
+                        continue
+                except Exception as e:
+                    logger.error(f"Currency conversion error: {e}")
+                    continue
+            
+            # Apply price filters
+            if max_price and price_usd > max_price:
+                continue
+            
+            if min_price and price_usd < min_price:
+                continue
+            
+            # Apply rating filter
+            if min_rating and hotel.rating < min_rating:
+                continue
+            
+            # Apply property type filter
+            if property_type and hotel.property_type not in property_type:
+                continue
+            
+            # Apply amenities filter (if available)
+            hotel_amenities = hotel.amenities or []
+            if amenities:
+                # Check if hotel has required amenities
+                has_required_amenities = True
+                for amenity in amenities:
+                    amenity_lower = amenity.lower()
+                    if not any(amenity_lower in existing_amenity.lower() for existing_amenity in hotel_amenities):
+                        has_required_amenities = False
+                        break
+                
+                if not has_required_amenities:
+                    continue
+            
+            # Apply location filter (if available)
+            if location_pref:
+                # This would require additional location data from the API
+                # For now, we'll skip location filtering
+                pass
+            
+            hotel_data = {
+                "hotel_id": hotel.hotel_id,
+                "name": hotel.name,
+                "rating": hotel.rating,
+                "review_score": hotel.review_score,
+                "star_rating": hotel.star_rating,
+                "average_price_per_night": price_per_night,
+                "total_price": hotel_result.total_price,
+                "currency": currency,
+                "photos": hotel.photos,
+                "address": hotel.address,
+                "city": hotel.city,
+                "country": hotel.country,
+                "property_type": hotel.property_type,
+                "amenities": hotel_amenities,
+                "booking_url": hotel.booking_url
+            }
+            
+            # Categorize by star rating
+            star_rating = hotel.star_rating or 0
+            
+            if star_rating <= 2:
+                budget_hotels.append(hotel_data)
+            elif star_rating == 3:
+                moderate_hotels.append(hotel_data)
+            elif star_rating >= 4:
+                luxury_hotels.append(hotel_data)
+            else:
+                # Fallback to price-based categorization
+                if destination.lower() in ['india', 'tirupati', 'hyderabad', 'delhi', 'mumbai', 'bangalore']:
+                    budget_threshold = 50
+                    moderate_threshold = 150
+                else:
+                    budget_threshold = 150
+                    moderate_threshold = 300
+                
+                if price_usd <= budget_threshold:
+                    budget_hotels.append(hotel_data)
+                elif price_usd <= moderate_threshold:
+                    moderate_hotels.append(hotel_data)
+                else:
+                    luxury_hotels.append(hotel_data)
+        
+        # Generate booking URLs for top hotels in each category
+        booking_urls = {}
+        for hotel in (budget_hotels[:2] + moderate_hotels[:2] + luxury_hotels[:2]):
+            booking_url = hotel_client.generate_hotel_booking_url(
+                hotel_id=hotel["hotel_id"],
+                check_in=start_date,
+                check_out=return_date,
+                adults=travelers,
+                children=[],
+                rooms=1,
+                currency="USD"
+            )
+            booking_urls[hotel["hotel_id"]] = booking_url
+        
+        # Search metadata
+        search_metadata = {
+            "total_results": hotel_results.total_results,
+            "currency": "USD",
+            "smart_search": True,
+            "search_attempts": hotel_results.search_metadata.get("search_attempts", 0),
+            "destinations_tried": hotel_results.search_metadata.get("destinations_tried", 0),
+            "filters_applied": filters
+        }
+        
+        return {
+            "budget": budget_hotels[:3],
+            "moderate": moderate_hotels[:3],
+            "luxury": luxury_hotels[:3],
+            "total_hotels_found": len(budget_hotels) + len(moderate_hotels) + len(luxury_hotels),
+            "booking_urls": booking_urls,
+            "search_metadata": search_metadata,
+            "filters_applied": filters
+        }
+        
+    except Exception as e:
+        logger.error(f"Enhanced hotel search error: {e}")
+        return {"error": f"Hotel search failed: {str(e)}"} 
+
+@router.post("/search-hotels-enhanced")
+async def search_hotels_enhanced(request: dict):
+    """Enhanced hotel search with inline filters"""
+    try:
+        # Extract search parameters
+        destination = request.get('destination', '')
+        start_date = request.get('start_date', '')
+        return_date = request.get('return_date', '')
+        travelers = request.get('travelers', 1)
+        filters = request.get('filters', {})
+        
+        # Validate required parameters
+        if not all([destination, start_date, return_date]):
+            return {"error": "Missing required parameters: destination, start_date, return_date"}
+        
+        # Call enhanced hotel search
+        result = await search_hotels_with_filters(
+            destination=destination,
+            start_date=start_date,
+            return_date=return_date,
+            travelers=travelers,
+            filters=filters
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Enhanced hotel search endpoint error: {e}")
         return {"error": f"Hotel search failed: {str(e)}"} 
