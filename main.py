@@ -6,6 +6,7 @@ from api.search_router import router as search_router
 from api.trip_planner_router import router as trip_planner_router
 from api.destination_router import router as destination_router
 from api.hotel_router import router as hotel_router
+from api.hybrid_trip_router import router as hybrid_router
 
 app = FastAPI(title="FlightTickets.ai API")
 
@@ -19,6 +20,7 @@ app.include_router(search_router)
 app.include_router(trip_planner_router)
 app.include_router(destination_router)
 app.include_router(hotel_router)
+app.include_router(hybrid_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -31,3 +33,18 @@ async def trip_planner_page(request: Request):
 @app.get("/enhanced-search", response_class=HTMLResponse)
 async def enhanced_search_page(request: Request):
     return templates.TemplateResponse("enhanced_search.html", {"request": request})
+
+@app.get("/ai-trip-planner", response_class=HTMLResponse)
+async def ai_trip_planner_page(request: Request):
+    return templates.TemplateResponse("natural_trip_planner.html", {"request": request})
+
+@app.get("/hybrid", response_class=HTMLResponse)
+async def hybrid_planner_page(request: Request):
+    return templates.TemplateResponse("hybrid_trip_planner.html", {"request": request})
+
+if __name__ == "__main__":
+    import uvicorn
+    print("🚀 Starting FlightTickets.ai API server...")
+    print("📍 Server will be available at: http://localhost:8000")
+    print("🎯 AI Trip Planner: http://localhost:8000/ai-trip-planner")
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trip Planner - FlightTickets.ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .ai-header {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .ai-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .ai-subtitle {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--light-bg);
+            border-radius: 16px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .message-content {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 80%;
+        }
+
+        .message.user .message-content {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #1e293b;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .query-input {
+            flex: 1;
+            padding: 20px 24px;
+            border: 3px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 16px;
+            resize: none;
+            min-height: 60px;
+            max-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .query-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .send-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .send-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+
+        .send-btn:disabled {
+            background: var(--secondary-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .validation-panel {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .validation-panel.error {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .validation-panel.error .validation-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .validation-panel.error .validation-list li {
+            font-weight: 500;
+            padding: 10px 0;
+        }
+
+        .validation-panel.success {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+
+        .validation-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .validation-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .validation-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .validation-list li i {
+            width: 16px;
+        }
+
+        .validation-list li.error i {
+            color: #ef4444;
+        }
+
+        .validation-list li.warning i {
+            color: #f59e0b;
+        }
+
+        .validation-list li.success i {
+            color: #10b981;
+        }
+
+        .trip-plan {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .trip-summary {
+            background: var(--light-bg);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .summary-cost {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .summary-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .summary-icon.flight {
+            background: var(--primary-color);
+        }
+
+        .summary-icon.hotel {
+            background: var(--success-color);
+        }
+
+        .summary-icon.activity {
+            background: var(--warning-color);
+        }
+
+        .itinerary-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .itinerary-tab {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .itinerary-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .itinerary-content {
+            display: none;
+        }
+
+        .itinerary-content.active {
+            display: block;
+        }
+
+        .day-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #007bff;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .day-title {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        
+        .day-date {
+            color: #6c757d;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .day-theme {
+            background: #007bff;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .day-schedule {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .time-slot {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #007bff;
+        }
+
+        .time-slot.morning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+
+        .time-slot.lunch {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .time-slot.afternoon {
+            border-left-color: #17a2b8;
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        }
+
+        .time-slot.dinner {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .time-slot.evening {
+            border-left-color: #6f42c1;
+            background: linear-gradient(135deg, #e2d9f3 0%, #d4c5f7 100%);
+        }
+
+        .time-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .time-header i {
+            font-size: 1.2rem;
+            color: #007bff;
+        }
+
+        .time-header h4 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .activities {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+
+        .activity-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .activity-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .activity-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .activity-description {
+            color: #495057;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .transportation {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dining-recommendations {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .dining-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+
+        .dining-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .dining-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .dining-meta .type {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .dining-meta .price {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .dining-specialty {
+            color: #495057;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .accommodation-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .accommodation-details {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .hotel-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .hotel-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .hotel-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .practical-tips, .cultural-notes {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .tips-list, .notes-list {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin: 0;
+        }
+
+        .tips-list li, .notes-list li {
+            margin-bottom: 8px;
+            color: #495057;
+            line-height: 1.4;
+        }
+
+        .tips-list li:last-child, .notes-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .activity-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .activity-list li:last-child {
+            border-bottom: none;
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            padding: 15px 30px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--secondary-color);
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example-queries {
+            background: var(--light-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .example-title {
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #1e293b;
+        }
+
+        .example-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .example-list li {
+            padding: 8px 0;
+            cursor: pointer;
+            color: var(--primary-color);
+            transition: color 0.3s ease;
+        }
+
+        .example-list li:hover {
+            color: #1d4ed8;
+        }
+
+        .required-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .required-info p {
+            margin: 0;
+            color: #0369a1;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: none;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 1.25rem;
+        }
+
+        .close {
+            color: #6b7280;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #1f2937;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 4px;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .ai-title {
+                font-size: 2rem;
+            }
+            
+            .input-container {
+                flex-direction: column;
+            }
+            
+            .send-btn {
+                width: 100%;
+            }
+            
+            .summary-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .booking-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- AI Header -->
+        <div class="ai-header">
+            <h1 class="ai-title">
+                <i class="fas fa-robot me-3"></i>
+                AI Trip Planner
+            </h1>
+            <p class="ai-subtitle">
+                Plan your perfect trip with natural language. Just tell us what you want!
+            </p>
+            
+            <div class="example-queries">
+                <div class="example-title">Try these examples (include all required info):</div>
+                <ul class="example-list">
+                    <li onclick="setExample('Plan a 3-day trip from Dallas to Yosemite National Park starting March 15th for 2 people')">
+                        "Plan a 3-day trip from Dallas to Yosemite National Park starting March 15th for 2 people"
+                    </li>
+                    <li onclick="setExample('I want to visit Disney World from New York for 5 days starting August 10th')">
+                        "I want to visit Disney World from New York for 5 days starting August 10th"
+                    </li>
+                    <li onclick="setExample('Book a luxury vacation to Las Vegas for 4 days from Chicago starting July 20th')">
+                        "Book a luxury vacation to Las Vegas for 4 days from Chicago starting July 20th"
+                    </li>
+                    <li onclick="setExample('Plan a budget trip to San Francisco for 2 people, 3 days starting September 5th')">
+                        "Plan a budget trip to San Francisco for 2 people, 3 days starting September 5th"
+                    </li>
+                </ul>
+                <div class="required-info">
+                    <p><strong>Required information:</strong> Origin city, destination, dates, duration, and number of travelers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        Hi! I'm your AI travel assistant. Tell me about your dream trip and I'll plan everything for you - flights, hotels, and activities. What would you like to do?
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <textarea 
+                    class="query-input" 
+                    id="queryInput" 
+                    placeholder="Describe your trip with origin, destination, dates, duration, and travelers... (e.g., 'Plan a 3-day trip from Dallas to Yosemite National Park starting March 15th for 2 people')"
+                    rows="3"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendQuery()">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    Plan Trip
+                </button>
+            </div>
+        </div>
+
+        <!-- Validation Panel -->
+        <div class="validation-panel" id="validationPanel">
+            <div class="validation-title" id="validationTitle">
+                <i class="fas fa-info-circle"></i>
+                <span id="validationTitleText">Validation</span>
+            </div>
+            <ul class="validation-list" id="validationList">
+                <!-- Validation items will be populated here -->
+            </ul>
+        </div>
+
+        <!-- Requirements Modal -->
+        <div id="requirementsModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Complete Your Trip Details</h3>
+                    <span class="close" onclick="closeRequirementsModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="requirementsForm">
+                        <div class="form-group">
+                            <label for="adults">Number of Adults:</label>
+                            <input type="number" id="adults" name="adults" min="1" max="8" value="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="children">Number of Children:</label>
+                            <input type="number" id="children" name="children" min="0" max="6" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="interests">Interests (optional):</label>
+                            <select id="interests" name="interests" multiple>
+                                <option value="theme_parks">Theme Parks</option>
+                                <option value="beaches">Beaches</option>
+                                <option value="culture">Culture & History</option>
+                                <option value="outdoor">Outdoor Activities</option>
+                                <option value="food">Food & Dining</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="adventure">Adventure</option>
+                            </select>
+                            <small>Hold Ctrl/Cmd to select multiple</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="budget">Budget Preference:</label>
+                            <select id="budget" name="budget" required>
+                                <option value="budget">Budget</option>
+                                <option value="moderate" selected>Moderate</option>
+                                <option value="luxury">Luxury</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeRequirementsModal()">Cancel</button>
+                    <button type="button" class="btn-primary" onclick="submitRequirements()">Plan My Trip</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trip Plan -->
+        <div class="trip-plan" id="tripPlan">
+            <!-- Trip Summary -->
+            <div class="trip-summary">
+                <div class="summary-header">
+                    <h2 class="summary-title" id="tripTitle">Your Trip to Yosemite National Park</h2>
+                    <div class="summary-cost" id="tripCost">$1,250</div>
+                </div>
+                <div class="summary-details" id="tripDetails">
+                    <!-- Trip details will be populated here -->
+                </div>
+            </div>
+
+            <!-- Itinerary Tabs -->
+            <div class="itinerary-tabs">
+                <button class="itinerary-tab active" onclick="switchItineraryTab('summary')">
+                    <i class="fas fa-info-circle me-2"></i>Summary
+                </button>
+                <button class="itinerary-tab" onclick="switchItineraryTab('flights')">
+                    <i class="fas fa-plane me-2"></i>Flights
+                </button>
+                <button class="itinerary-tab" onclick="switchItineraryTab('hotels')">
+                    <i class="fas fa-hotel me-2"></i>Hotels
+                </button>
+                <button class="itinerary-tab" onclick="switchItineraryTab('itinerary')">
+                    <i class="fas fa-calendar-alt me-2"></i>Itinerary
+                </button>
+            </div>
+
+            <!-- Summary Content -->
+            <div class="itinerary-content active" id="summaryContent">
+                <div id="summaryContentInner">
+                    <!-- Summary content will be populated here -->
+                </div>
+            </div>
+
+            <!-- Flights Content -->
+            <div class="itinerary-content" id="flightsContent">
+                <div id="flightsContentInner">
+                    <!-- Flights content will be populated here -->
+                </div>
+            </div>
+
+            <!-- Hotels Content -->
+            <div class="itinerary-content" id="hotelsContent">
+                <div id="hotelsContentInner">
+                    <!-- Hotels content will be populated here -->
+                </div>
+            </div>
+
+            <!-- Itinerary Content -->
+            <div class="itinerary-content" id="itineraryContent">
+                <div id="itineraryContentInner">
+                    <!-- Itinerary content will be populated here -->
+                </div>
+            </div>
+
+            <!-- Booking Actions -->
+            <div class="booking-actions" id="bookingActions">
+                <a href="#" class="btn-primary" id="bookFlightsBtn" target="_blank">
+                    <i class="fas fa-plane"></i>
+                    Book Flights
+                </a>
+                <a href="#" class="btn-primary" id="bookHotelsBtn" target="_blank">
+                    <i class="fas fa-hotel"></i>
+                    Book Hotels
+                </a>
+                <button class="btn-outline" onclick="exportTrip()">
+                    <i class="fas fa-download"></i>
+                    Export Trip
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentTripData = null;
+        let currentItineraryTab = 'summary';
+        let pendingQuery = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const queryInput = document.getElementById('queryInput');
+            const sendBtn = document.getElementById('sendBtn');
+
+            // Auto-resize textarea
+            queryInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Enter key to send
+            queryInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendQuery();
+                }
+            });
+
+            // Focus on input
+            queryInput.focus();
+        });
+
+        function setExample(query) {
+            document.getElementById('queryInput').value = query;
+            document.getElementById('queryInput').focus();
+        }
+
+        async function sendQuery(query = null) {
+            const queryInput = document.getElementById('queryInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const queryText = query || queryInput.value.trim();
+
+            if (!queryText) {
+                showValidation('error', 'Please enter a trip description', ['Please describe your trip in natural language']);
+                return;
+            }
+
+            // Add user message
+            addMessage('user', queryText);
+
+            // Disable input and show loading
+            queryInput.disabled = true;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<div class="spinner"></div> Planning...';
+
+            try {
+                const response = await fetch('/trip-planner/plan-trip-natural', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: queryText })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    // Handle budget too low error
+                    if (result.error === 'budget_too_low') {
+                        showBudgetTooLowDialog(result.message, result.suggestions, result.extraction);
+                        addMessage('ai', result.message);
+                        return;
+                    }
+                    
+                    // Handle validation errors or other failures
+                    if (result.status === 'needs_more_info') {
+                        // Show validation errors and follow-up questions
+                        showValidationFromMissingFields(result.missing_fields, result.validation_errors, result.suggestions);
+                        addMessage('ai', 'I need a bit more information to plan your perfect trip. Please provide the missing details.');
+                        
+                        // Show follow-up questions dialog if available
+                        if (result.follow_up_questions && result.follow_up_questions.length > 0) {
+                            showFollowUpQuestionsDialog(result.follow_up_questions, result.partial_extraction, queryText);
+                        }
+                    } else if (result.missing_fields && result.missing_fields.includes('number of travelers')) {
+                        // Show requirements modal
+                        showRequirementsModal(queryText);
+                        addMessage('ai', 'I need a bit more information to plan your perfect trip. Please fill in the details below.');
+                    } else {
+                        // Show validation errors
+                        showValidationFromMissingFields(result.missing_fields, result.validation_errors, result.suggestions);
+                        addMessage('ai', `I couldn't plan your trip. ${result.error}`);
+                    }
+                } else {
+                    // Show validation if any
+                    if (result.validation) {
+                        showValidationFromResponse(result.validation, result.suggestions);
+                    }
+
+                    // Show trip plan
+                    currentTripData = result.trip_plan;
+                    displayTripPlan(result.trip_plan);
+
+                    // Add AI response
+                    const aiResponse = generateAIResponse(result.trip_plan, result.suggestions);
+                    addMessage('ai', aiResponse);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showValidation('error', 'Network error', ['Please check your connection and try again']);
+                addMessage('ai', 'Sorry, I encountered an error while planning your trip. Please try again.');
+            } finally {
+                // Re-enable input
+                queryInput.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Plan Trip';
+                if (!query) {
+                    queryInput.value = '';
+                    queryInput.style.height = 'auto';
+                }
+            }
+        }
+
+        function addMessage(type, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = type === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showValidation(type, title, items) {
+            const panel = document.getElementById('validationPanel');
+            const titleElement = document.getElementById('validationTitle');
+            const titleText = document.getElementById('validationTitleText');
+            const list = document.getElementById('validationList');
+
+            // Update panel type
+            panel.className = `validation-panel ${type}`;
+            
+            // Update title
+            titleText.textContent = title;
+            titleElement.innerHTML = `<i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'check-circle'}"></i><span>${title}</span>`;
+
+            // Update list
+            list.innerHTML = items.map(item => 
+                `<li class="${type}"><i class="fas fa-${type === 'error' ? 'times' : type === 'warning' ? 'exclamation-triangle' : 'check'}"></i>${item}</li>`
+            ).join('');
+
+            panel.style.display = 'block';
+            
+            // For errors, make the panel more prominent and scroll to it
+            if (type === 'error') {
+                panel.style.border = '2px solid #ef4444';
+                panel.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
+                panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Add a subtle animation
+                panel.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    panel.style.animation = '';
+                }, 500);
+            } else {
+                panel.style.border = '';
+                panel.style.boxShadow = '';
+            }
+        }
+
+        function showValidationFromResponse(validation, suggestions) {
+            const items = [];
+            
+            if (validation.errors && validation.errors.length > 0) {
+                items.push(...validation.errors.map(error => ({ text: error, type: 'error' })));
+            }
+            
+            if (validation.warnings && validation.warnings.length > 0) {
+                items.push(...validation.warnings.map(warning => ({ text: warning, type: 'warning' })));
+            }
+            
+            if (suggestions && suggestions.length > 0) {
+                items.push(...suggestions.map(suggestion => ({ text: suggestion, type: 'success' })));
+            }
+
+            if (items.length > 0) {
+                const type = items.some(item => item.type === 'error') ? 'error' : 
+                           items.some(item => item.type === 'warning') ? 'warning' : 'success';
+                const title = type === 'error' ? 'Please fix these issues' : 
+                             type === 'warning' ? 'Trip planned with warnings' : 'Trip planned successfully';
+                
+                showValidation(type, title, items.map(item => item.text));
+            }
+        }
+
+        function showValidationFromMissingFields(missingFields, validationErrors, suggestions) {
+            const items = [];
+            
+            // Add missing fields as errors
+            if (missingFields && missingFields.length > 0) {
+                items.push(...missingFields.map(field => ({ text: `Missing: ${field}`, type: 'error' })));
+            }
+            
+            // Add validation errors
+            if (validationErrors && validationErrors.length > 0) {
+                items.push(...validationErrors.map(error => ({ text: error, type: 'error' })));
+            }
+            
+            // Add suggestions
+            if (suggestions && suggestions.length > 0) {
+                items.push(...suggestions.map(suggestion => ({ text: suggestion, type: 'success' })));
+            }
+
+            if (items.length > 0) {
+                const type = items.some(item => item.type === 'error') ? 'error' : 'success';
+                const title = type === 'error' ? 'Missing required information' : 'Trip planned successfully';
+                
+                showValidation(type, title, items.map(item => item.text));
+            }
+        }
+
+        function showFollowUpQuestionsDialog(questions, partialExtraction, originalQuery) {
+            // Create modal for follow-up questions
+            const modal = document.createElement('div');
+            modal.className = 'modal fade show';
+            modal.style.display = 'block';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Complete Your Trip Details</h5>
+                            <button type="button" class="btn-close" onclick="closeFollowUpDialog()"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="followUpForm">
+                                ${questions.map((question, index) => `
+                                    <div class="mb-3">
+                                        <label class="form-label">${question.question}</label>
+                                        ${generateInputField(question, index)}
+                                    </div>
+                                `).join('')}
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeFollowUpDialog()">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="submitFollowUpAnswers()">Continue Planning</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Store data for submission
+            window.currentFollowUpData = {
+                questions: questions,
+                partial_extraction: partialExtraction,
+                originalQuery: originalQuery
+            };
+        }
+
+        function generateInputField(question, index) {
+            const fieldId = `followUp_${index}`;
+            
+            switch (question.type) {
+                case 'travelers':
+                    return `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="number" class="form-control" id="${fieldId}_adults" 
+                                       placeholder="Number of adults" min="1" value="2">
+                                <label class="form-label">Adults</label>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="number" class="form-control" id="${fieldId}_children" 
+                                       placeholder="Number of children" min="0" value="0">
+                                <label class="form-label">Children</label>
+                            </div>
+                        </div>
+                    `;
+                case 'budget':
+                    return `
+                        <input type="text" class="form-control" id="${fieldId}" 
+                               placeholder="${question.placeholder}" 
+                               value="">
+                    `;
+                case 'interests':
+                    const currentInterests = question.current_value || [];
+                    const interestOptions = [
+                        'theme_parks', 'beaches', 'culture', 'adventure', 'food', 'shopping',
+                        'nature', 'history', 'museums', 'nightlife', 'relaxation', 'sports'
+                    ];
+                    return `
+                        <div class="interests-container">
+                            <div class="row">
+                                ${interestOptions.map(interest => `
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   id="${fieldId}_${interest}" 
+                                                   value="${interest}"
+                                                   ${currentInterests.includes(interest) ? 'checked' : ''}>
+                                            <label class="form-check-label" for="${fieldId}_${interest}">
+                                                ${interest.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            </label>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="mt-2">
+                                <input type="text" class="form-control" id="${fieldId}_custom" 
+                                       placeholder="Or add custom interests (comma separated)">
+                            </div>
+                        </div>
+                    `;
+                case 'date':
+                    return `
+                        <input type="date" class="form-control" id="${fieldId}" 
+                               value="">
+                    `;
+                case 'number':
+                    return `
+                        <input type="number" class="form-control" id="${fieldId}" 
+                               placeholder="${question.placeholder}" 
+                               min="1" value="">
+                    `;
+                default:
+                    return `
+                        <input type="text" class="form-control" id="${fieldId}" 
+                               placeholder="${question.placeholder}" 
+                               value="">
+                    `;
+            }
+        }
+
+        function closeFollowUpDialog() {
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                modal.remove();
+            }
+            delete window.currentFollowUpData;
+        }
+
+        function showBudgetTooLowDialog(message, suggestions, extraction) {
+            // Create modal for budget too low
+            const modal = document.createElement('div');
+            modal.className = 'modal fade show';
+            modal.style.display = 'block';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Budget Too Low
+                            </h5>
+                            <button type="button" class="btn-close" onclick="closeBudgetTooLowDialog()"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <strong>${message}</strong>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Budget Ranges Available:</h6>
+                                    <div class="list-group">
+                                        ${suggestions.budget_ranges.map(range => `
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong>${range.range}</strong>
+                                                    <span class="text-muted">${range.description}</span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Recommendations:</h6>
+                                    <ul class="list-unstyled">
+                                        ${suggestions.recommendations.map(rec => `
+                                            <li class="mb-2">
+                                                <i class="fas fa-lightbulb text-warning me-2"></i>
+                                                ${rec}
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h6>Try with a higher budget:</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <button class="btn btn-outline-primary w-100 mb-2" onclick="retryWithBudget('budget')">
+                                            <strong>$150-300</strong><br>
+                                            <small>Budget hotels</small>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-outline-primary w-100 mb-2" onclick="retryWithBudget('moderate')">
+                                            <strong>$300-500</strong><br>
+                                            <small>Mid-range hotels</small>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-outline-primary w-100 mb-2" onclick="retryWithBudget('luxury')">
+                                            <strong>$500+</strong><br>
+                                            <small>Luxury hotels</small>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeBudgetTooLowDialog()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Store data for retry
+            window.currentBudgetData = {
+                extraction: extraction,
+                suggestions: suggestions
+            };
+        }
+
+        function closeBudgetTooLowDialog() {
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                modal.remove();
+            }
+            window.currentBudgetData = null;
+        }
+
+        function retryWithBudget(budgetType) {
+            if (!window.currentBudgetData) return;
+            
+            const extraction = window.currentBudgetData.extraction;
+            const budgetRanges = {
+                'budget': 250,
+                'moderate': 400,
+                'luxury': 800
+            };
+            
+            // Update the extraction with new budget
+            extraction.budget_preference = budgetType;
+            extraction.budget_amount = budgetRanges[budgetType];
+            
+            // Close the dialog
+            closeBudgetTooLowDialog();
+            
+            // Retry the trip planning
+            retryTripPlanning(extraction);
+        }
+
+        function retryTripPlanning(extraction) {
+            // Add user message about budget change
+            addMessage('user', `Retrying with ${extraction.budget_preference} budget ($${extraction.budget_amount})`);
+            
+            // Show loading
+            addMessage('ai', 'Planning your trip with the new budget...');
+            
+            // Call the API with updated extraction
+            fetch('/trip-planner/plan-trip-natural-with-answers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    original_query: 'Trip planning with updated budget',
+                    answers: {
+                        budget: extraction.budget_amount
+                    },
+                    partial_extraction: extraction
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                // Remove loading message
+                const chatMessages = document.getElementById('chatMessages');
+                const lastMessage = chatMessages.lastElementChild;
+                if (lastMessage && lastMessage.querySelector('.message-content').textContent === 'Planning your trip with the new budget...') {
+                    lastMessage.remove();
+                }
+                
+                if (result.success) {
+                    // Display the trip plan
+                    currentTripData = result.trip_plan;
+                    displayTripPlan(result.trip_plan);
+
+                    // Add AI response
+                    const aiResponse = generateAIResponse(result.trip_plan, result.suggestions);
+                    addMessage('ai', aiResponse);
+                } else {
+                    addMessage('ai', `Sorry, I still couldn't plan your trip. ${result.error || 'Please try again.'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Remove loading message
+                const chatMessages = document.getElementById('chatMessages');
+                const lastMessage = chatMessages.lastElementChild;
+                if (lastMessage && lastMessage.querySelector('.message-content').textContent === 'Planning your trip with the new budget...') {
+                    lastMessage.remove();
+                }
+                
+                addMessage('ai', 'Sorry, I encountered an error while planning your trip. Please try again.');
+            });
+        }
+
+        async function submitFollowUpAnswers() {
+            if (!window.currentFollowUpData) return;
+            
+            console.log('Current follow-up data:', window.currentFollowUpData);
+            
+            const form = document.getElementById('followUpForm');
+            const answers = {};
+            
+            window.currentFollowUpData.questions.forEach((question, index) => {
+                const fieldId = `followUp_${index}`;
+                
+                if (question.type === 'travelers') {
+                    const adults = parseInt(document.getElementById(`${fieldId}_adults`).value) || 0;
+                    const children = parseInt(document.getElementById(`${fieldId}_children`).value) || 0;
+                    answers[question.field] = { adults, children };
+                } else if (question.type === 'interests') {
+                    // Collect checked interests
+                    const interestOptions = [
+                        'theme_parks', 'beaches', 'culture', 'adventure', 'food', 'shopping',
+                        'nature', 'history', 'museums', 'nightlife', 'relaxation', 'sports'
+                    ];
+                    const selectedInterests = interestOptions.filter(interest => 
+                        document.getElementById(`${fieldId}_${interest}`)?.checked
+                    );
+                    
+                    // Add custom interests
+                    const customInterests = document.getElementById(`${fieldId}_custom`).value
+                        .split(',')
+                        .map(interest => interest.trim())
+                        .filter(interest => interest.length > 0);
+                    
+                    answers[question.field] = [...selectedInterests, ...customInterests];
+                } else {
+                    answers[question.field] = document.getElementById(fieldId).value;
+                }
+            });
+            
+            // Hide validation panel immediately when user submits answers
+            const validationPanel = document.getElementById('validationPanel');
+            if (validationPanel) {
+                validationPanel.style.display = 'none';
+            }
+            
+            // Add user message with the answers
+            const answerText = Object.entries(answers).map(([field, value]) => {
+                if (typeof value === 'object' && value.adults !== undefined) {
+                    return `${value.adults} adults, ${value.children} children`;
+                }
+                return `${field}: ${value}`;
+            }).join(', ');
+            
+            addMessage('user', `Additional details: ${answerText}`);
+            
+            // Show loading state
+            addMessage('ai', 'Processing your trip details...');
+            
+            try {
+                // Send the answers to the backend to complete the trip planning
+                const response = await fetch('/trip-planner/plan-trip-natural-with-answers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        original_query: (window.currentFollowUpData.originalQuery || window.currentFollowUpData.original_query || ''),
+                        answers: answers,
+                        partial_extraction: window.currentFollowUpData.partial_extraction
+                    })
+                });
+
+                const result = await response.json();
+                console.log('Response from backend:', result);
+
+                if (result.success) {
+                    console.log('Trip plan received:', result.trip_plan);
+                    
+                    // Remove the loading message
+                    const chatMessages = document.getElementById('chatMessages');
+                    const lastMessage = chatMessages.lastElementChild;
+                    if (lastMessage && lastMessage.querySelector('.message-content').textContent === 'Processing your trip details...') {
+                        lastMessage.remove();
+                    }
+                    
+                    // Display the trip plan
+                    currentTripData = result.trip_plan;
+                    displayTripPlan(result.trip_plan);
+
+                    // Add AI response
+                    const aiResponse = generateAIResponse(result.trip_plan, result.suggestions);
+                    addMessage('ai', aiResponse);
+                    
+                    // Close the dialog
+                    closeFollowUpDialog();
+                } else {
+                    console.log('Backend returned error:', result);
+                    
+                    // Remove the loading message
+                    const chatMessages = document.getElementById('chatMessages');
+                    const lastMessage = chatMessages.lastElementChild;
+                    if (lastMessage && lastMessage.querySelector('.message-content').textContent === 'Processing your trip details...') {
+                        lastMessage.remove();
+                    }
+                    
+                    // Handle budget too low error
+                    if (result.error === 'budget_too_low') {
+                        showBudgetTooLowDialog(result.message, result.suggestions, result.extraction);
+                        addMessage('ai', result.message);
+                    } else {
+                        addMessage('ai', `Sorry, I couldn't complete your trip plan. ${result.error || 'Please try again.'}`);
+                    }
+                    
+                    // Close the dialog
+                    closeFollowUpDialog();
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Remove the loading message
+                const chatMessages = document.getElementById('chatMessages');
+                const lastMessage = chatMessages.lastElementChild;
+                if (lastMessage && lastMessage.querySelector('.message-content').textContent === 'Processing your trip details...') {
+                    lastMessage.remove();
+                }
+                
+                addMessage('ai', 'Sorry, I encountered an error while completing your trip plan. Please try again.');
+                
+                // Close the dialog
+                closeFollowUpDialog();
+            }
+        }
+
+        function generateAIResponse(tripPlan, suggestions) {
+            const summary = tripPlan.summary;
+            let response = `Perfect! I've planned your ${summary.duration}-day trip from ${summary.origin} to ${summary.destination}. `;
+            
+            if (summary.total_estimated_cost) {
+                response += `The estimated total cost is $${summary.total_estimated_cost.total.toFixed(0)}. `;
+            }
+            
+            if (suggestions && suggestions.length > 0) {
+                response += suggestions[0] + ' ';
+            }
+            
+            response += 'Check out the details below and click the booking links when you\'re ready to book!';
+            
+            return response;
+        }
+
+        function displayTripPlan(tripPlan) {
+            const tripPlanDiv = document.getElementById('tripPlan');
+            tripPlanDiv.style.display = 'block';
+
+            // Update trip title and cost
+            const summary = tripPlan.summary || {};
+            document.getElementById('tripTitle').textContent = `Your Trip to ${summary.destination || 'Unknown Destination'}`;
+            
+            if (summary.total_estimated_cost?.total) {
+                document.getElementById('tripCost').textContent = `$${summary.total_estimated_cost.total.toFixed(0)}`;
+            } else {
+                document.getElementById('tripCost').textContent = 'TBD';
+            }
+
+            // Update trip details
+            updateTripDetails(summary);
+
+            // Update content sections
+            updateSummaryContent(tripPlan);
+            updateFlightsContent(tripPlan.flights || {});
+            updateHotelsContent(tripPlan.hotels || {});
+            updateItineraryContent(tripPlan.itinerary || []);
+
+            // Update booking links
+            updateBookingLinks(tripPlan.booking_links || {});
+
+            // Scroll to trip plan
+            tripPlanDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateTripDetails(summary) {
+            const detailsDiv = document.getElementById('tripDetails');
+            detailsDiv.innerHTML = `
+                <div class="summary-item">
+                    <div class="summary-icon flight">
+                        <i class="fas fa-plane"></i>
+                    </div>
+                    <div>
+                        <div><strong>${summary.origin || 'N/A'} → ${summary.destination || 'N/A'}</strong></div>
+                        <div>${summary.duration || 'N/A'} days</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-icon hotel">
+                        <i class="fas fa-hotel"></i>
+                    </div>
+                    <div>
+                        <div><strong>${summary.travelers || 'N/A'} Traveler${(summary.travelers || 1) > 1 ? 's' : ''}</strong></div>
+                        <div>${summary.budget_amount ? '$' + summary.budget_amount + ' (' + summary.budget_preference + ')' : (summary.budget_preference || 'N/A') + ' budget'}</div>
+                    </div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-icon activity">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div>
+                        <div><strong>${summary.start_date || 'N/A'}</strong></div>
+                        <div>to ${summary.end_date || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateSummaryContent(tripPlan) {
+            const contentDiv = document.getElementById('summaryContentInner');
+            const summary = tripPlan.summary;
+            
+            // Safely get flight and hotel data
+            const cheapestFlight = tripPlan.flights?.cheapest?.[0];
+            const moderateHotel = tripPlan.hotels?.moderate?.[0];
+            
+            contentDiv.innerHTML = `
+                <div class="day-card">
+                    <div class="day-header">
+                        <h3 class="day-title">Trip Overview</h3>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Flight Details</h5>
+                            ${cheapestFlight ? `
+                                <p><strong>Best Option:</strong> $${cheapestFlight.price?.toFixed(0) || 'N/A'}</p>
+                                <p><strong>Duration:</strong> ${cheapestFlight.duration || 'N/A'}</p>
+                                <p><strong>Airline:</strong> ${cheapestFlight.airline || 'N/A'}</p>
+                            ` : '<p>No flights found</p>'}
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Hotel Details</h5>
+                            ${moderateHotel ? `
+                                <p><strong>Recommended:</strong> ${moderateHotel.name || 'N/A'}</p>
+                                <p><strong>Price:</strong> $${moderateHotel.average_price_per_night?.toFixed(0) || 'N/A'}/night</p>
+                                <p><strong>Rating:</strong> ${moderateHotel.star_rating || moderateHotel.rating || 'N/A'} stars</p>
+                            ` : '<p>No hotels found</p>'}
+                        </div>
+                    </div>
+                    ${tripPlan.destination_intelligence ? `
+                        <div class="mt-3">
+                            <h5>Destination Info</h5>
+                            <p>${tripPlan.destination_intelligence.resolved_destination?.description || 'N/A'}</p>
+                            <p><strong>Nearest airports:</strong> ${tripPlan.destination_intelligence.nearest_airports?.join(', ') || 'N/A'}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function updateFlightsContent(flights) {
+            const contentDiv = document.getElementById('flightsContentInner');
+            
+            if (!flights || Object.keys(flights).length === 0) {
+                contentDiv.innerHTML = '<p>No flights found</p>';
+                return;
+            }
+
+            let html = '';
+            Object.entries(flights).forEach(([category, flightList]) => {
+                if (flightList && flightList.length > 0) {
+                    html += `
+                        <div class="day-card">
+                            <div class="day-header">
+                                <h3 class="day-title">${category.charAt(0).toUpperCase() + category.slice(1)} Flights</h3>
+                            </div>
+                            ${flightList.map(flight => `
+                                <div class="summary-item mb-3">
+                                    <div class="summary-icon flight">
+                                        <i class="fas fa-plane"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div><strong>${flight.airline || 'N/A'}</strong> - $${flight.price?.toFixed(0) || 'N/A'}</div>
+                                        <div>${flight.duration || 'N/A'} • ${flight.stops || 0} stop${(flight.stops || 0) !== 1 ? 's' : ''}</div>
+                                        <div>${flight.departure_time || 'N/A'} → ${flight.arrival_time || 'N/A'}</div>
+                                    </div>
+                                    <a href="${flight.booking_url || '#'}" target="_blank" class="btn-primary btn-sm">
+                                        <i class="fas fa-external-link-alt"></i> Book
+                                    </a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            });
+
+            contentDiv.innerHTML = html || '<p>No flights found</p>';
+        }
+
+        function updateHotelsContent(hotels) {
+            const contentDiv = document.getElementById('hotelsContentInner');
+            
+            if (!hotels || Object.keys(hotels).length === 0) {
+                contentDiv.innerHTML = '<p>No hotels found</p>';
+                return;
+            }
+
+            let html = '';
+            Object.entries(hotels).forEach(([category, hotelList]) => {
+                if (hotelList && hotelList.length > 0) {
+                    html += `
+                        <div class="day-card">
+                            <div class="day-header">
+                                <h3 class="day-title">${category.charAt(0).toUpperCase() + category.slice(1)} Hotels</h3>
+                            </div>
+                            ${hotelList.map(hotel => `
+                                <div class="summary-item mb-3">
+                                    <div class="summary-icon hotel">
+                                        <i class="fas fa-hotel"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div><strong>${hotel.name || 'N/A'}</strong> - $${hotel.average_price_per_night?.toFixed(0) || 'N/A'}/night</div>
+                                        <div>${hotel.star_rating || hotel.rating || 'N/A'} stars • ${hotel.rating || 'N/A'}/10 rating</div>
+                                        <div>${hotel.city || 'N/A'}, ${hotel.country || 'N/A'}</div>
+                                    </div>
+                                    <a href="${hotel.booking_url || '#'}" target="_blank" class="btn-primary btn-sm">
+                                        <i class="fas fa-external-link-alt"></i> Book
+                                    </a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            });
+
+            contentDiv.innerHTML = html || '<p>No hotels found</p>';
+        }
+
+        function updateItineraryContent(itinerary) {
+            const contentDiv = document.getElementById('itineraryContentInner');
+            
+            if (!itinerary || itinerary.length === 0) {
+                contentDiv.innerHTML = '<p>No itinerary available</p>';
+                return;
+            }
+
+            const html = itinerary.map(day => `
+                <div class="day-card">
+                    <div class="day-header">
+                        <h3 class="day-title">Day ${day.day || 'N/A'}</h3>
+                        <div class="day-date">${day.date || 'N/A'}</div>
+                        ${day.theme ? `<div class="day-theme">${formatTheme(day.theme)}</div>` : ''}
+                    </div>
+                    
+                    <div class="day-schedule">
+                        <!-- Morning Activities -->
+                        <div class="time-slot morning">
+                            <div class="time-header">
+                                <i class="fas fa-sun"></i>
+                                <h4>Morning (${day.morning?.start_time || '09:00'} - ${day.morning?.end_time || '12:00'})</h4>
+                            </div>
+                            <div class="activities">
+                                ${(day.morning?.activities || []).map(activity => `
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <div class="activity-name">${activity.name || 'Activity'}</div>
+                                            <div class="activity-meta">
+                                                <span class="duration"><i class="fas fa-clock"></i> ${activity.duration || 'N/A'}</span>
+                                                <span class="location"><i class="fas fa-map-pin"></i> ${activity.location || 'N/A'}</span>
+                                            </div>
+                                            <div class="activity-description">${activity.description || ''}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="transportation">
+                                <i class="fas fa-car"></i> ${day.morning?.transportation || 'Walking/Public Transit'}
+                            </div>
+                        </div>
+
+                        <!-- Lunch -->
+                        <div class="time-slot lunch">
+                            <div class="time-header">
+                                <i class="fas fa-utensils"></i>
+                                <h4>Lunch (${day.lunch?.time || '12:00-13:30'})</h4>
+                            </div>
+                            <div class="dining-recommendations">
+                                ${(day.lunch?.recommendations || []).map(rec => `
+                                    <div class="dining-item">
+                                        <div class="dining-name">${rec.name || 'Restaurant'}</div>
+                                        <div class="dining-meta">
+                                            <span class="type">${rec.type || 'N/A'}</span>
+                                            <span class="price">${rec.price_range || 'N/A'}</span>
+                                        </div>
+                                        <div class="dining-specialty">${rec.specialty || ''}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Afternoon Activities -->
+                        <div class="time-slot afternoon">
+                            <div class="time-header">
+                                <i class="fas fa-cloud-sun"></i>
+                                <h4>Afternoon (${day.afternoon?.start_time || '13:30'} - ${day.afternoon?.end_time || '18:00'})</h4>
+                            </div>
+                            <div class="activities">
+                                ${(day.afternoon?.activities || []).map(activity => `
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <div class="activity-name">${activity.name || 'Activity'}</div>
+                                            <div class="activity-meta">
+                                                <span class="duration"><i class="fas fa-clock"></i> ${activity.duration || 'N/A'}</span>
+                                                <span class="location"><i class="fas fa-map-pin"></i> ${activity.location || 'N/A'}</span>
+                                            </div>
+                                            <div class="activity-description">${activity.description || ''}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="transportation">
+                                <i class="fas fa-car"></i> ${day.afternoon?.transportation || 'Walking/Public Transit'}
+                            </div>
+                        </div>
+
+                        <!-- Dinner -->
+                        <div class="time-slot dinner">
+                            <div class="time-header">
+                                <i class="fas fa-utensils"></i>
+                                <h4>Dinner (${day.dinner?.time || '19:00-21:00'})</h4>
+                            </div>
+                            <div class="dining-recommendations">
+                                ${(day.dinner?.recommendations || []).map(rec => `
+                                    <div class="dining-item">
+                                        <div class="dining-name">${rec.name || 'Restaurant'}</div>
+                                        <div class="dining-meta">
+                                            <span class="type">${rec.type || 'N/A'}</span>
+                                            <span class="price">${rec.price_range || 'N/A'}</span>
+                                        </div>
+                                        <div class="dining-specialty">${rec.specialty || ''}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Evening Activities -->
+                        <div class="time-slot evening">
+                            <div class="time-header">
+                                <i class="fas fa-moon"></i>
+                                <h4>Evening (${day.evening?.start_time || '21:00'} - ${day.evening?.end_time || '23:00'})</h4>
+                            </div>
+                            <div class="activities">
+                                ${(day.evening?.activities || []).map(activity => `
+                                    <div class="activity-item">
+                                        <div class="activity-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <div class="activity-details">
+                                            <div class="activity-name">${activity.name || 'Activity'}</div>
+                                            <div class="activity-meta">
+                                                <span class="duration"><i class="fas fa-clock"></i> ${activity.duration || 'N/A'}</span>
+                                                <span class="location"><i class="fas fa-map-pin"></i> ${activity.location || 'N/A'}</span>
+                                            </div>
+                                            <div class="activity-description">${activity.description || ''}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="transportation">
+                                <i class="fas fa-car"></i> ${day.evening?.transportation || 'Walking/Taxi'}
+                            </div>
+                        </div>
+
+                        <!-- Accommodation -->
+                        ${day.accommodation ? `
+                            <div class="accommodation-info">
+                                <div class="time-header">
+                                    <i class="fas fa-hotel"></i>
+                                    <h4>Accommodation</h4>
+                                </div>
+                                <div class="accommodation-details">
+                                    <div class="hotel-name">${day.accommodation.name || 'Hotel'}</div>
+                                    <div class="hotel-meta">
+                                        <span class="location"><i class="fas fa-map-pin"></i> ${day.accommodation.location || 'N/A'}</span>
+                                        <span class="price"><i class="fas fa-dollar-sign"></i> ${day.accommodation.price_per_night || 'N/A'}/night</span>
+                                        <span class="rating"><i class="fas fa-star"></i> ${day.accommodation.rating || 'N/A'}</span>
+                                    </div>
+                                    ${day.accommodation.booking_url && day.accommodation.booking_url !== '#' ? `
+                                        <a href="${day.accommodation.booking_url}" target="_blank" class="btn-primary btn-sm">
+                                            <i class="fas fa-external-link-alt"></i> Book Hotel
+                                        </a>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Practical Tips -->
+                        ${day.practical_tips && day.practical_tips.length > 0 ? `
+                            <div class="practical-tips">
+                                <div class="time-header">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <h4>Practical Tips</h4>
+                                </div>
+                                <ul class="tips-list">
+                                    ${day.practical_tips.map(tip => `<li>${tip}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+
+                        <!-- Cultural Notes -->
+                        ${day.cultural_notes && day.cultural_notes.length > 0 ? `
+                            <div class="cultural-notes">
+                                <div class="time-header">
+                                    <i class="fas fa-globe"></i>
+                                    <h4>Cultural Notes</h4>
+                                </div>
+                                <ul class="notes-list">
+                                    ${day.cultural_notes.map(note => `<li>${note}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            contentDiv.innerHTML = html;
+        }
+
+        function formatTheme(theme) {
+            const themeMap = {
+                'arrival_exploration': 'Arrival & Exploration',
+                'deep_exploration': 'Deep Exploration',
+                'cultural_immersion': 'Cultural Immersion',
+                'adventure_day': 'Adventure Day',
+                'local_experience': 'Local Experience',
+                'relaxation_day': 'Relaxation Day',
+                'hidden_gems': 'Hidden Gems',
+                'final_adventures': 'Final Adventures',
+                'departure_relaxation': 'Departure & Relaxation'
+            };
+            return themeMap[theme] || theme;
+        }
+
+        function updateBookingLinks(bookingLinks) {
+            const flightsBtn = document.getElementById('bookFlightsBtn');
+            const hotelsBtn = document.getElementById('bookHotelsBtn');
+            
+            if (bookingLinks?.flights && flightsBtn) {
+                flightsBtn.href = bookingLinks.flights;
+            } else if (flightsBtn) {
+                flightsBtn.href = '#';
+            }
+            
+            if (bookingLinks?.hotels && hotelsBtn) {
+                hotelsBtn.href = bookingLinks.hotels;
+            } else if (hotelsBtn) {
+                hotelsBtn.href = '#';
+            }
+        }
+
+        function switchItineraryTab(tab) {
+            currentItineraryTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.itinerary-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide content
+            document.querySelectorAll('.itinerary-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + 'Content').classList.add('active');
+        }
+
+        function showRequirementsModal(query) {
+            pendingQuery = query;
+            document.getElementById('requirementsModal').style.display = 'block';
+        }
+
+        function closeRequirementsModal() {
+            document.getElementById('requirementsModal').style.display = 'none';
+            pendingQuery = null;
+        }
+
+        function submitRequirements() {
+            const form = document.getElementById('requirementsForm');
+            const formData = new FormData(form);
+            
+            const requirements = {
+                adults: parseInt(formData.get('adults')),
+                children: parseInt(formData.get('children')),
+                interests: Array.from(document.getElementById('interests').selectedOptions).map(option => option.value),
+                budget: formData.get('budget')
+            };
+            
+            // Store the original query before closing modal
+            const originalQuery = pendingQuery;
+            
+            closeRequirementsModal();
+            
+            // Combine the original query with the requirements
+            const enhancedQuery = `${originalQuery} for ${requirements.adults} adults${requirements.children > 0 ? ` and ${requirements.children} children` : ''} with ${requirements.interests.join(', ')} interests on a ${requirements.budget} budget`;
+            
+            sendQuery(enhancedQuery);
+        }
+
+        function exportTrip() {
+            if (!currentTripData) return;
+            
+            // Create a simple text export
+            const summary = currentTripData.summary || {};
+            let exportText = `Trip Plan: ${summary.origin || 'N/A'} to ${summary.destination || 'N/A'}\n`;
+            exportText += `Duration: ${summary.duration || 'N/A'} days\n`;
+            exportText += `Dates: ${summary.start_date || 'N/A'} to ${summary.end_date || 'N/A'}\n`;
+            exportText += `Travelers: ${summary.travelers || 'N/A'}\n`;
+            exportText += `Budget: ${summary.budget_amount ? '$' + summary.budget_amount + ' (' + summary.budget_preference + ')' : (summary.budget_preference || 'N/A')}\n\n`;
+            
+            if (summary.total_estimated_cost?.total) {
+                exportText += `Estimated Cost: $${summary.total_estimated_cost.total.toFixed(0)}\n`;
+                exportText += `Flights: $${summary.total_estimated_cost.flights?.toFixed(0) || 'N/A'}\n`;
+                exportText += `Hotels: $${summary.total_estimated_cost.hotels?.toFixed(0) || 'N/A'}\n\n`;
+            }
+            
+            // Add itinerary
+            if (currentTripData.itinerary && currentTripData.itinerary.length > 0) {
+                exportText += 'Itinerary:\n';
+                currentTripData.itinerary.forEach(day => {
+                    exportText += `\nDay ${day.day || 'N/A'} (${day.date || 'N/A'}):\n`;
+                    (day.activities || []).forEach(activity => {
+                        exportText += `- ${activity || 'N/A'}\n`;
+                    });
+                });
+            }
+            
+            // Create and download file
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trip-plan-${summary.destination || 'unknown'}-${summary.start_date || 'unknown'}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html> 

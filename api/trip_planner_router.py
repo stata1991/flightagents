@@ -13,6 +13,17 @@ from datetime import datetime
 import re
 from datetime import timedelta
 from api.models import TripType, BudgetRange
+from typing import Dict, Any, Optional, List, Tuple
+import logging
+import re
+import os
+from datetime import datetime, timedelta
+from dateutil import parser as date_parser
+from dateutil.relativedelta import relativedelta
+import json
+import aiohttp
+from .enhanced_parser import EnhancedQueryParser
+from .currency_converter import CurrencyConverter
 
 router = APIRouter(prefix="/trip-planner", tags=["AI Trip Planner"])
 logger = logging.getLogger(__name__)
@@ -1098,6 +1109,7 @@ async def search_flights_with_filters(
     filters: dict = None
 ):
     """Enhanced flight search with inline filters"""
+    logger.info(f"search_flights_with_filters called with: origin={origin}, destination={destination}, start_date={start_date}, return_date={return_date}, travelers={travelers}, filters={filters}")
     try:
         from api.booking_client import booking_client
         from api.enhanced_parser import EnhancedQueryParser
@@ -1135,8 +1147,98 @@ async def search_flights_with_filters(
         if "error" in origin_search or "error" in dest_search:
             return {"error": "Destination search failed"}
         
-        origin_id = origin_search['destinations'][0].get('id')
-        dest_id = dest_search['destinations'][0].get('id')
+        # Check if destinations arrays are not empty
+        if not origin_search.get('destinations') or not dest_search.get('destinations'):
+            return {"error": f"No destinations found for {origin_clean} or {destination_clean}"}
+        
+        # Smart destination selection using major airports data
+        def select_best_destination(destinations, location_name):
+            """Select the best destination from the list using major airports data"""
+            logger.info(f"Selecting best destination for {location_name} from {len(destinations)} options")
+            
+            # Load major airports data
+            import json
+            import os
+            
+            major_airports_file = os.path.join(os.path.dirname(__file__), '..', 'major_airports_filtered.json')
+            try:
+                with open(major_airports_file, 'r') as f:
+                    major_airports = json.load(f)
+                logger.info(f"Loaded {len(major_airports)} major airports")
+            except Exception as e:
+                logger.error(f"Failed to load major airports file: {e}")
+                # Fallback to first result if file can't be loaded
+                return destinations[0]
+            
+            location_lower = location_name.lower()
+            
+            # First, try to find airports in major airports data that match the location
+            matching_major_airports = []
+            for airport in major_airports:
+                airport_city = airport.get('city_name', '') or ''
+                airport_name = airport.get('airport_name', '') or ''
+                
+                # Check if this major airport matches our location
+                if (location_lower in airport_city.lower() or 
+                    location_lower in airport_name.lower() or
+                    airport_city.lower() in location_lower):
+                    matching_major_airports.append(airport)
+            
+            logger.info(f"Found {len(matching_major_airports)} matching major airports for {location_name}")
+            
+            # Now try to match Booking.com results with our major airports
+            for dest in destinations:
+                dest_code = dest.get('code', '') or ''
+                dest_name = dest.get('name', '') or ''
+                dest_city = dest.get('cityName', '') or ''
+                
+                dest_code = dest_code.upper()
+                dest_name = dest_name.lower()
+                dest_city = dest_city.lower()
+                
+                # Check if this destination matches any of our major airports
+                for major_airport in matching_major_airports:
+                    major_code = major_airport.get('column_1', '') or ''
+                    major_city = major_airport.get('city_name', '') or ''
+                    
+                    # Match by airport code or city name
+                    if (dest_code == major_code.upper() or 
+                        major_city.lower() in dest_city or 
+                        dest_city in major_city.lower()):
+                        logger.info(f"Selected major airport: {dest.get('name')} ({dest_code}) - matches {major_airport.get('airport_name')}")
+                        return dest
+            
+            # If no major airport match found, look for airports in the same city/region
+            for dest in destinations:
+                dest_name = dest.get('name', '') or ''
+                dest_city = dest.get('cityName', '') or ''
+                
+                dest_name = dest_name.lower()
+                dest_city = dest_city.lower()
+                
+                # Check if it's an airport in the same city
+                if (location_lower in dest_name or location_lower in dest_city or 
+                    dest_name in location_lower or dest_city in location_lower):
+                    logger.info(f"Selected city airport: {dest.get('name')} ({dest.get('code')})")
+                    return dest
+            
+            # If still no match, log all available options and return the first one
+            logger.warning(f"No major airport match found for {location_name}. Available options:")
+            for i, dest in enumerate(destinations):
+                logger.warning(f"  {i+1}. {dest.get('name')} ({dest.get('code')}) - {dest.get('cityName', 'Unknown city')}")
+            
+            logger.info(f"Using fallback destination: {destinations[0].get('name')} ({destinations[0].get('code')})")
+            return destinations[0]
+        
+        # Select best destinations
+        origin_dest = select_best_destination(origin_search['destinations'], origin_clean)
+        dest_dest = select_best_destination(dest_search['destinations'], destination_clean)
+        
+        origin_id = origin_dest.get('id')
+        dest_id = dest_dest.get('id')
+        
+        if not origin_id or not dest_id:
+            return {"error": f"Could not get destination IDs for {origin_clean} or {destination_clean}"}
         
         # Search for flights
         flight_results = booking_client.search_flights(
@@ -1180,8 +1282,8 @@ async def search_flights_with_filters(
                     
                     # Extract airline info
                     carriers_data = outbound_leg.get('carriersData', [])
-                    airline_name = carriers_data[0].get('name', 'Unknown') if carriers_data else 'Unknown'
-                    airline_code = carriers_data[0].get('code', '') if carriers_data else ''
+                    airline_name = carriers_data[0].get('name', 'Unknown') if carriers_data and len(carriers_data) > 0 else 'Unknown'
+                    airline_code = carriers_data[0].get('code', '') if carriers_data and len(carriers_data) > 0 else ''
                     
                     # Extract flight times
                     departure_time = outbound_leg.get('departureTime', '')
@@ -1384,10 +1486,15 @@ async def search_hotels_with_filters(
             page_number=1
         )
         
-        # Use smart hotel search
+        # Use smart hotel search with more flexible budget handling
+        # If max_price is too restrictive, use a more reasonable default
+        effective_max_budget = max_price
+        if max_price and max_price < 300:  # If budget is too low, expand it
+            effective_max_budget = max_price * 2  # Double the budget for better results
+        
         hotel_results = hotel_client.smart_hotel_search(
             request=hotel_request,
-            max_budget=max_price,
+            max_budget=effective_max_budget,
             budget_expansion_steps=3
         )
         
@@ -1395,6 +1502,25 @@ async def search_hotels_with_filters(
             return {"error": f"Hotel search failed: {hotel_results.search_metadata['error']}"}
         
         if hotel_results.total_results == 0:
+            # Check if this is likely due to budget constraints
+            if max_price and max_price < 300:  # If budget is very low
+                return {
+                    "error": "budget_too_low",
+                    "message": f"No hotels found within your budget of ${max_price} per night",
+                    "suggestions": {
+                        "budget_ranges": [
+                            {"range": "$150-300", "description": "Budget hotels and motels"},
+                            {"range": "$300-500", "description": "Mid-range hotels and resorts"},
+                            {"range": "$500+", "description": "Luxury hotels and premium resorts"}
+                        ],
+                        "recommendations": [
+                            "Consider increasing your budget to $300-500 for better options",
+                            "Look for hotels slightly further from the main attractions",
+                            "Consider staying during off-peak seasons for better rates",
+                            "Check for package deals that include accommodation"
+                        ]
+                    }
+                }
             return {"error": "No hotels found for the specified criteria"}
         
         # Process and categorize hotels with filters
@@ -1402,10 +1528,15 @@ async def search_hotels_with_filters(
         moderate_hotels = []
         luxury_hotels = []
         
+        logger.info(f"Processing {len(hotel_results.hotels)} hotels from API")
+        
         for hotel_result in hotel_results.hotels:
             hotel = hotel_result.hotel
             price_per_night = hotel_result.average_price_per_night or 0
             currency = hotel_result.currency or "USD"
+            
+            # Debug logging to see actual prices
+            logger.info(f"Processing hotel: {hotel.name}, Price: {price_per_night} {currency}")
             
             # Convert price to USD for categorization
             price_usd = price_per_night
@@ -1421,33 +1552,45 @@ async def search_hotels_with_filters(
                     logger.error(f"Currency conversion error: {e}")
                     continue
             
-            # Apply price filters
-            if max_price and price_usd > max_price:
+            # Apply price filtering for very low budgets
+            # For very low budgets (< $100), we need to be strict about price filtering
+            if max_price and max_price < 100 and price_usd > max_price:
+                logger.info(f"Filtered out {hotel.name} due to strict price filter: ${price_usd} > ${max_price}")
                 continue
             
+            # Only apply min_price filter if specified
             if min_price and price_usd < min_price:
+                logger.info(f"Filtered out {hotel.name} due to min price: ${price_usd} < ${min_price}")
                 continue
             
             # Apply rating filter
             if min_rating and hotel.rating < min_rating:
+                logger.info(f"Filtered out {hotel.name} due to rating: {hotel.rating} < {min_rating}")
                 continue
             
             # Apply property type filter
             if property_type and hotel.property_type not in property_type:
+                logger.info(f"Filtered out {hotel.name} due to property type: {hotel.property_type} not in {property_type}")
                 continue
             
             # Apply amenities filter (if available)
             hotel_amenities = hotel.amenities or []
-            if amenities:
+            logger.info(f"Hotel {hotel.name} amenities: {hotel_amenities}")
+            
+            # Temporarily skip amenities filtering since amenities data is not being properly extracted
+            # TODO: Fix amenities extraction from API response
+            if amenities and hotel_amenities:  # Only apply if we have amenities data
                 # Check if hotel has required amenities
                 has_required_amenities = True
                 for amenity in amenities:
                     amenity_lower = amenity.lower()
                     if not any(amenity_lower in existing_amenity.lower() for existing_amenity in hotel_amenities):
                         has_required_amenities = False
+                        logger.info(f"Missing amenity '{amenity}' for hotel {hotel.name}")
                         break
                 
                 if not has_required_amenities:
+                    logger.info(f"Filtered out {hotel.name} due to missing amenities: {amenities}")
                     continue
             
             # Apply location filter (if available)
@@ -1455,6 +1598,9 @@ async def search_hotels_with_filters(
                 # This would require additional location data from the API
                 # For now, we'll skip location filtering
                 pass
+            
+            # Hotel passed all filters
+            logger.info(f"Hotel {hotel.name} passed all filters - adding to results")
             
             hotel_data = {
                 "hotel_id": hotel.hotel_id,
@@ -1523,11 +1669,33 @@ async def search_hotels_with_filters(
             "filters_applied": filters
         }
         
+        total_hotels_found = len(budget_hotels) + len(moderate_hotels) + len(luxury_hotels)
+        
+        # Check if all hotels were filtered out due to budget constraints
+        if total_hotels_found == 0 and max_price and max_price < 300:
+            return {
+                "error": "budget_too_low",
+                "message": f"No hotels found within your budget of ${max_price} per night",
+                "suggestions": {
+                    "budget_ranges": [
+                        {"range": "$150-300", "description": "Budget hotels and motels"},
+                        {"range": "$300-500", "description": "Mid-range hotels and resorts"},
+                        {"range": "$500+", "description": "Luxury hotels and premium resorts"}
+                    ],
+                    "recommendations": [
+                        "Consider increasing your budget to $300-500 for better options",
+                        "Look for hotels slightly further from the main attractions",
+                        "Consider staying during off-peak seasons for better rates",
+                        "Check for package deals that include accommodation"
+                    ]
+                }
+            }
+        
         return {
             "budget": budget_hotels[:3],
             "moderate": moderate_hotels[:3],
             "luxury": luxury_hotels[:3],
-            "total_hotels_found": len(budget_hotels) + len(moderate_hotels) + len(luxury_hotels),
+            "total_hotels_found": total_hotels_found,
             "booking_urls": booking_urls,
             "search_metadata": search_metadata,
             "filters_applied": filters
@@ -1566,3 +1734,1850 @@ async def search_hotels_enhanced(request: dict):
     except Exception as e:
         logger.error(f"Enhanced hotel search endpoint error: {e}")
         return {"error": f"Hotel search failed: {str(e)}"} 
+
+class NaturalLanguageTripPlanner:
+    """Handles natural language trip planning with comprehensive validation"""
+    
+    def __init__(self):
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not configured")
+        self.parser = EnhancedQueryParser(api_key)
+        self.currency_converter = CurrencyConverter()
+        self.destination_intelligence = self._load_destination_intelligence()
+        
+    def _load_destination_intelligence(self) -> Dict[str, Dict]:
+        """Load destination intelligence for places like Yosemite National Park"""
+        return {
+            "yosemite national park": {
+                "type": "national_park",
+                "nearest_airports": ["FAT", "SFO", "OAK", "SJC"],
+                "city": "Yosemite Valley",
+                "state": "California",
+                "country": "United States",
+                "description": "Famous national park in California's Sierra Nevada mountains"
+            },
+            "grand canyon": {
+                "type": "national_park", 
+                "nearest_airports": ["FLG", "PHX", "LAS"],
+                "city": "Grand Canyon Village",
+                "state": "Arizona", 
+                "country": "United States",
+                "description": "Iconic national park featuring the massive Grand Canyon"
+            },
+            "yellowstone": {
+                "type": "national_park",
+                "nearest_airports": ["BZN", "JAC", "COD"],
+                "city": "Yellowstone National Park",
+                "state": "Wyoming",
+                "country": "United States", 
+                "description": "First national park in the world, known for geothermal features"
+            },
+            "disney world": {
+                "type": "theme_park",
+                "nearest_airports": ["MCO", "SFB"],
+                "city": "Orlando",
+                "state": "Florida",
+                "country": "United States",
+                "description": "Walt Disney World Resort theme park complex"
+            },
+            "disneyland": {
+                "type": "theme_park", 
+                "nearest_airports": ["SNA", "LAX", "ONT"],
+                "city": "Anaheim",
+                "state": "California",
+                "country": "United States",
+                "description": "Original Disney theme park in California"
+            },
+            "niagara falls": {
+                "type": "natural_wonder",
+                "nearest_airports": ["BUF", "YYZ"],
+                "city": "Niagara Falls",
+                "state": "New York",
+                "country": "United States",
+                "description": "Famous waterfalls on the border of US and Canada"
+            },
+            "niagara falls canada": {
+                "type": "natural_wonder",
+                "nearest_airports": ["YYZ", "YHM", "BUF"],
+                "city": "Toronto",
+                "state": "Ontario",
+                "country": "Canada",
+                "description": "Famous waterfalls on the Canadian side"
+            },
+            "las vegas strip": {
+                "type": "entertainment",
+                "nearest_airports": ["LAS"],
+                "city": "Las Vegas",
+                "state": "Nevada",
+                "country": "United States",
+                "description": "Famous entertainment and gambling district"
+            },
+            "times square": {
+                "type": "landmark",
+                "nearest_airports": ["JFK", "LGA", "EWR"],
+                "city": "New York",
+                "state": "New York", 
+                "country": "United States",
+                "description": "Famous intersection and tourist destination in Manhattan"
+            },
+            "golden gate bridge": {
+                "type": "landmark",
+                "nearest_airports": ["SFO", "OAK", "SJC"],
+                "city": "San Francisco",
+                "state": "California",
+                "country": "United States",
+                "description": "Iconic suspension bridge in San Francisco"
+            },
+            "statue of liberty": {
+                "type": "landmark",
+                "nearest_airports": ["JFK", "LGA", "EWR"],
+                "city": "New York",
+                "state": "New York",
+                "country": "United States", 
+                "description": "Famous statue and national monument in New York Harbor"
+            }
+        }
+    
+    def _extract_trip_details(self, query: str) -> Dict[str, Any]:
+        """Extract comprehensive trip details from natural language query"""
+        query_lower = query.lower()
+        
+        # Initialize extraction
+        extraction = {
+            "origin": None,
+            "destination": None,
+            "duration": None,
+            "start_date": None,
+            "end_date": None,
+            "flexible_days": 0,
+            "travelers": {
+                "adults": 2,
+                "children": 0,
+                "ages": []
+            },
+            "travelers_specified": False,  # Flag to track if user specified travelers
+            "trip_type": "round_trip",
+            "budget_preference": "moderate",
+            "budget_specified": False,  # Flag to track if user specified budget
+            "interests": [],
+            "validation_errors": [],
+            "suggestions": []
+        }
+        
+        # Extract origin and destination
+        # Look for "from X to Y" or "visit Y from X" patterns
+        origin_dest_patterns = [
+            r'from\s+([^,\s]+(?:\s+[^,\s]+)*?)\s+to\s+([^,\s]+(?:\s+[^,\s]+)*?)(?:\s|$)',
+            r'visit\s+([^,\s]+(?:\s+[^,\s]+)*?)\s+from\s+([^,\s]+(?:\s+[^,\s]+)*?)(?:\s|$)',
+            r'go\s+to\s+([^,\s]+(?:\s+[^,\s]+)*?)\s+from\s+([^,\s]+(?:\s+[^,\s]+)*?)(?:\s|$)',
+            r'([^,\s]+(?:\s+[^,\s]+)*?)\s+to\s+([^,\s]+(?:\s+[^,\s]+)*?)(?:\s|$)'
+        ]
+        
+        # Try a more specific pattern for "visit X from Y" first
+        visit_pattern = r'visit\s+([^,\s]+(?:\s+[^,\s]+)*?)\s+from\s+([^,\s]+(?:\s+[^,\s]+)*?)(?:\s|$)'
+        
+        # Try a simpler approach - split the query and look for keywords
+        words = query_lower.split()
+        try:
+            visit_index = words.index('visit')
+            from_index = words.index('from')
+            
+            if visit_index < from_index:
+                # Extract destination (everything between 'visit' and 'from')
+                destination_words = words[visit_index + 1:from_index]
+                extraction["destination"] = ' '.join(destination_words)
+                
+                # Extract origin (everything after 'from' until we hit another keyword)
+                origin_words = words[from_index + 1:]
+                # Stop at common keywords
+                stop_words = ['for', 'starting', 'on', 'with', 'budget', 'and', 'or']
+                origin_end = len(origin_words)
+                for i, word in enumerate(origin_words):
+                    if word in stop_words:
+                        origin_end = i
+                        break
+                extraction["origin"] = ' '.join(origin_words[:origin_end])
+        except ValueError:
+            # If keywords not found, try regex patterns
+            match = re.search(visit_pattern, query_lower)
+            if match:
+                extraction["destination"] = match.group(1).strip()
+                extraction["origin"] = match.group(2).strip()
+            else:
+                # Try other patterns
+                for pattern in origin_dest_patterns:
+                    if 'visit' not in pattern:  # Skip the visit pattern we already tried
+                        match = re.search(pattern, query_lower)
+                        if match:
+                            if 'from' in pattern:
+                                extraction["origin"] = match.group(1).strip()
+                                extraction["destination"] = match.group(2).strip()
+                            else:
+                                extraction["origin"] = match.group(1).strip()
+                                extraction["destination"] = match.group(2).strip()
+                            break
+        
+        # Extract start date
+        date_patterns = [
+            r'starting\s+([a-zA-Z]+\s+\d{1,2}(?:st|nd|rd|th)?)',
+            r'start\s+([a-zA-Z]+\s+\d{1,2}(?:st|nd|rd|th)?)',
+            r'on\s+([a-zA-Z]+\s+\d{1,2}(?:st|nd|rd|th)?)',
+            r'([a-zA-Z]+\s+\d{1,2}(?:st|nd|rd|th)?)',
+            r'(\d{4}-\d{2}-\d{2})',  # YYYY-MM-DD format
+            r'(\d{1,2}/\d{1,2}/\d{4})',  # MM/DD/YYYY format
+            r'(\d{1,2}-\d{1,2}-\d{4})'  # MM-DD-YYYY format
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, query_lower)
+            if match:
+                date_str = match.group(1).strip()
+                # Try to parse the date
+                try:
+                    # Handle various date formats
+                    if re.match(r'\d{4}-\d{2}-\d{2}', date_str):
+                        # Already in YYYY-MM-DD format
+                        extraction["start_date"] = date_str
+                    elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', date_str):
+                        # MM/DD/YYYY format
+                        from datetime import datetime
+                        date_obj = datetime.strptime(date_str, '%m/%d/%Y')
+                        extraction["start_date"] = date_obj.strftime('%Y-%m-%d')
+                    elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', date_str):
+                        # MM-DD-YYYY format
+                        from datetime import datetime
+                        date_obj = datetime.strptime(date_str, '%m-%d-%Y')
+                        extraction["start_date"] = date_obj.strftime('%Y-%m-%d')
+                    else:
+                        # Handle "August 10th" format
+                        from datetime import datetime
+                        import calendar
+                        
+                        # Remove ordinal suffixes
+                        date_str = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
+                        
+                        # Try to parse month names
+                        month_names = {name.lower(): i for i, name in enumerate(calendar.month_name) if name}
+                        month_abbr = {name.lower(): i for i, name in enumerate(calendar.month_abbr) if name}
+                        
+                        parts = date_str.split()
+                        if len(parts) >= 2:
+                            month_str = parts[0].lower()
+                            day_str = parts[1]
+                            
+                            month = month_names.get(month_str) or month_abbr.get(month_str)
+                            if month and day_str.isdigit():
+                                day = int(day_str)
+                                # Assume current year or next year
+                                current_year = datetime.now().year
+                                date_obj = datetime(current_year, month, day)
+                                
+                                # If the date has passed, use next year
+                                if date_obj < datetime.now():
+                                    date_obj = datetime(current_year + 1, month, day)
+                                
+                                extraction["start_date"] = date_obj.strftime('%Y-%m-%d')
+                    break
+                except (ValueError, TypeError):
+                    continue
+        
+        # Extract duration
+        duration_patterns = [
+            r'(\d+)\s*day\s*trip',
+            r'(\d+)\s*day\s*visit',
+            r'(\d+)\s*day\s*vacation',
+            r'(\d+)\s*day\s*stay',
+            r'for\s*(\d+)\s*days',
+            r'(\d+)\s*days\s*in',
+            r'(\d+)\s*days\s*at'
+        ]
+        
+        for pattern in duration_patterns:
+            match = re.search(pattern, query_lower)
+            if match:
+                extraction["duration"] = int(match.group(1))
+                break
+        
+        # Extract flexible days (±1 day, ±2 days, etc.)
+        flex_patterns = [
+            r'±(\d+)\s*day',
+            r'plus\s*minus\s*(\d+)\s*day',
+            r'flexible\s*(\d+)\s*day'
+        ]
+        
+        for pattern in flex_patterns:
+            match = re.search(pattern, query_lower)
+            if match:
+                extraction["flexible_days"] = int(match.group(1))
+                break
+        
+        # Extract travelers - adults and children separately
+        # Extract adults
+        adult_patterns = [
+            r'(\d+)\s*adult',
+            r'(\d+)\s*person',
+            r'(\d+)\s*people',
+            r'(\d+)\s*traveler',
+            r'(\d+)\s*passenger'
+        ]
+        
+        for pattern in adult_patterns:
+            match = re.search(pattern, query_lower)
+            if match:
+                extraction["travelers"]["adults"] = int(match.group(1))
+                extraction["travelers_specified"] = True
+                break
+        
+        # Extract children
+        child_patterns = [
+            r'(\d+)\s*child',
+            r'(\d+)\s*kid',
+            r'(\d+)\s*children'
+        ]
+        
+        for pattern in child_patterns:
+            match = re.search(pattern, query_lower)
+            if match:
+                extraction["travelers"]["children"] = int(match.group(1))
+                extraction["travelers_specified"] = True
+                break
+        
+        # Extract specific budget amount (e.g., "$1000", "1000 dollars", "1000$")
+        budget_patterns = [
+            r'\$(\d+(?:,\d{3})*(?:\.\d{2})?)',  # $1000, $1,000, $1000.50
+            r'(\d+(?:,\d{3})*(?:\.\d{2})?)\s*dollars?',  # 1000 dollars, 1,000 dollar
+            r'(\d+(?:,\d{3})*(?:\.\d{2})?)\s*\$',  # 1000$, 1,000$
+            r'(\d+(?:,\d{3})*(?:\.\d{2})?)\s*usd',  # 1000 usd, 1,000 USD
+            r'budget\s*(\d+(?:,\d{3})*(?:\.\d{2})?)',  # budget 1000
+            r'(\d+(?:,\d{3})*(?:\.\d{2})?)\s*budget'  # 1000 budget
+        ]
+        
+        for i, pattern in enumerate(budget_patterns):
+            match = re.search(pattern, query_lower)
+            if match:
+                budget_str = match.group(1).replace(',', '')
+                try:
+                    extraction["budget_amount"] = float(budget_str)
+                    extraction["budget_currency"] = "USD"
+                    extraction["budget_specified"] = True
+                    logger.info(f"Basic parser - Found budget amount: ${budget_str}")
+                    break
+                except ValueError:
+                    continue
+        
+        # Extract budget preference (check for specific budget terms first)
+        if any(word in query_lower for word in ['moderate', 'mid-range', 'standard']):
+            extraction["budget_preference"] = "moderate"
+            extraction["budget_specified"] = True
+        elif any(word in query_lower for word in ['luxury', 'premium', 'expensive', 'high-end']):
+            extraction["budget_preference"] = "luxury"
+            extraction["budget_specified"] = True
+        elif any(word in query_lower for word in ['budget', 'cheap', 'economy', 'affordable']):
+            extraction["budget_preference"] = "budget"
+            extraction["budget_specified"] = True
+        
+        # Extract interests
+        interests = []
+        interest_keywords = {
+            "outdoor": ["hiking", "camping", "nature", "outdoor", "adventure"],
+            "culture": ["museum", "art", "culture", "history", "heritage"],
+            "food": ["food", "restaurant", "cuisine", "dining", "culinary"],
+            "shopping": ["shopping", "mall", "market", "retail"],
+            "entertainment": ["entertainment", "show", "concert", "theater"],
+            "relaxation": ["spa", "relax", "wellness", "peaceful"]
+        }
+        
+        for interest, keywords in interest_keywords.items():
+            if any(keyword in query_lower for keyword in keywords):
+                interests.append(interest)
+        
+        extraction["interests"] = interests
+        
+        # Extract trip type
+        if any(word in query_lower for word in ['one way', 'one-way', 'oneway']):
+            extraction["trip_type"] = "one_way"
+        
+        return extraction
+    
+    def _resolve_destination_intelligence(self, destination: str) -> Dict[str, Any]:
+        """Resolve destination intelligence for places like Yosemite National Park"""
+        destination_lower = destination.lower()
+        
+        # Check if it's a known destination
+        for key, info in self.destination_intelligence.items():
+            if key in destination_lower or destination_lower in key:
+                return {
+                    "original_query": destination,
+                    "resolved_destination": info,
+                    "nearest_airports": info["nearest_airports"],
+                    "suggested_airport": info["nearest_airports"][0],  # Primary airport
+                    "type": info["type"],
+                    "description": info["description"]
+                }
+        
+        # If not found, return None
+        return None
+    
+    def _validate_trip_request(self, extraction: Dict[str, Any]) -> Dict[str, Any]:
+        """Comprehensive validation of trip request"""
+        validation = {
+            "is_valid": True,
+            "errors": [],
+            "warnings": [],
+            "suggestions": [],
+            "missing_fields": []
+        }
+        
+        # Check required fields with specific error messages
+        if not extraction.get("origin"):
+            validation["missing_fields"].append("origin")
+            validation["errors"].append("Origin city is not provided. Please specify where you want to depart from.")
+            validation["is_valid"] = False
+        
+        if not extraction.get("destination"):
+            validation["missing_fields"].append("destination")
+            validation["errors"].append("Destination is not provided. Please specify where you want to travel to.")
+            validation["is_valid"] = False
+        
+        if not extraction.get("duration"):
+            validation["missing_fields"].append("duration")
+            validation["errors"].append("Trip duration is not provided. Please specify how many days you want to travel.")
+            validation["is_valid"] = False
+        
+        if not extraction.get("start_date"):
+            validation["missing_fields"].append("start_date")
+            validation["errors"].append("Start date is not provided. Please specify when you want to start your trip.")
+            validation["is_valid"] = False
+        
+        # Validate duration
+        if extraction.get("duration"):
+            duration = extraction["duration"]
+            if duration < 1:
+                validation["errors"].append("Trip duration must be at least 1 day")
+                validation["is_valid"] = False
+            elif duration > 30:
+                validation["warnings"].append("Trip duration is quite long. Consider breaking it into multiple trips.")
+        
+        # Validate dates
+        if extraction.get("start_date"):
+            try:
+                start_date = datetime.strptime(extraction["start_date"], "%Y-%m-%d")
+                today = datetime.now()
+                
+                # Check if date is in the past
+                if start_date < today:
+                    validation["errors"].append("Start date cannot be in the past")
+                    validation["is_valid"] = False
+                # Allow dates up to 2 years in the future
+                elif start_date > today + timedelta(days=730):
+                    validation["warnings"].append("Start date is more than 2 years away. Consider booking closer to your travel date.")
+                    
+            except ValueError:
+                validation["errors"].append("Invalid start date format")
+                validation["is_valid"] = False
+        
+        # Check if origin and destination are the same
+        if extraction.get("origin") and extraction.get("destination"):
+            if extraction["origin"] == extraction["destination"]:
+                validation["errors"].append("Origin and destination cannot be the same. Please specify different cities.")
+                validation["is_valid"] = False
+        
+        # Validate travelers - check if user actually specified travelers or if it's just defaults
+        travelers = extraction.get("travelers")
+        travelers_specified = extraction.get("travelers_specified", False)  # Flag to track if user specified travelers
+        
+        if not travelers or not travelers.get("adults") or not travelers_specified:
+            validation["missing_fields"].append("number of travelers")
+            validation["errors"].append("Number of travelers is not provided. Please specify how many adults are traveling.")
+            validation["is_valid"] = False
+        else:
+            adults = travelers.get("adults", 0)
+            children = travelers.get("children", 0)
+            if adults < 1:
+                validation["errors"].append("Number of adults must be at least 1")
+                validation["is_valid"] = False
+            elif adults + children > 8:
+                validation["warnings"].append("Large group travel may have limited flight options")
+        
+        # Check for budget information - check if user actually specified budget or if it's just defaults
+        budget_specified = extraction.get("budget_specified", False)  # Flag to track if user specified budget
+        
+        if (not extraction.get("budget_amount") and not extraction.get("budget_preference")) or not budget_specified:
+            validation["missing_fields"].append("budget")
+            validation["errors"].append("Budget information is not provided. Please specify your total budget (e.g., $1000, 1500 dollars) or budget preference (budget/moderate/luxury).")
+            validation["is_valid"] = False
+        
+        # Check for interests (optional but helpful)
+        if not extraction.get("interests"):
+            validation["suggestions"].append("Consider adding interests like 'theme parks', 'beaches', 'culture', 'adventure' for better recommendations")
+        
+        # Validate flexible days
+        if extraction.get("flexible_days"):
+            flex_days = extraction["flexible_days"]
+            if flex_days > 7:
+                validation["warnings"].append("Very flexible dates may result in many search options")
+        
+        return validation
+    
+    async def plan_trip_from_natural_language(self, query: str) -> Dict[str, Any]:
+        """Main method to plan a trip from natural language query"""
+        try:
+            logger.info(f"Planning trip from query: {query}")
+            
+            # Step 1: Extract basic trip details
+            extraction = self._extract_trip_details(query)
+            logger.info(f"Basic extraction completed: {extraction}")
+            
+            # Step 2: Parse the query using enhanced parser
+            parsed_result = await self.parser.parse_query(query)
+            logger.info(f"Enhanced parser result: {parsed_result}")
+            
+            # Even if enhanced parser fails, we can still use basic parser results
+            if "error" in parsed_result:
+                logger.warning(f"Enhanced parser failed: {parsed_result['error']}, but continuing with basic parser results")
+                # Don't return early, continue with basic parser results
+            
+            # Step 3: Merge parsed results with extraction (prioritize enhanced parser results)
+            if parsed_result.get("origin"):
+                extraction["origin"] = parsed_result["origin"]
+            if parsed_result.get("destination"):
+                extraction["destination"] = parsed_result["destination"]
+            if parsed_result.get("date"):
+                extraction["start_date"] = parsed_result["date"]
+            if parsed_result.get("return_date"):
+                extraction["end_date"] = parsed_result["return_date"]
+            if parsed_result.get("travelers"):
+                # Merge travelers data properly
+                enhanced_travelers = parsed_result["travelers"]
+                if enhanced_travelers.get("adults"):
+                    extraction["travelers"]["adults"] = enhanced_travelers["adults"]
+                if enhanced_travelers.get("children"):
+                    extraction["travelers"]["children"] = enhanced_travelers["children"]
+                if enhanced_travelers.get("ages"):
+                    extraction["travelers"]["ages"] = enhanced_travelers["ages"]
+            if parsed_result.get("interests"):
+                extraction["interests"] = parsed_result["interests"]
+            # Apply budget from enhanced parser if available
+            enhanced_budget = parsed_result.get("budget")
+            logger.info(f"Enhanced parser budget: {enhanced_budget}, type: {type(enhanced_budget)}")
+            logger.info(f"Before enhanced parser merge - Budget amount: {extraction.get('budget_amount')}, Budget preference: {extraction.get('budget_preference')}")
+            
+            if enhanced_budget and enhanced_budget != "null" and enhanced_budget != "":
+                # Handle both numeric and string budget values
+                if isinstance(enhanced_budget, (int, float)):
+                    # If it's a numeric value, treat it as budget amount
+                    extraction["budget_amount"] = float(enhanced_budget)
+                    extraction["budget_currency"] = "USD"
+                    logger.info(f"Set budget amount from enhanced parser: ${enhanced_budget}")
+                elif isinstance(enhanced_budget, str):
+                    # If it's a string, only set as preference if we don't have a budget amount
+                    # and if it's not just the word "budget" (which might be from the query)
+                    if not extraction.get("budget_amount") and enhanced_budget.lower() not in ["budget", "moderate", "luxury"]:
+                        extraction["budget_preference"] = enhanced_budget
+                        logger.info(f"Set budget preference from enhanced parser: {enhanced_budget}")
+                    elif enhanced_budget.lower() in ["budget", "moderate", "luxury"]:
+                        # If it's a budget category, only set if we don't have a budget amount
+                        if not extraction.get("budget_amount"):
+                            extraction["budget_preference"] = enhanced_budget
+                            logger.info(f"Set budget preference from enhanced parser: {enhanced_budget}")
+            
+            logger.info(f"After enhanced parser merge - Budget amount: {extraction.get('budget_amount')}, Budget preference: {extraction.get('budget_preference')}")
+            
+            # Budget categorization will be done after we get destination info from API responses
+            # For now, just store the budget amount for later categorization
+            if extraction.get("budget_amount"):
+                logger.info(f"Budget amount found: ${extraction.get('budget_amount')}, will categorize after API calls")
+            
+            # Step 4: Resolve destination intelligence
+            destination_intel = None
+            if extraction["destination"]:
+                destination_intel = self._resolve_destination_intelligence(extraction["destination"])
+                if destination_intel:
+                    extraction["destination_intelligence"] = destination_intel
+                    extraction["suggestions"].append(
+                        f"Found {destination_intel['resolved_destination']['description']}. "
+                        f"Nearest airports: {', '.join(destination_intel['nearest_airports'])}"
+                    )
+            
+            # Step 5: Validate the request
+            validation = self._validate_trip_request(extraction)
+            extraction["validation"] = validation
+            logger.info(f"Validation result: {validation}")
+            
+            # Check if we have missing fields that should trigger follow-up questions
+            missing_fields = validation.get("missing_fields", [])
+            validation_errors = validation.get("errors", [])
+            
+            if missing_fields or validation_errors:
+                logger.info(f"Missing fields: {missing_fields}, Validation errors: {validation_errors}")
+                # Create follow-up questions for missing information
+                follow_up_questions = []
+                
+                if "origin" in missing_fields:
+                    follow_up_questions.append({
+                        "field": "origin",
+                        "question": "Where would you like to depart from?",
+                        "type": "text",
+                        "placeholder": "e.g., New York, JFK, LAX"
+                    })
+                
+                if "destination" in missing_fields:
+                    follow_up_questions.append({
+                        "field": "destination", 
+                        "question": "Where would you like to travel to?",
+                        "type": "text",
+                        "placeholder": "e.g., Disney World, Paris, Tokyo"
+                    })
+                
+                if "duration" in missing_fields:
+                    follow_up_questions.append({
+                        "field": "duration",
+                        "question": "How many days would you like to travel?",
+                        "type": "number",
+                        "placeholder": "e.g., 5"
+                    })
+                
+                if "start_date" in missing_fields:
+                    follow_up_questions.append({
+                        "field": "start_date",
+                        "question": "When would you like to start your trip?",
+                        "type": "date",
+                        "placeholder": "e.g., 2025-08-10"
+                    })
+                
+                if "number of travelers" in missing_fields:
+                    follow_up_questions.append({
+                        "field": "travelers",
+                        "question": "How many adults and children are traveling?",
+                        "type": "travelers",
+                        "placeholder": "e.g., 2 adults, 1 child"
+                    })
+                
+                if "budget" in missing_fields:
+                    follow_up_questions.append({
+                        "field": "budget",
+                        "question": "What's your total budget for this trip?",
+                        "type": "budget",
+                        "placeholder": "e.g., $1000, 1500 dollars, or budget/moderate/luxury"
+                    })
+                
+                # Always include interests question for better trip planning
+                follow_up_questions.append({
+                    "field": "interests",
+                    "question": "What are your main interests for this trip?",
+                    "type": "interests",
+                    "placeholder": "e.g., theme parks, beaches, culture, adventure, food, shopping",
+                    "current_value": extraction.get("interests", [])
+                })
+                
+                logger.info(f"Returning validation response with follow-up questions: {follow_up_questions}")
+                return {
+                    "success": False,
+                    "status": "needs_more_info",
+                    "validation_errors": validation_errors,
+                    "missing_fields": missing_fields,
+                    "follow_up_questions": follow_up_questions,
+                    "partial_extraction": extraction,
+                    "suggestions": validation.get("suggestions", [])
+                }
+            
+            # Step 6: Generate trip plan
+            logger.info(f"Starting trip plan generation with extraction: {extraction}")
+            trip_plan = await self._generate_trip_plan(extraction)
+            logger.info(f"Trip plan generated successfully: {trip_plan}")
+            
+            return {
+                "success": True,
+                "trip_plan": trip_plan,
+                "extraction": extraction,
+                "validation": validation,
+                "suggestions": extraction["suggestions"]
+            }
+            
+        except Exception as e:
+            logger.error(f"Error planning trip: {str(e)}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            return {
+                "error": f"Failed to plan trip: {str(e)}",
+                "suggestions": [
+                    "Try rephrasing your request",
+                    "Include specific dates and destinations",
+                    "Check that all information is clear"
+                ]
+            }
+    
+
+    
+    async def _generate_trip_plan(self, extraction: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate the actual trip plan with flights, hotels, and activities"""
+        try:
+            logger.info(f"Starting _generate_trip_plan with extraction: {extraction}")
+            
+            # Calculate end date if not provided
+            if not extraction.get("end_date") and extraction.get("start_date") and extraction.get("duration"):
+                start_date = datetime.strptime(extraction["start_date"], "%Y-%m-%d")
+                end_date = start_date + timedelta(days=extraction["duration"] - 1)
+                extraction["end_date"] = end_date.strftime("%Y-%m-%d")
+                logger.info(f"Calculated end date: {extraction['end_date']}")
+            
+            # Determine destination for hotel search
+            hotel_destination = extraction["destination"]
+            if extraction.get("destination_intelligence"):
+                # Use the city from destination intelligence
+                hotel_destination = extraction["destination_intelligence"]["resolved_destination"]["city"]
+                logger.info(f"Using destination intelligence city for hotels: {hotel_destination}")
+            
+            # Calculate total travelers
+            travelers = extraction["travelers"]
+            total_travelers = travelers.get("adults", 0) + travelers.get("children", 0)
+            logger.info(f"Total travelers: {total_travelers}")
+            
+            # Convert airport codes to city names for flight search
+            origin_city = extraction["origin"]
+            destination_city = extraction["destination"]
+            
+            # If we have destination intelligence, use the city name
+            if extraction.get("destination_intelligence"):
+                destination_city = extraction["destination_intelligence"]["resolved_destination"]["city"]
+                logger.info(f"Using destination intelligence city for flights: {destination_city}")
+            
+            # For origin, convert common airport codes to city names
+            airport_to_city = {
+                "JFK": "New York",
+                "LGA": "New York", 
+                "EWR": "Newark",
+                "LAX": "Los Angeles",
+                "SFO": "San Francisco",
+                "ORD": "Chicago",
+                "DFW": "Dallas",
+                "ATL": "Atlanta",
+                "MIA": "Miami",
+                "MCO": "Orlando",
+                "LAS": "Las Vegas",
+                "DEN": "Denver",
+                "BOS": "Boston",
+                "SEA": "Seattle",
+                "PHX": "Phoenix"
+            }
+            
+            if origin_city in airport_to_city:
+                origin_city = airport_to_city[origin_city]
+                logger.info(f"Converted origin airport code to city: {origin_city}")
+            if destination_city in airport_to_city:
+                destination_city = airport_to_city[destination_city]
+                logger.info(f"Converted destination airport code to city: {destination_city}")
+            
+            logger.info(f"Flight search params - Origin: {origin_city}, Destination: {destination_city}, Start: {extraction['start_date']}, End: {extraction['end_date']}, Travelers: {total_travelers}")
+            
+            # Search for flights
+            flight_search_params = {
+                "origin": origin_city,
+                "destination": destination_city,
+                "start_date": extraction["start_date"],
+                "return_date": extraction["end_date"],
+                "travelers": total_travelers,
+                "filters": {
+                    "max_price": self._get_budget_max_price(extraction["budget_preference"]),
+                    "non_stop_only": extraction["budget_preference"] == "luxury"
+                }
+            }
+            
+            # Search for hotels
+            # Use actual budget amount if specified, otherwise use categorized preference
+            max_price = None
+            if extraction.get("budget_amount"):
+                max_price = extraction["budget_amount"]
+            else:
+                max_price = self._get_hotel_budget_max_price(extraction["budget_preference"])
+            
+            hotel_search_params = {
+                "destination": hotel_destination,
+                "start_date": extraction["start_date"],
+                "return_date": extraction["end_date"],
+                "travelers": total_travelers,
+                "filters": {
+                    "max_price": max_price,
+                    "min_rating": self._get_budget_min_rating(extraction["budget_preference"])
+                }
+            }
+            
+            # Execute searches
+            logger.info(f"Starting flight search with params: {flight_search_params}")
+            try:
+                flight_results = await search_flights_with_filters(
+                    origin=flight_search_params["origin"],
+                    destination=flight_search_params["destination"],
+                    start_date=flight_search_params["start_date"],
+                    return_date=flight_search_params["return_date"],
+                    travelers=flight_search_params["travelers"],
+                    filters=flight_search_params["filters"]
+                )
+                logger.info(f"Flight search completed: {flight_results}")
+            except Exception as e:
+                logger.error(f"Flight search failed with exception: {e}")
+                flight_results = {"error": f"Flight search failed: {str(e)}"}
+            
+            logger.info(f"Starting hotel search with params: {hotel_search_params}")
+            hotel_results = await search_hotels_with_filters(
+                destination=hotel_search_params["destination"],
+                start_date=hotel_search_params["start_date"],
+                return_date=hotel_search_params["return_date"],
+                travelers=hotel_search_params["travelers"],
+                filters=hotel_search_params["filters"]
+            )
+            logger.info(f"Hotel search completed: {hotel_results}")
+            
+            # Now categorize budget based on destination country from API responses
+            if extraction.get("budget_amount") and not extraction.get("budget_analysis"):
+                destination_country = "US"  # Default
+                
+                # Try to get country from destination intelligence first
+                if extraction.get("destination_intelligence"):
+                    destination_country = extraction["destination_intelligence"]["resolved_destination"].get("country", "US")
+                    logger.info(f"Found destination country from destination intelligence: {destination_country}")
+                
+                # If not found, try to search for destination to get country info
+                else:
+                    try:
+                        from api.booking_client import booking_client
+                        dest_search = booking_client.search_destination(extraction["destination"])
+                        if dest_search and "destinations" in dest_search and dest_search["destinations"]:
+                            destination_country = dest_search["destinations"][0].get("country", "US")
+                            logger.info(f"Found destination country from destination search: {destination_country}")
+                    except Exception as e:
+                        logger.warning(f"Could not get destination country from search: {e}")
+                
+                # Categorize budget based on destination country
+                budget_category = self._categorize_budget_by_country(
+                    extraction["budget_amount"], 
+                    destination_country
+                )
+                extraction["budget_preference"] = budget_category
+                extraction["budget_analysis"] = {
+                    "original_amount": extraction["budget_amount"],
+                    "destination_country": destination_country,
+                    "categorized_as": budget_category,
+                    "cost_of_living_adjusted": True
+                }
+                logger.info(f"Budget categorized as {budget_category} for {destination_country} (${extraction['budget_amount']})")
+            
+            # Generate day-by-day itinerary
+            itinerary = self._generate_itinerary(extraction, flight_results, hotel_results)
+            
+            # Validate that we have results
+            if not flight_results or "error" in flight_results:
+                logger.warning("No flight results found or flight search failed")
+                flight_results = {"cheapest": [], "fastest": [], "best_value": []}
+            
+            if not hotel_results or "error" in hotel_results:
+                logger.warning("No hotel results found or hotel search failed")
+                # Check if it's a budget too low error
+                if hotel_results and hotel_results.get("error") == "budget_too_low":
+                    # Return the budget too low error to be handled by the frontend
+                    return {
+                        "error": "budget_too_low",
+                        "message": hotel_results.get("message", "No hotels found within your budget"),
+                        "suggestions": hotel_results.get("suggestions", {}),
+                        "extraction": extraction
+                    }
+                hotel_results = {"budget": [], "moderate": [], "luxury": []}
+            
+            return {
+                "summary": {
+                    "origin": extraction["origin"],
+                    "destination": extraction["destination"],
+                    "duration": extraction["duration"],
+                    "start_date": extraction["start_date"],
+                    "end_date": extraction["end_date"],
+                    "travelers": extraction["travelers"],
+                    "budget_preference": extraction["budget_preference"],
+            "budget_amount": extraction.get("budget_amount"),
+            "budget_analysis": extraction.get("budget_analysis"),
+                    "total_estimated_cost": self._calculate_total_cost(flight_results, hotel_results, extraction["duration"])
+                },
+                "flights": flight_results,
+                "hotels": hotel_results,
+                "itinerary": itinerary,
+                "destination_intelligence": extraction.get("destination_intelligence"),
+                "booking_links": self._generate_booking_links(flight_results, hotel_results)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating trip plan: {str(e)}")
+            raise
+    
+    def _get_budget_max_price(self, budget_preference: str) -> Optional[int]:
+        """Get max price based on budget preference"""
+        budget_ranges = {
+            "budget": 300,
+            "moderate": 800,
+            "luxury": None  # No limit for luxury
+        }
+        return budget_ranges.get(budget_preference, 800)
+    
+    def _get_hotel_budget_max_price(self, budget_preference: str) -> Optional[int]:
+        """Get hotel max price based on budget preference"""
+        budget_ranges = {
+            "budget": 150,
+            "moderate": 300,
+            "luxury": None  # No limit for luxury
+        }
+        return budget_ranges.get(budget_preference, 300)
+    
+    def _get_budget_min_rating(self, budget_preference: str) -> Optional[int]:
+        """Get minimum hotel rating based on budget preference"""
+        rating_ranges = {
+            "budget": 6,
+            "moderate": 7,
+            "luxury": 8
+        }
+        return rating_ranges.get(budget_preference, 7)
+    
+    def _categorize_budget_by_country(self, budget_amount: float, destination_country: str) -> str:
+        """Categorize budget as low/moderate/high based on destination country cost of living"""
+        # Cost of living multipliers (relative to US)
+        # Higher multiplier = more expensive country
+        cost_of_living_multipliers = {
+            "US": 1.0,      # United States (baseline)
+            "CA": 1.1,      # Canada
+            "GB": 1.2,      # United Kingdom
+            "AU": 1.3,      # Australia
+            "JP": 1.4,      # Japan
+            "SG": 1.5,      # Singapore
+            "CH": 1.8,      # Switzerland
+            "NO": 1.6,      # Norway
+            "DK": 1.5,      # Denmark
+            "SE": 1.4,      # Sweden
+            "NL": 1.3,      # Netherlands
+            "DE": 1.2,      # Germany
+            "FR": 1.2,      # France
+            "IT": 1.1,      # Italy
+            "ES": 1.0,      # Spain
+            "PT": 0.9,      # Portugal
+            "GR": 0.8,      # Greece
+            "IN": 0.3,      # India (much cheaper)
+            "TH": 0.4,      # Thailand
+            "VN": 0.3,      # Vietnam
+            "ID": 0.4,      # Indonesia
+            "PH": 0.4,      # Philippines
+            "MY": 0.5,      # Malaysia
+            "MX": 0.6,      # Mexico
+            "BR": 0.5,      # Brazil
+            "AR": 0.7,      # Argentina
+            "CL": 0.8,      # Chile
+            "CO": 0.5,      # Colombia
+            "PE": 0.5,      # Peru
+            "ZA": 0.6,      # South Africa
+            "EG": 0.4,      # Egypt
+            "MA": 0.5,      # Morocco
+            "KE": 0.3,      # Kenya
+            "NG": 0.4,      # Nigeria
+            "CN": 0.7,      # China
+            "KR": 1.0,      # South Korea
+            "TW": 0.8,      # Taiwan
+            "HK": 1.4,      # Hong Kong
+            "AE": 1.2,      # UAE
+            "SA": 1.0,      # Saudi Arabia
+            "IL": 1.3,      # Israel
+            "TR": 0.5,      # Turkey
+            "RU": 0.6,      # Russia
+            "PL": 0.7,      # Poland
+            "CZ": 0.8,      # Czech Republic
+            "HU": 0.6,      # Hungary
+            "RO": 0.5,      # Romania
+            "BG": 0.5,      # Bulgaria
+            "HR": 0.8,      # Croatia
+            "SI": 0.9,      # Slovenia
+            "SK": 0.7,      # Slovakia
+            "EE": 0.9,      # Estonia
+            "LV": 0.8,      # Latvia
+            "LT": 0.7,      # Lithuania
+        }
+        
+        # Get cost of living multiplier for destination country
+        multiplier = cost_of_living_multipliers.get(destination_country.upper(), 1.0)
+        
+        # Adjust budget for cost of living
+        adjusted_budget = budget_amount / multiplier
+        
+        # Categorize based on adjusted budget (US equivalent)
+        if adjusted_budget < 500:
+            return "budget"
+        elif adjusted_budget < 1500:
+            return "moderate"
+        else:
+            return "luxury"
+    
+    def _get_budget_ranges_by_country(self, destination_country: str) -> Dict[str, Dict[str, float]]:
+        """Get budget ranges for different categories based on destination country"""
+        # Cost of living multipliers (relative to US)
+        cost_of_living_multipliers = {
+            "US": 1.0,      # United States (baseline)
+            "CA": 1.1,      # Canada
+            "GB": 1.2,      # United Kingdom
+            "AU": 1.3,      # Australia
+            "JP": 1.4,      # Japan
+            "SG": 1.5,      # Singapore
+            "CH": 1.8,      # Switzerland
+            "NO": 1.6,      # Norway
+            "DK": 1.5,      # Denmark
+            "SE": 1.4,      # Sweden
+            "NL": 1.3,      # Netherlands
+            "DE": 1.2,      # Germany
+            "FR": 1.2,      # France
+            "IT": 1.1,      # Italy
+            "ES": 1.0,      # Spain
+            "PT": 0.9,      # Portugal
+            "GR": 0.8,      # Greece
+            "IN": 0.3,      # India (much cheaper)
+            "TH": 0.4,      # Thailand
+            "VN": 0.3,      # Vietnam
+            "ID": 0.4,      # Indonesia
+            "PH": 0.4,      # Philippines
+            "MY": 0.5,      # Malaysia
+            "MX": 0.6,      # Mexico
+            "BR": 0.5,      # Brazil
+            "AR": 0.7,      # Argentina
+            "CL": 0.8,      # Chile
+            "CO": 0.5,      # Colombia
+            "PE": 0.5,      # Peru
+            "ZA": 0.6,      # South Africa
+            "EG": 0.4,      # Egypt
+            "MA": 0.5,      # Morocco
+            "KE": 0.3,      # Kenya
+            "NG": 0.4,      # Nigeria
+            "CN": 0.7,      # China
+            "KR": 1.0,      # South Korea
+            "TW": 0.8,      # Taiwan
+            "HK": 1.4,      # Hong Kong
+            "AE": 1.2,      # UAE
+            "SA": 1.0,      # Saudi Arabia
+            "IL": 1.3,      # Israel
+            "TR": 0.5,      # Turkey
+            "RU": 0.6,      # Russia
+            "PL": 0.7,      # Poland
+            "CZ": 0.8,      # Czech Republic
+            "HU": 0.6,      # Hungary
+            "RO": 0.5,      # Romania
+            "BG": 0.5,      # Bulgaria
+            "HR": 0.8,      # Croatia
+            "SI": 0.9,      # Slovenia
+            "SK": 0.7,      # Slovakia
+            "EE": 0.9,      # Estonia
+            "LV": 0.8,      # Latvia
+            "LT": 0.7,      # Lithuania
+        }
+        
+        # Get cost of living multiplier for destination country
+        multiplier = cost_of_living_multipliers.get(destination_country.upper(), 1.0)
+        
+        # US baseline ranges
+        us_ranges = {
+            "budget": {"min": 0, "max": 500},
+            "moderate": {"min": 500, "max": 1500},
+            "luxury": {"min": 1500, "max": float('inf')}
+        }
+        
+        # Adjust ranges for destination country
+        adjusted_ranges = {}
+        for category, range_dict in us_ranges.items():
+            adjusted_ranges[category] = {
+                "min": range_dict["min"] * multiplier,
+                "max": range_dict["max"] * multiplier
+            }
+        
+        return adjusted_ranges
+    
+    def _generate_itinerary(self, extraction: Dict[str, Any], flights: Dict, hotels: Dict) -> List[Dict]:
+        """Generate comprehensive day-by-day itinerary with time-based scheduling"""
+        itinerary = []
+        duration = extraction["duration"]
+        interests = extraction.get("interests", [])
+        destination_type = "city"  # Default
+        
+        if extraction.get("destination_intelligence"):
+            destination_type = extraction["destination_intelligence"]["resolved_destination"]["type"]
+        
+        # Get destination-specific information
+        destination_name = extraction.get("destination", "Unknown")
+        destination_info = extraction.get("destination_intelligence", {})
+        
+        for day in range(1, duration + 1):
+            day_plan = self._create_detailed_day_plan(
+                day=day,
+                date=self._calculate_date(extraction["start_date"], day - 1),
+                destination_type=destination_type,
+                destination_name=destination_name,
+                interests=interests,
+                destination_info=destination_info,
+                is_first_day=(day == 1),
+                is_last_day=(day == duration),
+                total_days=duration,
+                flights=flights,
+                hotels=hotels
+            )
+            itinerary.append(day_plan)
+        
+        return itinerary
+    
+    def _create_detailed_day_plan(self, day: int, date: str, destination_type: str, destination_name: str, 
+                                interests: List[str], destination_info: Dict, is_first_day: bool, 
+                                is_last_day: bool, total_days: int, flights: Dict, hotels: Dict) -> Dict:
+        """Create a detailed day plan with time-based activities"""
+        
+        # Determine day theme based on day number and total trip length
+        day_theme = self._determine_day_theme(day, total_days, is_first_day, is_last_day)
+        
+        # Generate activities for different time periods
+        morning_activities = self._generate_morning_activities(destination_type, interests, day_theme, day, is_first_day)
+        afternoon_activities = self._generate_afternoon_activities(destination_type, interests, day_theme, day, is_last_day)
+        evening_activities = self._generate_evening_activities(destination_type, interests, day_theme, day, is_last_day)
+        
+        # Generate dining recommendations
+        lunch_recommendations = self._generate_lunch_recommendations(destination_type, interests, day_theme)
+        dinner_recommendations = self._generate_dinner_recommendations(destination_type, interests, day_theme)
+        
+        # Generate transportation and accommodation info
+        transportation = self._generate_transportation_info(day, is_first_day, is_last_day, flights)
+        accommodation = self._generate_accommodation_info(day, hotels, destination_name)
+        
+        return {
+            "day": day,
+            "date": date,
+            "theme": day_theme,
+            "morning": {
+                "start_time": "09:00",
+                "end_time": "12:00",
+                "activities": morning_activities,
+                "transportation": transportation.get("morning", "Walking/Public Transit")
+            },
+            "lunch": {
+                "time": "12:00-13:30",
+                "recommendations": lunch_recommendations
+            },
+            "afternoon": {
+                "start_time": "13:30",
+                "end_time": "18:00",
+                "activities": afternoon_activities,
+                "transportation": transportation.get("afternoon", "Walking/Public Transit")
+            },
+            "dinner": {
+                "time": "19:00-21:00",
+                "recommendations": dinner_recommendations
+            },
+            "evening": {
+                "start_time": "21:00",
+                "end_time": "23:00",
+                "activities": evening_activities,
+                "transportation": transportation.get("evening", "Walking/Taxi")
+            },
+            "accommodation": accommodation,
+            "transportation": transportation,
+            "practical_tips": self._generate_practical_tips(destination_type, day, is_first_day, is_last_day),
+            "cultural_notes": self._generate_cultural_notes(destination_type, interests, destination_info)
+        }
+    
+    def _determine_day_theme(self, day: int, total_days: int, is_first_day: bool, is_last_day: bool) -> str:
+        """Determine the theme for the day based on trip progression"""
+        if is_first_day:
+            return "arrival_exploration"
+        elif is_last_day:
+            return "departure_relaxation"
+        elif day == 2 and total_days > 3:
+            return "deep_exploration"
+        elif day == total_days - 1 and total_days > 3:
+            return "final_adventures"
+        else:
+            themes = ["cultural_immersion", "adventure_day", "local_experience", "relaxation_day", "hidden_gems"]
+            return themes[(day - 2) % len(themes)]
+    
+    def _generate_morning_activities(self, destination_type: str, interests: List[str], day_theme: str, day: int, is_first_day: bool) -> List[Dict]:
+        """Generate morning activities with detailed information"""
+        activities = []
+        
+        if is_first_day:
+            activities.extend([
+                {
+                    "name": "Check-in and settle in",
+                    "duration": "1 hour",
+                    "location": "Hotel",
+                    "description": "Drop off luggage and freshen up after arrival"
+                },
+                {
+                    "name": "Orientation walk",
+                    "duration": "2 hours",
+                    "location": "City center",
+                    "description": "Get familiar with the area and find key landmarks"
+                }
+            ])
+        else:
+            # Add destination-specific morning activities
+            if destination_type == "national_park":
+                activities.extend([
+                    {
+                        "name": "Early morning wildlife viewing",
+                        "duration": "2 hours",
+                        "location": "Park trails",
+                        "description": "Best time to spot wildlife and enjoy cooler temperatures"
+                    },
+                    {
+                        "name": "Ranger-led morning program",
+                        "duration": "1 hour",
+                        "location": "Visitor center",
+                        "description": "Learn about the park's history and current conditions"
+                    }
+                ])
+            elif destination_type == "theme_park":
+                activities.extend([
+                    {
+                        "name": "Early park entry",
+                        "duration": "3 hours",
+                        "location": "Theme park",
+                        "description": "Beat the crowds and enjoy popular attractions with shorter wait times"
+                    }
+                ])
+            elif destination_type == "landmark":
+                activities.extend([
+                    {
+                        "name": "Guided morning tour",
+                        "duration": "2 hours",
+                        "location": "Main landmark",
+                        "description": "Expert-led tour with historical insights and photo opportunities"
+                    }
+                ])
+            else:  # city or entertainment
+                activities.extend([
+                    {
+                        "name": "Local coffee and breakfast",
+                        "duration": "1 hour",
+                        "location": "Local cafe",
+                        "description": "Start the day with authentic local breakfast"
+                    },
+                    {
+                        "name": "Morning market visit",
+                        "duration": "1.5 hours",
+                        "location": "Local market",
+                        "description": "Experience local culture and find fresh produce"
+                    }
+                ])
+        
+        # Add interest-specific activities
+        if "food" in interests and not is_first_day:
+            activities.append({
+                "name": "Food market exploration",
+                "duration": "1 hour",
+                "location": "Local food market",
+                "description": "Discover local ingredients and food culture"
+            })
+        
+        if "culture" in interests:
+            activities.append({
+                "name": "Cultural site visit",
+                "duration": "1.5 hours",
+                "location": "Cultural landmark",
+                "description": "Visit a museum, temple, or cultural site"
+            })
+        
+        return activities[:3]  # Limit to 3 morning activities
+    
+    def _generate_afternoon_activities(self, destination_type: str, interests: List[str], day_theme: str, day: int, is_last_day: bool) -> List[Dict]:
+        """Generate afternoon activities with detailed information"""
+        activities = []
+        
+        if is_last_day:
+            activities.extend([
+                {
+                    "name": "Final souvenir shopping",
+                    "duration": "1 hour",
+                    "location": "Local shops",
+                    "description": "Pick up last-minute gifts and mementos"
+                },
+                {
+                    "name": "Relaxation time",
+                    "duration": "2 hours",
+                    "location": "Hotel or park",
+                    "description": "Unwind before departure"
+                }
+            ])
+        else:
+            # Add destination-specific afternoon activities
+            if destination_type == "national_park":
+                activities.extend([
+                    {
+                        "name": "Scenic hiking trail",
+                        "duration": "3 hours",
+                        "location": "Park trails",
+                        "description": "Explore beautiful landscapes and viewpoints"
+                    },
+                    {
+                        "name": "Photography session",
+                        "duration": "1 hour",
+                        "location": "Scenic overlooks",
+                        "description": "Capture stunning natural beauty"
+                    }
+                ])
+            elif destination_type == "theme_park":
+                activities.extend([
+                    {
+                        "name": "Afternoon attractions",
+                        "duration": "3 hours",
+                        "location": "Theme park",
+                        "description": "Enjoy popular rides and shows"
+                    },
+                    {
+                        "name": "Character meet and greets",
+                        "duration": "1 hour",
+                        "location": "Designated areas",
+                        "description": "Meet favorite characters and take photos"
+                    }
+                ])
+            elif destination_type == "landmark":
+                activities.extend([
+                    {
+                        "name": "Detailed landmark exploration",
+                        "duration": "2 hours",
+                        "location": "Main landmark",
+                        "description": "Take time to explore every detail"
+                    },
+                    {
+                        "name": "Historical information session",
+                        "duration": "1 hour",
+                        "location": "Information center",
+                        "description": "Learn about the landmark's history"
+                    }
+                ])
+            else:  # city or entertainment
+                activities.extend([
+                    {
+                        "name": "Local neighborhood exploration",
+                        "duration": "2 hours",
+                        "location": "Various neighborhoods",
+                        "description": "Discover hidden gems and local life"
+                    },
+                    {
+                        "name": "Cultural activity",
+                        "duration": "1.5 hours",
+                        "location": "Cultural venue",
+                        "description": "Participate in local cultural activities"
+                    }
+                ])
+        
+        # Add interest-specific activities
+        if "outdoor" in interests and destination_type != "national_park":
+            activities.append({
+                "name": "Outdoor adventure",
+                "duration": "2 hours",
+                "location": "Outdoor venue",
+                "description": "Enjoy outdoor activities like biking, kayaking, or hiking"
+            })
+        
+        if "shopping" in interests:
+            activities.append({
+                "name": "Shopping district visit",
+                "duration": "1.5 hours",
+                "location": "Shopping area",
+                "description": "Explore local shops and boutiques"
+            })
+        
+        return activities[:3]  # Limit to 3 afternoon activities
+    
+    def _generate_evening_activities(self, destination_type: str, interests: List[str], day_theme: str, day: int, is_last_day: bool) -> List[Dict]:
+        """Generate evening activities with detailed information"""
+        activities = []
+        
+        if is_last_day:
+            activities.extend([
+                {
+                    "name": "Farewell dinner",
+                    "duration": "2 hours",
+                    "location": "Special restaurant",
+                    "description": "Enjoy a memorable final meal"
+                },
+                {
+                    "name": "Evening stroll",
+                    "duration": "1 hour",
+                    "location": "Scenic area",
+                    "description": "Take in the evening atmosphere"
+                }
+            ])
+        else:
+            # Add destination-specific evening activities
+            if destination_type == "national_park":
+                activities.extend([
+                    {
+                        "name": "Sunset viewing",
+                        "duration": "1 hour",
+                        "location": "Scenic overlook",
+                        "description": "Watch the sunset over beautiful landscapes"
+                    },
+                    {
+                        "name": "Evening wildlife spotting",
+                        "duration": "1 hour",
+                        "location": "Park trails",
+                        "description": "Look for nocturnal wildlife"
+                    }
+                ])
+            elif destination_type == "theme_park":
+                activities.extend([
+                    {
+                        "name": "Evening shows and parades",
+                        "duration": "2 hours",
+                        "location": "Theme park",
+                        "description": "Enjoy spectacular evening entertainment"
+                    }
+                ])
+            elif destination_type == "landmark":
+                activities.extend([
+                    {
+                        "name": "Evening illumination viewing",
+                        "duration": "1 hour",
+                        "location": "Landmark",
+                        "description": "See the landmark beautifully lit up at night"
+                    }
+                ])
+            else:  # city or entertainment
+                activities.extend([
+                    {
+                        "name": "Live entertainment",
+                        "duration": "2 hours",
+                        "location": "Entertainment venue",
+                        "description": "Enjoy local music, theater, or shows"
+                    },
+                    {
+                        "name": "Nightlife exploration",
+                        "duration": "1.5 hours",
+                        "location": "Nightlife district",
+                        "description": "Experience the local nightlife scene"
+                    }
+                ])
+        
+        # Add interest-specific activities
+        if "entertainment" in interests:
+            activities.append({
+                "name": "Evening entertainment",
+                "duration": "2 hours",
+                "location": "Entertainment venue",
+                "description": "Enjoy local entertainment options"
+            })
+        
+        return activities[:2]  # Limit to 2 evening activities
+    
+    def _generate_lunch_recommendations(self, destination_type: str, interests: List[str], day_theme: str) -> List[Dict]:
+        """Generate lunch recommendations"""
+        recommendations = []
+        
+        if destination_type == "national_park":
+            recommendations.extend([
+                {
+                    "name": "Park cafe",
+                    "type": "casual",
+                    "specialty": "Local and healthy options",
+                    "price_range": "$$"
+                },
+                {
+                    "name": "Picnic lunch",
+                    "type": "outdoor",
+                    "specialty": "Pack your own or grab from visitor center",
+                    "price_range": "$"
+                }
+            ])
+        elif destination_type == "theme_park":
+            recommendations.extend([
+                {
+                    "name": "Theme park restaurant",
+                    "type": "family-friendly",
+                    "specialty": "Themed dining experience",
+                    "price_range": "$$"
+                },
+                {
+                    "name": "Quick service",
+                    "type": "fast-casual",
+                    "specialty": "Quick meals to maximize park time",
+                    "price_range": "$"
+                }
+            ])
+        else:
+            recommendations.extend([
+                {
+                    "name": "Local bistro",
+                    "type": "casual",
+                    "specialty": "Regional specialties",
+                    "price_range": "$$"
+                },
+                {
+                    "name": "Food market",
+                    "type": "street food",
+                    "specialty": "Fresh local ingredients",
+                    "price_range": "$"
+                }
+            ])
+        
+        if "food" in interests:
+            recommendations.append({
+                "name": "Gourmet lunch spot",
+                "type": "upscale",
+                "specialty": "Fine dining experience",
+                "price_range": "$$$"
+            })
+        
+        return recommendations[:3]
+    
+    def _generate_dinner_recommendations(self, destination_type: str, interests: List[str], day_theme: str) -> List[Dict]:
+        """Generate dinner recommendations"""
+        recommendations = []
+        
+        if destination_type == "national_park":
+            recommendations.extend([
+                {
+                    "name": "Lodge restaurant",
+                    "type": "upscale",
+                    "specialty": "Regional cuisine with park views",
+                    "price_range": "$$$"
+                },
+                {
+                    "name": "Local diner",
+                    "type": "casual",
+                    "specialty": "Comfort food and local favorites",
+                    "price_range": "$$"
+                }
+            ])
+        elif destination_type == "theme_park":
+            recommendations.extend([
+                {
+                    "name": "Character dining",
+                    "type": "family-friendly",
+                    "specialty": "Interactive dining with characters",
+                    "price_range": "$$$"
+                },
+                {
+                    "name": "Theme park fine dining",
+                    "type": "upscale",
+                    "specialty": "Gourmet cuisine in themed setting",
+                    "price_range": "$$$"
+                }
+            ])
+        else:
+            recommendations.extend([
+                {
+                    "name": "Fine dining restaurant",
+                    "type": "upscale",
+                    "specialty": "Regional specialties and wine pairings",
+                    "price_range": "$$$"
+                },
+                {
+                    "name": "Local favorite",
+                    "type": "casual",
+                    "specialty": "Authentic local dishes",
+                    "price_range": "$$"
+                }
+            ])
+        
+        if "food" in interests:
+            recommendations.append({
+                "name": "Culinary experience",
+                "type": "experiential",
+                "specialty": "Chef's tasting menu or cooking class",
+                "price_range": "$$$$"
+            })
+        
+        return recommendations[:3]
+    
+    def _generate_transportation_info(self, day: int, is_first_day: bool, is_last_day: bool, flights: Dict) -> Dict:
+        """Generate transportation information for the day"""
+        transportation = {
+            "morning": "Walking/Public Transit",
+            "afternoon": "Walking/Public Transit",
+            "evening": "Walking/Taxi"
+        }
+        
+        if is_first_day and flights.get("cheapest"):
+            transportation["arrival"] = {
+                "type": "Flight",
+                "details": flights["cheapest"][0],
+                "tips": ["Allow extra time for security", "Check flight status before leaving"]
+            }
+        
+        if is_last_day and flights.get("cheapest"):
+            transportation["departure"] = {
+                "type": "Flight",
+                "details": flights["cheapest"][0],
+                "tips": ["Check out of hotel early", "Confirm departure time"]
+            }
+        
+        return transportation
+    
+    def _generate_accommodation_info(self, day: int, hotels: Dict, destination_name: str) -> Dict:
+        """Generate accommodation information"""
+        if day == 1 and hotels.get("moderate"):
+            hotel = hotels["moderate"][0]
+            return {
+                "name": hotel.get("name", "Hotel"),
+                "location": hotel.get("city", destination_name),
+                "price_per_night": hotel.get("average_price_per_night", "N/A"),
+                "rating": hotel.get("star_rating", hotel.get("rating", "N/A")),
+                "booking_url": hotel.get("booking_url", "#"),
+                "tips": ["Book early for best rates", "Check for package deals"]
+            }
+        else:
+            return {
+                "name": "Same as Day 1",
+                "location": destination_name,
+                "tips": ["Consider extending your stay", "Ask about late checkout"]
+            }
+    
+    def _generate_practical_tips(self, destination_type: str, day: int, is_first_day: bool, is_last_day: bool) -> List[str]:
+        """Generate practical tips for the day"""
+        tips = ["Wear comfortable walking shoes", "Carry water and snacks"]
+        
+        if is_first_day:
+            tips.extend([
+                "Have hotel confirmation ready",
+                "Keep important documents accessible",
+                "Set up local transportation apps"
+            ])
+        
+        if is_last_day:
+            tips.extend([
+                "Pack early to avoid stress",
+                "Confirm departure arrangements",
+                "Take final photos and memories"
+            ])
+        
+        if destination_type == "national_park":
+            tips.extend([
+                "Check weather conditions",
+                "Bring appropriate gear for activities",
+                "Follow park safety guidelines"
+            ])
+        elif destination_type == "theme_park":
+            tips.extend([
+                "Download park app for wait times",
+                "Bring sunscreen and hats",
+                "Consider fast pass options"
+            ])
+        
+        return tips[:5]  # Limit to 5 tips
+    
+    def _generate_cultural_notes(self, destination_type: str, interests: List[str], destination_info: Dict) -> List[str]:
+        """Generate cultural notes and insights"""
+        notes = []
+        
+        if destination_info.get("resolved_destination"):
+            dest = destination_info["resolved_destination"]
+            if dest.get("description"):
+                notes.append(f"Local insight: {dest['description']}")
+        
+        if "culture" in interests:
+            notes.extend([
+                "Respect local customs and traditions",
+                "Learn a few basic phrases in the local language",
+                "Dress appropriately for cultural sites"
+            ])
+        
+        if destination_type == "national_park":
+            notes.extend([
+                "Follow Leave No Trace principles",
+                "Respect wildlife and maintain distance",
+                "Support local conservation efforts"
+            ])
+        
+        return notes[:3]  # Limit to 3 notes
+    
+    def _calculate_date(self, start_date: str, days_offset: int) -> str:
+        """Calculate date with offset from start date"""
+        start = datetime.strptime(start_date, "%Y-%m-%d")
+        target = start + timedelta(days=days_offset)
+        return target.strftime("%Y-%m-%d")
+    
+    def _calculate_total_cost(self, flights: Dict, hotels: Dict, duration: int) -> Dict[str, float]:
+        """Calculate total estimated trip cost"""
+        flight_cost = 0
+        if flights.get("cheapest") and len(flights["cheapest"]) > 0:
+            flight_cost = flights["cheapest"][0].get("price", 0)
+        
+        hotel_cost = 0
+        if hotels.get("moderate") and len(hotels["moderate"]) > 0:
+            hotel_cost = hotels["moderate"][0].get("average_price_per_night", 0) * duration
+        
+        return {
+            "flights": flight_cost,
+            "hotels": hotel_cost,
+            "total": flight_cost + hotel_cost,
+            "per_person": (flight_cost + hotel_cost) / 2  # Assuming 2 travelers
+        }
+    
+    def _generate_booking_links(self, flights: Dict, hotels: Dict) -> Dict[str, str]:
+        """Generate consolidated booking links"""
+        links = {}
+        
+        if flights.get("cheapest"):
+            links["flights"] = flights["cheapest"][0].get("booking_url", "")
+        
+        if hotels.get("moderate"):
+            links["hotels"] = hotels["moderate"][0].get("booking_url", "")
+        
+        return links
+
+# Initialize the trip planner
+trip_planner = NaturalLanguageTripPlanner()
+
+@router.post("/plan-trip-natural")
+async def plan_trip_natural(request: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Plan a complete trip from natural language input.
+    
+    Example queries:
+    - "Plan a 3-day trip from Dallas to Yosemite National Park this weekend, ±1 day"
+    - "I want to visit Disney World from New York for 5 days in August"
+    - "Book a luxury vacation to Las Vegas for 4 days next month"
+    """
+    try:
+        query = request.get("query")
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is required")
+        
+        logger.info(f"Received natural language trip planning request: {query}")
+        
+        # Plan the trip
+        result = await trip_planner.plan_trip_from_natural_language(query)
+        
+        if "error" in result:
+            # Return validation errors as a proper response instead of HTTPException
+            return {
+                "success": False,
+                "error": result["error"],
+                "validation": result.get("validation"),
+                "validation_errors": result.get("validation_errors", []),
+                "missing_fields": result.get("missing_fields", []),
+                "suggestions": result.get("suggestions", [])
+            }
+        
+        # Check if we have a successful result with trip_plan
+        if result.get("success") and "trip_plan" in result:
+            return {
+                "success": True,
+                "trip_plan": result["trip_plan"],
+                "extraction": result.get("extraction"),
+                "validation": result.get("validation"),
+                "suggestions": result.get("suggestions", [])
+            }
+        elif result.get("status") == "needs_more_info":
+            # Handle validation case - return the result as is
+            return result
+        else:
+            # Handle case where trip_plan is missing
+            return {
+                "success": False,
+                "error": "Failed to generate trip plan",
+                "suggestions": [
+                    "Try rephrasing your request",
+                    "Include specific dates and destinations",
+                    "Check that all information is clear"
+                ]
+            }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in plan_trip_natural: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to plan trip: {str(e)}")
+
+@router.post("/plan-trip-natural-with-answers")
+async def plan_trip_natural_with_answers(request: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Complete trip planning with follow-up answers from validation.
+    """
+    try:
+        original_query = request.get("original_query")
+        answers = request.get("answers", {})
+        partial_extraction = request.get("partial_extraction", {})
+        
+        if not original_query:
+            raise HTTPException(status_code=400, detail="Original query is required")
+        
+        logger.info(f"Completing trip planning with answers: {answers}")
+        
+        # Merge the answers with the partial extraction
+        updated_extraction = partial_extraction.copy()
+        
+        # Update travelers
+        if "travelers" in answers:
+            travelers_data = answers["travelers"]
+            if isinstance(travelers_data, dict):
+                updated_extraction["travelers"] = travelers_data
+                updated_extraction["travelers_specified"] = True
+            else:
+                # Handle string format like "2 adults, 1 child"
+                updated_extraction["travelers"] = {"adults": 2, "children": 0}  # Default
+                updated_extraction["travelers_specified"] = True
+        
+        # Update budget
+        if "budget" in answers:
+            budget_value = answers["budget"]
+            if budget_value:
+                # Try to extract budget amount
+                budget_str = str(budget_value).strip()
+                
+                # Remove dollar sign and commas
+                budget_clean = budget_str.replace('$', '').replace(',', '')
+                
+                # Check if it's a number
+                try:
+                    budget_amount = float(budget_clean)
+                    if budget_amount > 0:
+                        updated_extraction["budget_amount"] = budget_amount
+                        updated_extraction["budget_currency"] = "USD"
+                        updated_extraction["budget_specified"] = True
+                    else:
+                        # Check if it's a budget preference
+                        budget_lower = budget_str.lower()
+                        if budget_lower in ["budget", "moderate", "luxury"]:
+                            updated_extraction["budget_preference"] = budget_lower
+                            updated_extraction["budget_specified"] = True
+                except ValueError:
+                    # Check if it's a budget preference
+                    budget_lower = budget_str.lower()
+                    if budget_lower in ["budget", "moderate", "luxury"]:
+                        updated_extraction["budget_preference"] = budget_lower
+                        updated_extraction["budget_specified"] = True
+        
+        # Update interests
+        if "interests" in answers:
+            interests_data = answers["interests"]
+            if isinstance(interests_data, list):
+                updated_extraction["interests"] = interests_data
+            elif isinstance(interests_data, str):
+                # Split comma-separated interests
+                updated_extraction["interests"] = [interest.strip() for interest in interests_data.split(',') if interest.strip()]
+        
+        # Now generate the trip plan with the updated extraction
+        logger.info(f"Generating trip plan with updated extraction: {updated_extraction}")
+        trip_plan = await trip_planner._generate_trip_plan(updated_extraction)
+        logger.info(f"Trip plan generated successfully: {trip_plan}")
+        
+        # Check if it's a budget too low error
+        if trip_plan and "error" in trip_plan and trip_plan["error"] == "budget_too_low":
+            response = {
+                "success": False,
+                "error": "budget_too_low",
+                "message": trip_plan.get("message", "No hotels found within your budget"),
+                "suggestions": trip_plan.get("suggestions", {}),
+                "extraction": updated_extraction
+            }
+            logger.info(f"Returning budget too low response: {response}")
+            return response
+        
+        response = {
+            "success": True,
+            "trip_plan": trip_plan,
+            "extraction": updated_extraction,
+            "suggestions": updated_extraction.get("suggestions", [])
+        }
+        logger.info(f"Returning successful response: {response}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in plan_trip_natural_with_answers: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to complete trip planning: {str(e)}") 

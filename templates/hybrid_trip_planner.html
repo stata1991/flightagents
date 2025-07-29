@@ -1,0 +1,2172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Trip Planner - FlightTickets.ai</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: var(--gradient-bg);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .ai-header {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .ai-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .ai-subtitle {
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--light-bg);
+            border-radius: 16px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message.ai .message-avatar {
+            background: var(--gradient-bg);
+            color: white;
+        }
+
+        .message-content {
+            background: white;
+            padding: 16px 20px;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            color: #1e293b;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .query-input {
+            flex: 1;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px 20px;
+            font-size: 1rem;
+            resize: none;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .query-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .send-btn {
+            background: var(--gradient-bg);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 16px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            display: none;
+        }
+
+        .provider-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .provider-ai {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .provider-api {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .quality-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .quality-excellent {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .quality-good {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .quality-basic {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .itinerary-day {
+            background: var(--light-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .day-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .day-theme {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .activity {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .activity-time {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .activity-description {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .activity-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+        }
+
+        .cost-badge {
+            background: var(--success-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .tips-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+        }
+
+        .tips-list li {
+            background: var(--light-bg);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+        }
+
+        .tips-list li:before {
+            content: "💡 ";
+            margin-right: 5px;
+        }
+
+        .itinerary-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .itinerary-tab {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .itinerary-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .itinerary-tab:hover {
+            background: var(--light-bg);
+        }
+
+        .itinerary-content {
+            display: none;
+        }
+
+        .itinerary-content.active {
+            display: block;
+        }
+
+        .trip-summary {
+            background: var(--light-bg);
+            border-radius: 16px;
+            padding: 25px;
+        }
+
+        /* Flight Cards */
+        .flight-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .flight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .flight-header h5 {
+            margin: 0;
+            color: #333;
+        }
+
+        .price {
+            font-weight: bold;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+
+        .flight-details {
+            margin-bottom: 15px;
+        }
+
+        .flight-route {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .route-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 1.1em;
+        }
+
+        .airport {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 2px;
+        }
+
+        .flight-duration {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .duration {
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .layover {
+            color: #666;
+            font-size: 0.8em;
+            margin-top: 2px;
+        }
+
+        .flight-info {
+            text-align: center;
+        }
+
+        .stops {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Hotel Cards */
+        .hotel-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hotel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .hotel-header h5 {
+            margin: 0;
+            color: #333;
+        }
+
+        .stars {
+            color: #ffc107;
+            font-size: 1.1em;
+        }
+
+        .hotel-details {
+            margin-bottom: 15px;
+        }
+
+        .hotel-location {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .hotel-price {
+            margin-bottom: 10px;
+        }
+
+        .hotel-amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .amenity {
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="ai-header">
+            <h1 class="ai-title">Hybrid Trip Planner</h1>
+            <p class="ai-subtitle">AI-First with API Fallback - Best of Both Worlds</p>
+        </div>
+
+        <div class="chat-container">
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        Hi! I'm your AI travel assistant. Tell me about your dream trip and I'll create the perfect plan for you. I'll ask you a few questions to make sure I plan exactly what you want!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Container -->
+            <div class="input-container">
+                <textarea 
+                    class="query-input" 
+                    id="queryInput" 
+                    placeholder="Describe your trip with origin, destination, dates, duration, and travelers... (e.g., 'Plan a 3-day trip from New York to Paris starting March 15th for 2 people with food and culture interests')"
+                    rows="3"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendQuery()">
+                    <i class="fas fa-paper-plane"></i>
+                    Plan Trip
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <h4>Planning your perfect trip...</h4>
+            <p>This may take a few moments as we gather the best recommendations.</p>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="results-container">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <!-- Trip Details Modal -->
+    <div class="modal fade" id="tripDetailsModal" tabindex="-1" aria-labelledby="tripDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tripDetailsModalLabel">
+                        <i class="fas fa-edit"></i> Complete Your Trip Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="tripDetailsForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="origin" class="form-label">Origin City *</label>
+                                    <input type="text" class="form-control" id="origin" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="destination" class="form-label">Destination City *</label>
+                                    <input type="text" class="form-control" id="destination" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="startDate" class="form-label">Departure Date *</label>
+                                    <input type="date" class="form-control" id="startDate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="duration" class="form-label">Trip Duration (Days) *</label>
+                                    <input type="number" class="form-control" id="duration" min="1" max="30" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="travelers" class="form-label">Number of Travelers *</label>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="decrementTravelers()">-</button>
+                                        <input type="number" class="form-control text-center" id="travelers" value="1" min="1" max="10" readonly>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="incrementTravelers()">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="children" class="form-label">Number of Children</label>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="decrementChildren()">-</button>
+                                        <input type="number" class="form-control text-center" id="children" value="0" min="0" max="10" readonly>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="incrementChildren()">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="budget" class="form-label">Budget (USD) *</label>
+                                    <input type="number" class="form-control" id="budget" min="100" step="100" placeholder="e.g., 2000" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="budgetType" class="form-label">Budget Type</label>
+                                    <select class="form-select" id="budgetType">
+                                        <option value="budget">Budget</option>
+                                        <option value="moderate" selected>Moderate</option>
+                                        <option value="luxury">Luxury</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Interests (Select all that apply)</label>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="culture" id="interestCulture">
+                                        <label class="form-check-label" for="interestCulture">Culture</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="food" id="interestFood">
+                                        <label class="form-check-label" for="interestFood">Food</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="adventure" id="interestAdventure">
+                                        <label class="form-check-label" for="interestAdventure">Adventure</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="relaxation" id="interestRelaxation">
+                                        <label class="form-check-label" for="interestRelaxation">Relaxation</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="shopping" id="interestShopping">
+                                        <label class="form-check-label" for="interestShopping">Shopping</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="nightlife" id="interestNightlife">
+                                        <label class="form-check-label" for="interestNightlife">Nightlife</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="history" id="interestHistory">
+                                        <label class="form-check-label" for="interestHistory">History</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="nature" id="interestNature">
+                                        <label class="form-check-label" for="interestNature">Nature</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="art" id="interestArt">
+                                        <label class="form-check-label" for="interestArt">Art</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitTripDetails()">
+                        <i class="fas fa-check"></i> Plan My Trip
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // Enter key to send
+        document.getElementById('queryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuery();
+            }
+        });
+
+        // Modal event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('tripDetailsModal');
+            if (modal) {
+                modal.addEventListener('hidden.bs.modal', function() {
+                    console.log('Modal hidden event triggered');
+                    // Reset form when modal is closed
+                    document.getElementById('tripDetailsForm').reset();
+                });
+            }
+        });
+
+        let currentTripInfo = null;
+        let waitingForUserInput = false;
+        
+        // Make currentTripInfo globally accessible for deep links
+        window.currentTripInfo = currentTripInfo;
+
+        async function sendQuery() {
+            const queryInput = document.getElementById('queryInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            const query = queryInput.value.trim();
+            if (!query) return;
+
+            // Add user message to chat
+            addMessage('user', query);
+            
+            // Clear input and disable send button
+            queryInput.value = '';
+            sendBtn.disabled = true;
+
+            try {
+                // Parse the query to extract basic info
+                const tripInfo = parseQuery(query);
+                currentTripInfo = tripInfo;
+                window.currentTripInfo = tripInfo;
+                
+                // Ask follow-up questions and show modal if needed
+                await askFollowUpQuestions(tripInfo);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', `I'm sorry, but I encountered an error: ${error.message}. Please try again.`);
+            } finally {
+                sendBtn.disabled = false;
+            }
+        }
+
+
+
+        function getMissingInfo(tripInfo) {
+            const missingInfo = [];
+            
+            console.log('Checking missing info for:', tripInfo);
+            
+            if (!tripInfo.origin || tripInfo.origin === 'Unknown' || tripInfo.origin === '') {
+                missingInfo.push('origin');
+            }
+            if (!tripInfo.destination || tripInfo.destination === 'Unknown' || tripInfo.destination === '') {
+                missingInfo.push('destination');
+            }
+            if (!tripInfo.travelers || tripInfo.travelers === 0) {
+                missingInfo.push('travelers');
+            }
+            if (tripInfo.children === null || tripInfo.children === undefined) {
+                missingInfo.push('children');
+            }
+            if (!tripInfo.duration || tripInfo.duration === 0) {
+                missingInfo.push('duration');
+            }
+            if (!tripInfo.start_date || tripInfo.start_date === '') {
+                missingInfo.push('start_date');
+            }
+            if (!tripInfo.budget || tripInfo.budget === '') {
+                missingInfo.push('budget');
+            }
+            
+            console.log('Missing info:', missingInfo);
+            return missingInfo;
+        }
+
+        function parseQuery(query) {
+            console.log('Parsing query:', query);
+            
+            // Simple parsing - in a real app, you'd use NLP
+            const info = {
+                origin: null,
+                destination: null,
+                duration: 0,
+                travelers: 0,
+                children: null,
+                start_date: null,
+                budget: null,
+                interests: []
+            };
+
+            // Extract origin and destination from multiple patterns
+            let fromToMatch = query.match(/from\s+([^t]+?)\s+to\s+([^f]+?)(?:\s+for|\s+with)/i);
+            if (!fromToMatch) {
+                // Try "X to Y" pattern without "from"
+                fromToMatch = query.match(/([a-zA-Z]+)\s+to\s+([a-zA-Z]+)/i);
+            }
+            if (fromToMatch) {
+                info.origin = fromToMatch[1].trim();
+                info.destination = fromToMatch[2].trim();
+            }
+
+            // Extract duration - multiple patterns
+            let durationMatch = query.match(/(\d+)-?day/);
+            if (!durationMatch) {
+                durationMatch = query.match(/(\d+)\s+days?/);
+            }
+            if (durationMatch) {
+                info.duration = parseInt(durationMatch[1]);
+            }
+
+            // Extract travelers - multiple patterns
+            let travelersMatch = query.match(/for (\d+) (?:people|person|travelers?)/);
+            if (!travelersMatch) {
+                travelersMatch = query.match(/(\d+)\s+travelers?/);
+            }
+            if (!travelersMatch) {
+                travelersMatch = query.match(/(\d+)\s+travlers?/); // Handle typo
+            }
+            if (travelersMatch) {
+                info.travelers = parseInt(travelersMatch[1]);
+            }
+
+            // Extract children (if mentioned)
+            const childrenMatch = query.match(/(\d+)\s+children?/);
+            if (childrenMatch) {
+                info.children = parseInt(childrenMatch[1]);
+            }
+
+            // Extract start date - multiple patterns
+            let dateMatch = query.match(/(?:start|beginning|from)\s+(?:date\s+)?(?:on\s+)?([A-Za-z]+\s+\d{1,2},?\s+\d{4}|[A-Za-z]+\s+\d{1,2}|next\s+week|next\s+month)/i);
+            if (!dateMatch) {
+                dateMatch = query.match(/(\d{1,2})(?:st|nd|rd|th)?\s+(?:August|September|October|November|December|January|February|March|April|May|June|July)\s+\d{4}/i);
+            }
+            if (!dateMatch) {
+                dateMatch = query.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+            }
+            if (dateMatch) {
+                info.start_date = dateMatch[1];
+            }
+
+            // Extract budget - multiple patterns
+            if (query.includes('budget') || query.includes('cheap') || query.includes('economy') || query.includes('$2025')) {
+                info.budget = 'budget';
+            } else if (query.includes('luxury') || query.includes('expensive') || query.includes('premium')) {
+                info.budget = 'luxury';
+            } else if (query.includes('moderate') || query.includes('mid-range')) {
+                info.budget = 'moderate';
+            }
+
+            // Extract interests
+            if (query.includes('food') || query.includes('cuisine') || query.includes('dining')) info.interests.push('food');
+            if (query.includes('culture') || query.includes('cultural')) info.interests.push('culture');
+            if (query.includes('history') || query.includes('historical')) info.interests.push('history');
+            if (query.includes('adventure') || query.includes('outdoor')) info.interests.push('adventure');
+            if (query.includes('nature') || query.includes('outdoors')) info.interests.push('nature');
+            if (query.includes('shopping') || query.includes('retail')) info.interests.push('shopping');
+            if (query.includes('art') || query.includes('museum')) info.interests.push('art');
+            if (query.includes('nightlife') || query.includes('entertainment')) info.interests.push('nightlife');
+
+            console.log('Parsed info:', info);
+            return info;
+        }
+
+        async function askFollowUpQuestions(tripInfo) {
+            const missingInfo = getMissingInfo(tripInfo);
+            
+            // If we have missing information, show modal
+            if (missingInfo.length > 0) {
+                showTripDetailsModal(tripInfo, missingInfo);
+                return;
+            }
+            
+            // If all information is present, proceed with trip planning
+            addMessage('ai', `Perfect! I have all the information I need:
+• Origin: ${tripInfo.origin}
+• Destination: ${tripInfo.destination}
+• Travelers: ${tripInfo.travelers}
+• Children: ${tripInfo.children || 0}
+• Duration: ${tripInfo.duration} days
+• Start date: ${tripInfo.start_date || 'Next month'}
+• Budget: ${tripInfo.budget}
+• Interests: ${tripInfo.interests.join(', ') || 'General exploration'}
+
+Let me create your personalized trip plan!`);
+
+            // Proceed with trip planning
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/hybrid/plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        origin: tripInfo.origin,
+                        destination: tripInfo.destination,
+                        duration_days: tripInfo.duration,
+                        travelers: tripInfo.travelers,
+                        budget_range: tripInfo.budget,
+                        interests: tripInfo.interests,
+                        trip_type: 'leisure',
+                        special_requirements: null,
+                        preferred_provider: null
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addMessage('ai', `Perfect! I've created your comprehensive trip plan. Here's your detailed itinerary:`);
+                    displayResults(result, tripInfo);
+                } else {
+                    throw new Error(result.detail || 'Trip planning failed');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('ai', `I'm sorry, but I encountered an error while planning your trip: ${error.message}. Please try again.`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function addMessage(type, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = type === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function displayResults(result, tripInfo = null) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!resultsDiv) {
+                console.error('results element not found');
+                return;
+            }
+            
+            // Use tripInfo if available, otherwise fall back to result data
+            const origin = tripInfo?.origin || result.itinerary?.trip_summary?.origin || 'Not specified';
+            const destination = tripInfo?.destination || result.itinerary?.trip_summary?.destination || 'Not specified';
+            const duration = tripInfo?.duration || result.duration_days || result.itinerary?.trip_summary?.duration || 'Not specified';
+            const travelers = tripInfo?.travelers || result.travelers || result.itinerary?.trip_summary?.travelers || 'Not specified';
+            const budget = tripInfo?.budget || result.budget_range || result.itinerary?.trip_summary?.budget || 'Not specified';
+            
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h2>${result.itinerary?.trip_summary?.title || 'Your Trip Plan'}</h2>
+                        <p class="text-muted">${result.itinerary?.trip_summary?.overview || ''}</p>
+                    </div>
+                </div>
+                
+                <!-- Trip Summary -->
+                <div class="trip-summary mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>📍 Trip Route</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Origin:</strong> ${origin}</li>
+                                <li><strong>Destination:</strong> ${destination}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>📅 Trip Details</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Duration:</strong> ${duration} ${duration === 'Not specified' ? '' : 'days'}</li>
+                                <li><strong>Travelers:</strong> ${travelers}</li>
+                                <li><strong>Budget:</strong> ${budget}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Itinerary Tabs -->
+                <div class="itinerary-tabs mb-3">
+                    <button class="itinerary-tab active" onclick="switchItineraryTab('summary')">
+                        <i class="fas fa-info-circle me-2"></i>Summary
+                    </button>
+                    <button class="itinerary-tab" onclick="switchItineraryTab('itinerary')">
+                        <i class="fas fa-calendar me-2"></i>Itinerary
+                    </button>
+                    <button class="itinerary-tab" onclick="switchItineraryTab('flights')">
+                        <i class="fas fa-plane me-2"></i>Flights
+                    </button>
+                    <button class="itinerary-tab" onclick="switchItineraryTab('hotels')">
+                        <i class="fas fa-bed me-2"></i>Hotels
+                    </button>
+                    <button class="itinerary-tab" onclick="switchItineraryTab('practical')">
+                        <i class="fas fa-info me-2"></i>Practical Info
+                    </button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="itinerary-content active" id="summaryContent">
+                    <div class="day-card">
+                        <div class="day-header">
+                            <h3 class="day-title">Trip Overview</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Highlights</h5>
+                                <ul>
+                                    ${(result.itinerary.trip_summary?.highlights || []).map(highlight => `<li>${highlight}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Best Time to Visit</h5>
+                                <p>${result.itinerary.trip_summary?.best_time_to_visit || 'N/A'}</p>
+                                <h5>Weather</h5>
+                                <p>${result.itinerary.trip_summary?.weather_info || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="itinerary-content" id="itineraryContent">
+                    <!-- Itinerary content will be populated here -->
+                </div>
+
+                <div class="itinerary-content" id="flightsContent">
+                    <!-- Flights content will be populated here -->
+                </div>
+
+                <div class="itinerary-content" id="hotelsContent">
+                    <!-- Hotels content will be populated here -->
+                </div>
+
+                <div class="itinerary-content" id="practicalContent">
+                    <!-- Practical info content will be populated here -->
+                </div>
+            `;
+            
+            // Display practical info
+            if (result.itinerary.practical_info) {
+                const info = result.itinerary.practical_info;
+                html += `
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5>🌍 Practical Information</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Currency:</strong> ${info.currency}</li>
+                                <li><strong>Language:</strong> ${info.language}</li>
+                                <li><strong>Timezone:</strong> ${info.timezone}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>🎒 Packing Suggestions</h5>
+                            <ul>
+                                ${info.packing_suggestions?.map(item => `<li>${item}</li>`).join('') || '<li>No specific suggestions</li>'}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+            
+            // Populate tab content AFTER HTML is inserted into DOM
+            setTimeout(() => {
+                populateItineraryContent(result);
+                populateFlightsContent(result, origin, destination);
+                populateHotelsContent(result, destination);
+                populatePracticalContent(result);
+            }, 0);
+        }
+
+        function switchItineraryTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.itinerary-tab').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Show/hide content
+            document.querySelectorAll('.itinerary-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + 'Content').classList.add('active');
+        }
+
+        function populateItineraryContent(result) {
+            const contentDiv = document.getElementById('itineraryContent');
+            
+            if (!contentDiv) {
+                console.error('itineraryContent element not found');
+                return;
+            }
+            
+            if (!result.itinerary || !result.itinerary.itinerary) {
+                contentDiv.innerHTML = '<p>No detailed itinerary available.</p>';
+                return;
+            }
+            
+            let html = '<h3>📅 Daily Itinerary</h3>';
+            
+            // Generate dates based on start date if available
+            let startDate = result.itinerary.trip_summary?.start_date;
+            
+            // If no start date in result, try to get it from current trip info
+            if (!startDate && window.currentTripInfo?.start_date) {
+                startDate = window.currentTripInfo.start_date;
+                console.log('Using start date from current trip info:', startDate);
+            }
+            
+            if (!startDate) {
+                contentDiv.innerHTML = '<p>No start date available for itinerary. Please provide a start date in the trip details.</p>';
+                return;
+            }
+            
+            console.log('Processing itinerary with start date:', startDate);
+            
+            const start = new Date(startDate);
+            if (isNaN(start.getTime())) {
+                console.error('Invalid start date in itinerary:', startDate);
+                contentDiv.innerHTML = `<p>Invalid start date for itinerary: "${startDate}". Please provide a valid date format.</p>`;
+                return;
+            }
+            
+            console.log('Parsed start date:', start.toISOString(), 'Local:', start.toLocaleDateString());
+            
+            Object.entries(result.itinerary.itinerary).forEach(([dayKey, dayData], index) => {
+                // Calculate the date for this day - ensure proper date parsing
+                let dayDate;
+                if (startDate.includes('-')) {
+                    // Handle YYYY-MM-DD format - parse as local date to avoid timezone issues
+                    const [year, month, day] = startDate.split('-').map(Number);
+                    dayDate = new Date(year, month - 1, day + index); // month is 0-indexed
+                    console.log(`Day ${index + 1}: ${year}-${month}-${day + index} -> ${dayDate.toLocaleDateString()}`);
+                } else {
+                    // Fallback to original method
+                    dayDate = new Date(start);
+                    dayDate.setDate(start.getDate() + index);
+                    console.log(`Day ${index + 1} (fallback): ${dayDate.toLocaleDateString()}`);
+                }
+                
+                const dateString = dayDate.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    month: 'long', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                html += `
+                    <div class="itinerary-day">
+                        <div class="day-header">
+                            <div class="day-title">${dateString}</div>
+                            ${dayData.theme ? `<div class="day-theme">${dayData.theme.replace('_', ' ').toUpperCase()}</div>` : ''}
+                        </div>
+                `;
+                
+                // Display activities for each time slot
+                ['morning', 'lunch', 'afternoon', 'dinner', 'evening'].forEach(timeSlot => {
+                    if (dayData[timeSlot]) {
+                        const activity = dayData[timeSlot];
+                        html += `
+                            <div class="activity">
+                                <div class="activity-time">${timeSlot.charAt(0).toUpperCase() + timeSlot.slice(1)}</div>
+                                <div class="activity-title">${activity.activity || activity.restaurant || 'Activity'}</div>
+                                <div class="activity-description">${activity.description || ''}</div>
+                                <div class="activity-details">
+                                    ${activity.location ? `<span><i class="fas fa-map-marker-alt"></i> ${activity.location}</span>` : ''}
+                                    ${activity.duration ? `<span><i class="fas fa-clock"></i> ${activity.duration}</span>` : ''}
+                                    ${activity.cost ? `<span class="cost-badge">$${activity.cost}</span>` : ''}
+                                </div>
+                                ${activity.tips && activity.tips.length > 0 ? `
+                                    <ul class="tips-list">
+                                        ${activity.tips.map(tip => `<li>${tip}</li>`).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += '</div>';
+            });
+            
+            contentDiv.innerHTML = html || '<p>No detailed itinerary available.</p>';
+        }
+
+        function populateFlightsContent(result, origin, destination) {
+            const contentDiv = document.getElementById('flightsContent');
+            
+            if (!contentDiv) {
+                console.error('flightsContent element not found');
+                return;
+            }
+            
+            // Debug: Log the result structure
+            console.log('Flight function - result:', result);
+            console.log('Flight function - transportation:', result.itinerary?.transportation);
+            console.log('Flight function - arrival:', result.itinerary?.transportation?.arrival);
+            console.log('Flight function - departure:', result.itinerary?.transportation?.departure);
+            
+            // Get trip details for dynamic deep links
+            const tripInfo = window.currentTripInfo || {};
+            const tripOrigin = origin || tripInfo.origin;
+            const tripDestination = destination || tripInfo.destination;
+            const startDate = tripInfo.start_date;
+            const travelers = tripInfo.travelers;
+            const children = tripInfo.children;
+            
+            // Validate required data
+            if (!tripOrigin || !tripDestination || !startDate || !travelers) {
+                console.error('Missing required trip data for flight links:', { tripOrigin, tripDestination, startDate, travelers });
+                contentDiv.innerHTML = '<p>Flight information not available - missing trip details.</p>';
+                return;
+            }
+            
+            // Validate date format
+            const testDate = new Date(startDate);
+            if (isNaN(testDate.getTime())) {
+                console.error('Invalid start date for flights:', startDate);
+                contentDiv.innerHTML = `<p>Flight information not available - invalid start date: "${startDate}". Please provide a valid date format like "August 25, 2025" or "2025-08-25".</p>`;
+                return;
+            }
+            
+            // Create dynamic deep links with trip parameters
+            const createFlightLink = (airline, baseUrl) => {
+                // Format date for URLs (YYYY-MM-DD)
+                const formattedDate = new Date(startDate).toISOString().split('T')[0];
+                
+                // Use the most popular and reliable booking sites
+                let bookingUrl = '';
+                
+                // Use Expedia for most flights (most comprehensive)
+                if (airline.includes('Spirit') || airline.includes('Frontier') || airline.includes('JetBlue') || 
+                    airline.includes('Delta') || airline.includes('American') || airline.includes('United')) {
+                    const params = new URLSearchParams({
+                        'leg1': `from:${tripOrigin},to:${tripDestination},departure:${formattedDate}TANYT`,
+                        'passengers': `adults:${travelers},children:${children || 0}`
+                    });
+                    bookingUrl = `https://www.expedia.com/Flights-Search?${params.toString()}`;
+                } else {
+                    // Use Skyscanner for international airlines (better for European/Asian carriers)
+                    bookingUrl = `https://www.skyscanner.com/transport/flights/${tripOrigin}/${tripDestination}/${formattedDate}/?adults=${travelers}&children=${children || 0}`;
+                }
+                
+                return bookingUrl;
+            };
+            
+            // Check for new flights structure first
+            if (result.itinerary && result.itinerary.flights &&
+                (result.itinerary.flights.fastest || result.itinerary.flights.cheapest || result.itinerary.flights.optimal)) {
+                // New categorized format with flights structure
+                const fastest = result.itinerary.flights.fastest || [];
+                const cheapest = result.itinerary.flights.cheapest || [];
+                const optimal = result.itinerary.flights.optimal || [];
+                
+                flightOptions = {
+                    fastest: fastest,
+                    cheapest: cheapest,
+                    optimal: optimal,
+                    hasRealData: true
+                };
+            } else if (result.itinerary && result.itinerary.transportation &&
+                (result.itinerary.transportation.fastest || result.itinerary.transportation.cheapest || result.itinerary.transportation.optimal)) {
+                // Legacy categorized format with transportation structure
+                const fastest = result.itinerary.transportation.fastest || [];
+                const cheapest = result.itinerary.transportation.cheapest || [];
+                const optimal = result.itinerary.transportation.optimal || [];
+                
+                flightOptions = {
+                    fastest: fastest,
+                    cheapest: cheapest,
+                    optimal: optimal,
+                    hasRealData: true
+                };
+            } else {
+                // No real flight data available - show message and booking links
+                flightOptions = {
+                    message: `Flight data for ${tripOrigin} to ${tripDestination} is not available yet. Please use the booking links below to search for flights.`,
+                    booking_links: {
+                        expedia: createFlightLink('Expedia', 'https://www.expedia.com/Flights-Search'),
+                        skyscanner: createFlightLink('Skyscanner', 'https://www.skyscanner.com/transport/flights'),
+                        kayak: createFlightLink('Kayak', 'https://www.kayak.com/flights')
+                    }
+                };
+            }
+            
+            let html = '';
+            
+            console.log('Flight function - flightOptions:', flightOptions);
+            console.log('Flight function - hasRealData:', flightOptions.hasRealData);
+            console.log('Flight function - message:', flightOptions.message);
+            
+            if (flightOptions.message) {
+                // Show message and booking links when no real data is available
+                html = `
+                    <div class="flights-section">
+                        <h3>✈️ Flight Options</h3>
+                        <p class="text-muted">${origin} → ${destination}</p>
+                        
+                        <div class="alert alert-info">
+                            <p>${flightOptions.message}</p>
+                        </div>
+                        
+                        <div class="booking-links">
+                            <h4>Search for Flights:</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <a href="${flightOptions.booking_links.expedia}" target="_blank" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Expedia
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="${flightOptions.booking_links.skyscanner}" target="_blank" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Skyscanner
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="${flightOptions.booking_links.kayak}" target="_blank" class="btn btn-info btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Kayak
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (flightOptions.hasRealData) {
+                // Show real flight data when available
+                if (flightOptions.fastest && flightOptions.cheapest && flightOptions.optimal) {
+                    // New categorized format
+                    const fastest = flightOptions.fastest;
+                    const cheapest = flightOptions.cheapest;
+                    const optimal = flightOptions.optimal;
+                    
+                    html = `
+                        <div class="flights-section">
+                            <h3>✈️ Flight Options</h3>
+                            <p class="text-muted">${origin} → ${destination}</p>
+                            
+                            <div class="alert alert-success">
+                                <p><i class="fas fa-check-circle"></i> Real flight data from our enhanced AI system!</p>
+                            </div>
+                            
+                            <!-- Fastest Flights -->
+                            <div class="flight-category mb-4">
+                                <h4>🚀 Fastest Flights</h4>
+                                <div class="row">
+                                    ${fastest.map((flight, index) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6>Option ${index + 1}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="flight-details">
+                                                        <div class="airline">${flight.airline || 'Airline'}</div>
+                                                        <div class="flight-number">Flight ${flight.flight_number || 'N/A'}</div>
+                                                        <div class="times">
+                                                            <span class="departure">${flight.departure_time || 'N/A'}</span>
+                                                            <i class="fas fa-arrow-right mx-2"></i>
+                                                            <span class="arrival">${flight.arrival_time || 'N/A'}</span>
+                                                        </div>
+                                                        <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
+                                                        <div class="cost">$${flight.cost || 'N/A'}</div>
+                                                        <a href="${flight.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                            <i class="fas fa-external-link-alt"></i> Book Flight
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Cheapest Flights -->
+                            <div class="flight-category mb-4">
+                                <h4>💰 Cheapest Flights</h4>
+                                <div class="row">
+                                    ${cheapest.map((flight, index) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6>Option ${index + 1}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="flight-details">
+                                                        <div class="airline">${flight.airline || 'Airline'}</div>
+                                                        <div class="flight-number">Flight ${flight.flight_number || 'N/A'}</div>
+                                                        <div class="times">
+                                                            <span class="departure">${flight.departure_time || 'N/A'}</span>
+                                                            <i class="fas fa-arrow-right mx-2"></i>
+                                                            <span class="arrival">${flight.arrival_time || 'N/A'}</span>
+                                                        </div>
+                                                        <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
+                                                        <div class="cost">$${flight.cost || 'N/A'}</div>
+                                                        <a href="${flight.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                            <i class="fas fa-external-link-alt"></i> Book Flight
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Optimal Flights -->
+                            <div class="flight-category mb-4">
+                                <h4>⭐ Optimal Flights</h4>
+                                <div class="row">
+                                    ${optimal.map((flight, index) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6>Option ${index + 1}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="flight-details">
+                                                        <div class="airline">${flight.airline || 'Airline'}</div>
+                                                        <div class="flight-number">Flight ${flight.flight_number || 'N/A'}</div>
+                                                        <div class="times">
+                                                            <span class="departure">${flight.departure_time || 'N/A'}</span>
+                                                            <i class="fas fa-arrow-right mx-2"></i>
+                                                            <span class="arrival">${flight.arrival_time || 'N/A'}</span>
+                                                        </div>
+                                                        <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
+                                                        <div class="cost">$${flight.cost || 'N/A'}</div>
+                                                        <a href="${flight.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                            <i class="fas fa-external-link-alt"></i> Book Flight
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Legacy format - single arrival/departure
+                    const arrival = flightOptions.arrival;
+                    const departure = flightOptions.departure;
+                    
+                    html = `
+                        <div class="flights-section">
+                            <h3>✈️ Flight Options</h3>
+                            <p class="text-muted">${origin} → ${destination}</p>
+                            
+                            <div class="alert alert-success">
+                                <p><i class="fas fa-check-circle"></i> Real flight data from our enhanced AI system!</p>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h5><i class="fas fa-plane-departure"></i> Outbound Flight</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="flight-details">
+                                                <div class="airline">${arrival.airline || 'Airline'}</div>
+                                                <div class="flight-number">Flight ${arrival.flight_number || 'N/A'}</div>
+                                                <div class="times">
+                                                    <span class="departure">${arrival.departure_time || 'N/A'}</span>
+                                                    <i class="fas fa-arrow-right mx-2"></i>
+                                                    <span class="arrival">${arrival.arrival_time || 'N/A'}</span>
+                                                </div>
+                                                <div class="duration">Duration: ${arrival.duration || 'N/A'}</div>
+                                                <div class="cost">$${arrival.cost || 'N/A'}</div>
+                                                <a href="${arrival.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                    <i class="fas fa-external-link-alt"></i> Book Flight
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h5><i class="fas fa-plane-arrival"></i> Return Flight</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="flight-details">
+                                                <div class="airline">${departure.airline || 'Airline'}</div>
+                                                <div class="flight-number">Flight ${departure.flight_number || 'N/A'}</div>
+                                                <div class="times">
+                                                    <span class="departure">${departure.departure_time || 'N/A'}</span>
+                                                    <i class="fas fa-arrow-right mx-2"></i>
+                                                    <span class="arrival">${departure.arrival_time || 'N/A'}</span>
+                                                </div>
+                                                <div class="duration">Duration: ${departure.duration || 'N/A'}</div>
+                                                <div class="cost">$${departure.cost || 'N/A'}</div>
+                                                <a href="${departure.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                    <i class="fas fa-external-link-alt"></i> Book Flight
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Fallback - show generic booking links
+                html = `
+                    <div class="flights-section">
+                        <h3>✈️ Flight Options</h3>
+                        <p class="text-muted">${origin} → ${destination}</p>
+                        
+                        <div class="alert alert-warning">
+                            <p><i class="fas fa-exclamation-triangle"></i> Flight data not available. Please use the booking links below.</p>
+                        </div>
+                        
+                        <div class="booking-links">
+                            <h4>Search for Flights:</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <a href="https://www.expedia.com/Flights-Search" target="_blank" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Expedia
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="https://www.skyscanner.com/transport/flights" target="_blank" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Skyscanner
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="https://www.kayak.com/flights" target="_blank" class="btn btn-info btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Kayak
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            contentDiv.innerHTML = html;
+        }
+
+        function populateHotelsContent(result, destination) {
+            const contentDiv = document.getElementById('hotelsContent');
+            
+            if (!contentDiv) {
+                console.error('hotelsContent element not found');
+                return;
+            }
+            
+            // Debug: Log the result structure
+            console.log('Hotel function - result:', result);
+            console.log('Hotel function - accommodation:', result.itinerary?.accommodation);
+            console.log('Hotel function - recommendations:', result.itinerary?.accommodation?.recommendations);
+            
+            // Get trip details for dynamic deep links
+            const tripInfo = window.currentTripInfo || {};
+            const tripDestination = destination || tripInfo.destination;
+            const startDate = tripInfo.start_date;
+            const duration = tripInfo.duration;
+            const travelers = tripInfo.travelers;
+            const children = tripInfo.children;
+            
+            // Validate required data
+            if (!tripDestination || !startDate || !duration || !travelers) {
+                console.error('Missing required trip data for hotel links:', { tripDestination, startDate, duration, travelers });
+                contentDiv.innerHTML = '<p>Hotel information not available - missing trip details.</p>';
+                return;
+            }
+            
+            // Calculate end date
+            const start = new Date(startDate);
+            if (isNaN(start.getTime())) {
+                console.error('Invalid start date:', startDate);
+                contentDiv.innerHTML = `<p>Hotel information not available - invalid start date: "${startDate}". Please provide a valid date format like "August 25, 2025" or "2025-08-25".</p>`;
+                return;
+            }
+            
+            const end = new Date(start);
+            end.setDate(start.getDate() + duration);
+            const endDate = end.toISOString().split('T')[0];
+            
+            // Create dynamic deep links with trip parameters
+            const createHotelLink = (hotelName, baseUrl) => {
+                // Format dates for URLs (YYYY-MM-DD)
+                const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
+                const formattedEndDate = endDate;
+                
+                // Use the most popular and reliable booking sites
+                let bookingUrl = '';
+                
+                // Use Booking.com for most hotels (most comprehensive and reliable)
+                if (hotelName.includes('Budget') || hotelName.includes('Formule 1') || hotelName.includes('B&B') || 
+                    hotelName.includes('Holiday Inn') || hotelName.includes('Mercure') || hotelName.includes('Novotel')) {
+                    const params = new URLSearchParams({
+                        'ss': tripDestination,
+                        'checkin': formattedStartDate,
+                        'checkout': formattedEndDate,
+                        'group_adults': travelers,
+                        'group_children': children || 0,
+                        'no_rooms': 1
+                    });
+                    bookingUrl = `https://www.booking.com/search.html?${params.toString()}`;
+                } else {
+                    // Use Expedia for luxury hotels (often better rates for high-end properties)
+                    const params = new URLSearchParams({
+                        'destination': tripDestination,
+                        'checkin': formattedStartDate,
+                        'checkout': formattedEndDate,
+                        'adults': travelers,
+                        'children': children || 0
+                    });
+                    bookingUrl = `https://www.expedia.com/Hotel-Search?${params.toString()}`;
+                }
+                
+                return bookingUrl;
+            };
+            
+            // Check if we have real hotel data from the backend
+            let realHotels;
+            let hasRealData;
+            let hotelOptions;
+            
+            if (result.itinerary && result.itinerary.accommodation && 
+                (result.itinerary.accommodation.budget || result.itinerary.accommodation.moderate || result.itinerary.accommodation.luxury)) {
+                // Use real hotel data from backend with categories
+                const budget = result.itinerary.accommodation.budget || [];
+                const moderate = result.itinerary.accommodation.moderate || [];
+                const luxury = result.itinerary.accommodation.luxury || [];
+                
+                realHotels = { budget, moderate, luxury };
+                hasRealData = true;
+            } else if (result.itinerary && result.itinerary.accommodation && result.itinerary.accommodation.recommendations) {
+                // Legacy format - flat recommendations array
+                realHotels = result.itinerary.accommodation.recommendations;
+                hasRealData = true;
+            } else {
+                // No real hotel data available - show message and booking links
+                realHotels = [];
+                hasRealData = false;
+                hotelOptions = {
+                    message: `Hotel data for ${tripDestination} is not available yet. Please use the booking links below to search for hotels.`,
+                    booking_links: {
+                        booking: createHotelLink('Booking.com', 'https://www.booking.com/search.html'),
+                        expedia: createHotelLink('Expedia', 'https://www.expedia.com/Hotel-Search'),
+                        hotels: createHotelLink('Hotels.com', 'https://www.hotels.com/search.html')
+                    }
+                };
+            }
+            
+            let html = '';
+            
+            if (hasRealData && (realHotels.length > 0 || (realHotels.budget && realHotels.moderate && realHotels.luxury))) {
+                // Show real hotel data from enhanced AI system
+                if (realHotels.budget && realHotels.moderate && realHotels.luxury) {
+                    // New categorized format
+                    const budget = realHotels.budget;
+                    const moderate = realHotels.moderate;
+                    const luxury = realHotels.luxury;
+                    
+                    html = `
+                        <div class="hotels-section">
+                            <h3>🏨 Hotel Options</h3>
+                            <p class="text-muted">${destination}</p>
+                            
+                            <div class="alert alert-success">
+                                <p><i class="fas fa-check-circle"></i> Real hotel data from our enhanced AI system!</p>
+                            </div>
+                            
+                            <!-- Budget Hotels -->
+                            <div class="hotel-category mb-4">
+                                <h4>💰 Budget Hotels (Under $100/night)</h4>
+                                <div class="row">
+                                    ${budget.map((hotel, index) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6>Option ${index + 1}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="hotel-details">
+                                                        <div class="hotel-name">${hotel.name}</div>
+                                                        <div class="hotel-location">
+                                                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
+                                                        </div>
+                                                        <div class="hotel-price">
+                                                            <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
+                                                        </div>
+                                                        <div class="hotel-pros">
+                                                            <strong>Pros:</strong>
+                                                            <ul>
+                                                                ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
+                                                            </ul>
+                                                        </div>
+                                                        <div class="hotel-cons">
+                                                            <strong>Cons:</strong>
+                                                            <ul>
+                                                                ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-external-link-alt"></i> Book Hotel
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Moderate Hotels -->
+                            <div class="hotel-category mb-4">
+                                <h4>⭐ Moderate Hotels ($100-$400/night)</h4>
+                                <div class="row">
+                                    ${moderate.map((hotel, index) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6>Option ${index + 1}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="hotel-details">
+                                                        <div class="hotel-name">${hotel.name}</div>
+                                                        <div class="hotel-location">
+                                                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
+                                                        </div>
+                                                        <div class="hotel-price">
+                                                            <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
+                                                        </div>
+                                                        <div class="hotel-pros">
+                                                            <strong>Pros:</strong>
+                                                            <ul>
+                                                                ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
+                                                            </ul>
+                                                        </div>
+                                                        <div class="hotel-cons">
+                                                            <strong>Cons:</strong>
+                                                            <ul>
+                                                                ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-external-link-alt"></i> Book Hotel
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <!-- Luxury Hotels -->
+                            <div class="hotel-category mb-4">
+                                <h4>👑 Luxury Hotels (Above $500/night)</h4>
+                                <div class="row">
+                                    ${luxury.map((hotel, index) => `
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6>Option ${index + 1}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="hotel-details">
+                                                        <div class="hotel-name">${hotel.name}</div>
+                                                        <div class="hotel-location">
+                                                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
+                                                        </div>
+                                                        <div class="hotel-price">
+                                                            <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
+                                                        </div>
+                                                        <div class="hotel-pros">
+                                                            <strong>Pros:</strong>
+                                                            <ul>
+                                                                ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
+                                                            </ul>
+                                                        </div>
+                                                        <div class="hotel-cons">
+                                                            <strong>Cons:</strong>
+                                                            <ul>
+                                                                ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-external-link-alt"></i> Book Hotel
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Legacy format - flat array
+                    html = `
+                        <div class="hotels-section">
+                            <h3>🏨 Hotel Options</h3>
+                            <p class="text-muted">${destination}</p>
+                            
+                            <div class="alert alert-success">
+                                <p><i class="fas fa-check-circle"></i> Real hotel data from our enhanced AI system!</p>
+                            </div>
+                            
+                            <div class="row">
+                                ${realHotels.map((hotel, index) => `
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>${hotel.name}</h5>
+                                                <div class="hotel-type">${hotel.type}</div>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="hotel-details">
+                                                    <div class="hotel-location">
+                                                        <i class="fas fa-map-marker-alt"></i> ${hotel.location}
+                                                    </div>
+                                                    <div class="hotel-price">
+                                                        <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
+                                                    </div>
+                                                    <div class="hotel-pros">
+                                                        <strong>Pros:</strong>
+                                                        <ul>
+                                                            ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
+                                                        </ul>
+                                                    </div>
+                                                    <div class="hotel-cons">
+                                                        <strong>Cons:</strong>
+                                                        <ul>
+                                                            ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-external-link-alt"></i> Book Hotel
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Show message and booking links when no real data is available
+                html = `
+                    <div class="hotels-section">
+                        <h3>🏨 Hotel Options</h3>
+                        <p class="text-muted">${destination}</p>
+                        
+                        <div class="alert alert-info">
+                            <p>${hotelOptions.message}</p>
+                        </div>
+                        
+                        <div class="booking-links">
+                            <h4>Search for Hotels:</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <a href="${hotelOptions.booking_links.booking}" target="_blank" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Booking.com
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="${hotelOptions.booking_links.expedia}" target="_blank" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Expedia
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="${hotelOptions.booking_links.hotels}" target="_blank" class="btn btn-info btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Hotels.com
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            contentDiv.innerHTML = html;
+        }
+
+        function populatePracticalContent(result) {
+            const contentDiv = document.getElementById('practicalContent');
+            
+            if (!contentDiv) {
+                console.error('practicalContent element not found');
+                return;
+            }
+            
+            if (!result.itinerary.practical_info) {
+                contentDiv.innerHTML = '<p>No practical information available.</p>';
+                return;
+            }
+            
+            const info = result.itinerary.practical_info;
+            let html = `
+                <div class="day-card">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>🌍 Practical Information</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Currency:</strong> ${info.currency || 'N/A'}</li>
+                                <li><strong>Language:</strong> ${info.language || 'N/A'}</li>
+                                <li><strong>Timezone:</strong> ${info.timezone || 'N/A'}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>🎒 Packing Suggestions</h5>
+                            <ul>
+                                ${info.packing_suggestions && info.packing_suggestions.length > 0 ? 
+                                    info.packing_suggestions.map(item => `<li>${item}</li>`).join('') : 
+                                    '<li>No specific suggestions</li>'
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            contentDiv.innerHTML = html;
+        }
+
+        // Modal Functions
+        function showTripDetailsModal(tripInfo, missingInfo) {
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').min = today;
+            
+            // Pre-fill form with existing data
+            if (tripInfo.origin) document.getElementById('origin').value = tripInfo.origin;
+            if (tripInfo.destination) document.getElementById('destination').value = tripInfo.destination;
+            if (tripInfo.duration) document.getElementById('duration').value = tripInfo.duration;
+            if (tripInfo.travelers) document.getElementById('travelers').value = tripInfo.travelers;
+            if (tripInfo.children !== null && tripInfo.children !== undefined) document.getElementById('children').value = tripInfo.children;
+            if (tripInfo.budget) document.getElementById('budget').value = tripInfo.budget;
+            if (tripInfo.start_date) document.getElementById('startDate').value = tripInfo.start_date;
+            
+            // Set budget type
+            if (tripInfo.budget) {
+                const budgetType = tripInfo.budget.toLowerCase();
+                if (budgetType.includes('budget')) document.getElementById('budgetType').value = 'budget';
+                else if (budgetType.includes('luxury')) document.getElementById('budgetType').value = 'luxury';
+                else document.getElementById('budgetType').value = 'moderate';
+            }
+            
+            // Set interests
+            if (tripInfo.interests && tripInfo.interests.length > 0) {
+                tripInfo.interests.forEach(interest => {
+                    const checkbox = document.getElementById(`interest${interest.charAt(0).toUpperCase() + interest.slice(1)}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('tripDetailsModal'));
+            modal.show();
+        }
+
+        function incrementTravelers() {
+            const input = document.getElementById('travelers');
+            const currentValue = parseInt(input.value);
+            if (currentValue < 10) input.value = currentValue + 1;
+        }
+
+        function decrementTravelers() {
+            const input = document.getElementById('travelers');
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) input.value = currentValue - 1;
+        }
+
+        function incrementChildren() {
+            const input = document.getElementById('children');
+            const currentValue = parseInt(input.value);
+            if (currentValue < 10) input.value = currentValue + 1;
+        }
+
+        function decrementChildren() {
+            const input = document.getElementById('children');
+            const currentValue = parseInt(input.value);
+            if (currentValue > 0) input.value = currentValue - 1;
+        }
+
+        async function submitTripDetails() {
+            console.log('submitTripDetails called');
+            
+            // Get form data
+            const formData = {
+                origin: document.getElementById('origin').value.trim(),
+                destination: document.getElementById('destination').value.trim(),
+                start_date: document.getElementById('startDate').value,
+                duration: parseInt(document.getElementById('duration').value),
+                travelers: parseInt(document.getElementById('travelers').value),
+                children: parseInt(document.getElementById('children').value),
+                budget: document.getElementById('budget').value,
+                budget_type: document.getElementById('budgetType').value,
+                interests: []
+            };
+            
+            console.log('Form data collected:', formData);
+            
+            // Get selected interests
+            const interestCheckboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            interestCheckboxes.forEach(checkbox => {
+                formData.interests.push(checkbox.value);
+            });
+            
+            console.log('Selected interests:', formData.interests);
+            
+            // Validate required fields
+            if (!formData.origin || !formData.destination || !formData.start_date || !formData.duration || !formData.travelers || !formData.budget) {
+                alert('Please fill in all required fields marked with *.');
+                return;
+            }
+            
+            // Validate date
+            const startDate = new Date(formData.start_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (startDate < today) {
+                alert('Departure date must be today or in the future.');
+                return;
+            }
+            
+            console.log('Validation passed, closing modal...');
+            
+            // Close modal - try multiple methods to ensure it closes
+            try {
+                const modalElement = document.getElementById('tripDetailsModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    // If no instance exists, create one and hide it
+                    const newModal = new bootstrap.Modal(modalElement);
+                    newModal.hide();
+                }
+                console.log('Modal closed successfully');
+            } catch (error) {
+                console.error('Error closing modal:', error);
+                // Fallback: hide modal manually
+                document.getElementById('tripDetailsModal').style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) backdrop.remove();
+            }
+            
+            // Update current trip info
+            currentTripInfo = formData;
+            window.currentTripInfo = formData;
+            
+            console.log('Updated currentTripInfo:', currentTripInfo);
+            
+            // Show confirmation message
+            addMessage('ai', `Perfect! I have all the information I need:
+• Origin: ${formData.origin}
+• Destination: ${formData.destination}
+• Travelers: ${formData.travelers}
+• Children: ${formData.children}
+• Duration: ${formData.duration} days
+• Start date: ${formData.start_date}
+• Budget: $${formData.budget} (${formData.budget_type})
+• Interests: ${formData.interests.join(', ') || 'General exploration'}
+
+Let me create your personalized trip plan!`);
+            
+            console.log('Starting trip planning with data:', formData);
+            
+            // Proceed with trip planning
+            await planTrip(formData);
+        }
+
+        async function planTrip(tripInfo) {
+            console.log('planTrip called with:', tripInfo);
+            
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            results.style.display = 'none';
+
+            try {
+                const requestBody = {
+                    origin: tripInfo.origin,
+                    destination: tripInfo.destination,
+                    duration_days: tripInfo.duration,
+                    start_date: tripInfo.start_date,
+                    travelers: tripInfo.travelers,
+                    budget_range: tripInfo.budget_type,
+                    interests: tripInfo.interests,
+                    trip_type: 'leisure',
+                    special_requirements: null,
+                    preferred_provider: null
+                };
+                
+                console.log('Sending request to backend:', requestBody);
+                
+                const response = await fetch('/api/hybrid/plan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                const result = await response.json();
+                console.log('Backend response:', result);
+                
+                if (result.success) {
+                    addMessage('ai', `Perfect! I've created your comprehensive trip plan. Here's your detailed itinerary:`);
+                    displayResults(result, tripInfo);
+                } else {
+                    throw new Error(result.detail || 'Trip planning failed');
+                }
+                
+            } catch (error) {
+                console.error('Error in planTrip:', error);
+                addMessage('ai', `I'm sorry, but I encountered an error while planning your trip: ${error.message}. Please try again.`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

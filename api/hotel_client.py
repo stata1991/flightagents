@@ -230,11 +230,41 @@ class HotelClient:
         destinations = dest_search["destinations"]
         logger.info(f"Found {len(destinations)} destination options")
         
+        # Smart destination selection - prioritize US locations
+        def prioritize_destinations(destinations, location_name):
+            """Prioritize destinations based on location and country"""
+            location_lower = location_name.lower()
+            prioritized = []
+            
+            # First, prioritize US destinations for major cities
+            major_us_cities = ['orlando', 'new york', 'los angeles', 'chicago', 'miami', 'las vegas', 'disney']
+            
+            for dest in destinations:
+                dest_name = dest.get('name', '').lower()
+                dest_country = dest.get('country', '').lower()
+                dest_region = dest.get('region', '').lower()
+                
+                # Check if this is a major US city
+                if location_lower in major_us_cities:
+                    # Prioritize US destinations
+                    if 'united states' in dest_country or 'us' in dest_country or 'florida' in dest_region:
+                        prioritized.insert(0, dest)  # Add to beginning
+                    else:
+                        prioritized.append(dest)  # Add to end
+                else:
+                    prioritized.append(dest)
+            
+            return prioritized
+        
+        # Prioritize destinations
+        prioritized_destinations = prioritize_destinations(destinations, request.location)
+        logger.info(f"Prioritized destinations: {[d.get('label') for d in prioritized_destinations]}")
+        
         # Step 2: Try each destination with budget expansion
         all_hotels = []
         search_attempts = []
         
-        for dest in destinations:
+        for dest in prioritized_destinations:
             dest_id = dest["dest_id"]
             search_type = dest["search_type"]
             
@@ -353,7 +383,15 @@ class HotelClient:
         max_price = price_range["max"]
         
         if max_budget:
-            max_price = min(max_price, max_budget)
+            # If user budget is below minimum price, start with user budget
+            if max_budget < min_price:
+                budget_levels = [max_budget]
+                # Add one more level slightly above user budget
+                if steps > 1:
+                    budget_levels.append(max_budget * 1.5)
+                return budget_levels
+            else:
+                max_price = min(max_price, max_budget)
         
         # Start with minimum price, then expand
         budget_levels = [min_price]

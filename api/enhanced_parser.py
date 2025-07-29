@@ -95,12 +95,12 @@ def _resolve_relative_dates(query: str) -> str:
 
 class EnhancedQueryParser:
     def __init__(self, api_key: str = None):
-        """Initialize the parser (no API key required anymore)."""
-        self.api_key = None
+        """Initialize the parser with Anthropic API key."""
+        self.api_key = api_key
         self.airports = self._load_airports_data()
         self.major_airports = self._load_major_airports()
         self.airport_importance = self._calculate_airport_importance()
-        logger.info(f"Initialized parser (no API key required)")
+        logger.info(f"Initialized parser with Anthropic API key")
         logger.info(f"Loaded {len(self.airports)} airports from full database")
         logger.info(f"Loaded {len(self.major_airports)} airports from major airports database")
         logger.info(f"Calculated importance scores for {len(self.airport_importance)} airports.")
@@ -223,8 +223,12 @@ class EnhancedQueryParser:
             city_name = airport.get('city_name', '').lower()
             country_name = airport.get('country_name', '').lower()
 
+            # Normalize country names for comparison
+            normalized_country_hint = self._normalize_country_name(country_hint) if country_hint else None
+            normalized_country_name = self._normalize_country_name(country_name)
+
             # First, filter by country if a hint is provided
-            if country_hint and country_name != country_hint.lower():
+            if normalized_country_hint and normalized_country_name != normalized_country_hint:
                 continue
             
             # Then, check if the location is mentioned in the city name
@@ -368,7 +372,7 @@ class EnhancedQueryParser:
                 'name_length': len(name),
                 'has_city_name': location in name,
                 'country': country,
-                'is_correct_country': country_hint and country == country_hint
+                'is_correct_country': country_hint and self._normalize_country_name(country) == self._normalize_country_name(country_hint)
             }
 
         def score_airport(airport: dict, analysis: dict, context: Dict[str, Any] = None) -> float:
@@ -380,7 +384,9 @@ class EnhancedQueryParser:
             
             # Country matching is the most important factor
             if country_hint:
-                if analysis['country'].lower() == country_hint.lower():
+                normalized_country_hint = self._normalize_country_name(country_hint)
+                normalized_country = self._normalize_country_name(analysis['country'])
+                if normalized_country == normalized_country_hint:
                     score += 2000.0  # Strongly favor correct country
                 else:
                     return -10000.0  # Completely reject wrong country
@@ -482,6 +488,39 @@ class EnhancedQueryParser:
     def _is_iata_code(code: str) -> bool:
         """Check if a string is a valid IATA code."""
         return len(code) == 3 and code.isalpha()
+    
+    @staticmethod
+    def _normalize_country_name(country: str) -> str:
+        """Normalize country names for consistent comparison."""
+        if not country:
+            return ""
+        
+        country_lower = country.lower().strip()
+        
+        # Common country name variations
+        country_mappings = {
+            "usa": "united states",
+            "united states of america": "united states",
+            "us": "united states",
+            "u.s.": "united states",
+            "u.s.a.": "united states",
+            "uk": "united kingdom",
+            "great britain": "united kingdom",
+            "england": "united kingdom",
+            "canada": "canada",
+            "australia": "australia",
+            "germany": "germany",
+            "france": "france",
+            "spain": "spain",
+            "italy": "italy",
+            "japan": "japan",
+            "china": "china",
+            "india": "india",
+            "brazil": "brazil",
+            "mexico": "mexico"
+        }
+        
+        return country_mappings.get(country_lower, country_lower)
 
     async def parse_query(self, query: str) -> Dict[str, Any]:
         """
@@ -493,82 +532,104 @@ class EnhancedQueryParser:
             processed_query = _resolve_relative_dates(query)
             logger.info(f"Processed query with resolved dates: {processed_query}")
 
-            # Call X API to extract flight information
+            # Call Anthropic Claude API to extract flight information
             headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "x-api-key": self.api_key,
+                "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01"
             }
             
             data = {
-                "model": "grok-3",
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 1000,
                 "messages": [
                     {
-                        "role": "system",
-                        "content": "You are a flight search assistant. Extract flight search parameters from user queries. Return a JSON object with 'origin': {'city': 'City Name', 'country': 'Country Name'}, 'destination': {'city': 'City Name', 'country': 'Country Name'}, 'date' (in YYYY-MM-DD format), 'return_date' (in YYYY-MM-DD format, if present), and 'context'. For context, determine if the flight is likely 'is_international' (boolean) and the 'preferred_airport_type' ('primary' for major cities, 'any' otherwise)."
-                    },
-                    {
                         "role": "user",
-                        "content": processed_query
+                        "content": f"""You are a flight search assistant. Extract flight search parameters from this user query: "{processed_query}"
+
+IMPORTANT RULES:
+1. ONLY extract information that is EXPLICITLY stated in the query. Do NOT provide defaults or assumptions.
+2. If the query doesn't specify an origin city, set "origin" to null.
+3. If the query doesn't specify a destination, set "destination" to null.
+4. If the query doesn't specify a date, set "date" to null.
+5. For travelers, look for patterns like:
+   - "X adults" or "X adult" (set adults to X)
+   - "X children" or "X child" or "X kids" or "X kid" (set children to X)
+   - "for X adults and Y children" (set adults to X, children to Y)
+   - "X people" (assume all adults, set adults to X)
+   - "1 children" should be interpreted as 1 child
+   If no traveler information is found, set "travelers" to null.
+6. For interests, look for words like "interests", "with", "including" followed by activities like:
+   - "theme_parks", "food", "culture", "nature", "adventure", "relaxation", "shopping", "history"
+   If no interests are found, set "interests" to null.
+7. For budget, look for:
+   - "budget", "cheap", "economy" → "budget"
+   - "moderate", "mid-range", "standard" → "moderate" 
+   - "luxury", "premium", "high-end" → "luxury"
+7. If the destination is a landmark or attraction (like "Times Square", "Golden Gate Bridge", "Niagara Falls"), use the nearest major city.
+8. For Niagara Falls, use "Buffalo" if it seems to be the US side, or "Toronto" if it seems to be the Canadian side.
+
+Return ONLY a valid JSON object with the following structure:
+{{
+    "origin": {{
+        "city": "City Name" (or null if not specified),
+        "country": "Country Name" (or null if not specified)
+    }},
+    "destination": {{
+        "city": "City Name" (or null if not specified), 
+        "country": "Country Name" (or null if not specified)
+    }},
+    "date": "YYYY-MM-DD" (or null if not specified),
+    "return_date": "YYYY-MM-DD" (if present, otherwise null),
+    "travelers": {{
+        "adults": number (or null if not specified),
+        "children": number (or null if not specified),
+        "ages": [array of child ages] (or null if not specified)
+    }},
+    "interests": ["interest1", "interest2"] (or null if not specified),
+    "budget": "budget" or "moderate" or "luxury" (or null if not specified),
+    "context": {{
+        "is_international": true/false,
+        "preferred_airport_type": "primary" or "any"
+    }}
+}}
+
+Be precise and extract only the information that is clearly stated in the query. Do not make assumptions or provide defaults."""
                     }
                 ]
             }
             
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    "https://api.x.ai/v1/chat/completions",
+                    "https://api.anthropic.com/v1/messages",
                     headers=headers,
                     json=data
                 ) as response:
                     if response.status != 200:
                         error_text = await response.text()
-                        logger.error(f"X API error: {error_text}")
-                        raise Exception(f"X API error: {error_text}")
+                        logger.error(f"Anthropic API error: {error_text}")
+                        raise Exception(f"Anthropic API error: {error_text}")
                     
                     result = await response.json()
-                    logger.info(f"X API response: {json.dumps(result, indent=2)}")
+                    logger.info(f"Anthropic API response: {json.dumps(result, indent=2)}")
                     
                     # Extract the response content
-                    content = result['choices'][0]['message']['content']
+                    content = result['content'][0]['text']
                     
                     # Try to parse the content as JSON first
                     try:
-                        extracted_data = json.loads(content)
-                    except json.JSONDecodeError:
-                        # If not JSON, try to extract information using regex
-                        logger.info("Response is not JSON, using regex to extract information")
-                        
-                        # Extract origin
-                        origin_match = re.search(r'Origin City:?\s*([^\n]+)', content, re.IGNORECASE)
-                        if not origin_match:
-                            origin_match = re.search(r'origin:?\s*([^\n,]+)', content, re.IGNORECASE)
-                        
-                        # Extract destination
-                        dest_match = re.search(r'Destination City:?\s*([^\n]+)', content, re.IGNORECASE)
-                        if not dest_match:
-                            dest_match = re.search(r'destination:?\s*([^\n,]+)', content, re.IGNORECASE)
-                        
-                        # Extract date (departure)
-                        date_match = re.search(r'Date:?\s*(\d{4}-\d{2}-\d{2})', content)
-                        # Extract return_date (for round-trip)
-                        return_date_match = re.search(r'Return Date:?\s*(\d{4}-\d{2}-\d{2})', content)
-                        if not return_date_match:
-                            # Try alternative phrasing
-                            return_date_match = re.search(r'return_date:?\s*(\d{4}-\d{2}-\d{2})', content)
-                        
-                        # Extract context
-                        is_international = bool(re.search(r'international', content, re.IGNORECASE))
-                        preferred_type = 'international' if is_international else 'any'
-                        
-                        extracted_data = {
-                            "origin": origin_match.group(1).strip() if origin_match else None,
-                            "destination": dest_match.group(1).strip() if dest_match else None,
-                            "date": date_match.group(1) if date_match else None,
-                            "return_date": return_date_match.group(1) if return_date_match else None,
-                            "context": {
-                                "is_international": is_international,
-                                "preferred_airport_type": preferred_type
-                            }
-                        }
+                        # Clean the content to extract just the JSON part
+                        json_start = content.find('{')
+                        json_end = content.rfind('}') + 1
+                        if json_start != -1 and json_end != 0:
+                            json_content = content[json_start:json_end]
+                            extracted_data = json.loads(json_content)
+                        else:
+                            raise json.JSONDecodeError("No JSON found", content, 0)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse JSON: {e}")
+                        logger.error(f"Content: {content}")
+                        raise Exception(f"Failed to parse API response as JSON: {str(e)}")
                     
                     logger.info(f"Extracted data: {json.dumps(extracted_data, indent=2)}")
                     
@@ -583,8 +644,18 @@ class EnhancedQueryParser:
                         logger.error("Could not determine origin or destination details from LLM")
                         return {"error": "Could not determine origin or destination details"}
                     
-                    origin_iata = self._lookup_iata_code(origin_details.get('city'), context, origin_details.get('country'))
-                    dest_iata = self._lookup_iata_code(destination_details.get('city'), context, destination_details.get('country'))
+                    # Handle null values
+                    origin_city = origin_details.get('city')
+                    origin_country = origin_details.get('country')
+                    dest_city = destination_details.get('city')
+                    dest_country = destination_details.get('country')
+                    
+                    if not origin_city or not dest_city:
+                        logger.error("Missing city information in origin or destination")
+                        return {"error": "Missing city information in origin or destination"}
+                    
+                    origin_iata = self._lookup_iata_code(origin_city, context, origin_country)
+                    dest_iata = self._lookup_iata_code(dest_city, context, dest_country)
                     
                     if not origin_iata or not dest_iata:
                         logger.error("Could not find IATA codes for airports")
