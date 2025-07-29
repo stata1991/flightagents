@@ -1,0 +1,247 @@
+import os
+import aiohttp
+import logging
+from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
+
+class FlightService:
+    @staticmethod
+    async def search_flights(context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Search flights using the context provided by the AI agent.
+        This method matches the interface expected by ai_agents.py.
+        """
+        try:
+            logger.info(f"Flight search called with context: {context}")
+            
+            origin = context.get("origin")
+            destination = context.get("destination")
+            start_date = context.get("start_date")
+            return_date = context.get("return_date")
+            travelers = context.get("travelers", 1)
+            
+            logger.info(f"Extracted parameters: origin={origin}, destination={destination}, start_date={start_date}, return_date={return_date}, travelers={travelers}")
+            
+            if not all([origin, destination, start_date, return_date]):
+                logger.error(f"Missing required parameters: origin={origin}, destination={destination}, start_date={start_date}, return_date={return_date}")
+                return {"success": False, "flights": [], "error": "Missing required parameters"}
+            
+            # Check if RAPID_API_KEY is available
+            rapid_api_key = os.getenv("RAPID_API_KEY")
+            if not rapid_api_key:
+                logger.error("RAPID_API_KEY not found in environment variables")
+                return {"success": False, "flights": [], "error": "RAPID_API_KEY not configured"}
+            
+            logger.info(f"RAPID_API_KEY found: {rapid_api_key[:10]}...")
+            
+            result = await FlightService.get_recommendations(origin, destination, start_date, return_date, travelers)
+            logger.info(f"Flight search result: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Flight search error: {e}")
+            return {"success": False, "flights": [], "error": str(e)}
+
+    @staticmethod
+    async def get_recommendations(origin: str, destination: str, start_date: str, return_date: str, travelers: int = 1) -> Dict[str, Any]:
+        """
+        Fetches flight recommendations using Booking.com API with proper airport ID lookup.
+        """
+        try:
+            # Step 1: Get airport IDs for origin and destination
+            origin_id = await FlightService._get_airport_id(origin)
+            destination_id = await FlightService._get_airport_id(destination)
+            
+            if not origin_id or not destination_id:
+                logger.error(f"Could not find airport IDs for {origin} or {destination}")
+                return {"success": False, "flights": [], "error": "Airport not found"}
+            
+            # Step 2: Search flights with airport IDs
+            return await FlightService._search_flights(origin_id, destination_id, start_date, return_date, travelers)
+            
+        except Exception as e:
+            logger.error(f"Flight search error: {e}")
+            return {"success": False, "flights": [], "error": str(e)}
+
+    @staticmethod
+    async def _get_airport_id(location: str) -> Optional[str]:
+        """
+        Get airport ID using Booking.com searchDestination API.
+        """
+        try:
+            rapid_api_key = os.getenv("RAPID_API_KEY")
+            if not rapid_api_key:
+                logger.error("RAPID_API_KEY not found")
+                return None
+            
+            url = "https://booking-com15.p.rapidapi.com/api/v1/flights/searchDestination"
+            
+            headers = {
+                "X-RapidAPI-Key": rapid_api_key,
+                "X-RapidAPI-Host": "booking-com15.p.rapidapi.com"
+            }
+            
+            params = {"query": location}
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        logger.info(f"Search destination result for {location}: {result}")
+                        
+                        if result.get("status") and result.get("data"):
+                            # Get the first airport result
+                            for item in result["data"]:
+                                if item.get("type") == "AIRPORT":
+                                    return item.get("id")
+                            
+                            # If no airport found, get the first city result
+                            for item in result["data"]:
+                                if item.get("type") == "CITY":
+                                    return item.get("id")
+                    
+                    logger.error(f"Search destination failed for {location}: {response.status}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Error getting airport ID for {location}: {e}")
+            return None
+
+    @staticmethod
+    async def _search_flights(origin_id: str, destination_id: str, start_date: str, return_date: str, travelers: int) -> Dict[str, Any]:
+        """
+        Search flights using Booking.com searchFlights API.
+        """
+        try:
+            rapid_api_key = os.getenv("RAPID_API_KEY")
+            if not rapid_api_key:
+                logger.error("RAPID_API_KEY not found")
+                return {"success": False, "flights": []}
+            
+            url = "https://booking-com15.p.rapidapi.com/api/v1/flights/searchFlights"
+            
+            headers = {
+                "X-RapidAPI-Key": rapid_api_key,
+                "X-RapidAPI-Host": "booking-com15.p.rapidapi.com"
+            }
+            
+            params = {
+                "fromId": origin_id,
+                "toId": destination_id,
+                "departDate": start_date,
+                "returnDate": return_date,
+                "stops": "none",  # Fixed: use "none" instead of "0,1,2"
+                "pageNo": "1",
+                "adults": str(travelers),
+                "children": "0",
+                "sort": "CHEAPEST",  # Fixed: use "CHEAPEST" instead of "PRICE"
+                "cabinClass": "ECONOMY",
+                "currency_code": "USD"
+            }
+            
+            logger.info(f"Searching flights with params: {params}")
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        result = await response.json()
+                        logger.info(f"Flight search result: {result}")
+                        
+                        if result.get("status") and result.get("data", {}).get("flightOffers"):
+                            flights = []
+                            for offer in result["data"]["flightOffers"]:
+                                flight = FlightService._parse_flight_offer(offer)
+                                if flight:
+                                    flights.append(flight)
+                            
+                            return {
+                                "success": True,
+                                "flights": flights,
+                                "categorized_flights": FlightService._categorize_flights(flights)
+                            }
+                        else:
+                            logger.error(f"No flights found in response: {result}")
+                            return {"success": False, "flights": []}
+                    else:
+                        error_text = await response.text()
+                        logger.error(f"Flight search API error: {error_text}")
+                        return {"success": False, "flights": []}
+                        
+        except Exception as e:
+            logger.error(f"Error searching flights: {e}")
+            return {"success": False, "flights": []}
+
+    @staticmethod
+    def _parse_flight_offer(offer: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Parse a flight offer from the API response.
+        """
+        try:
+            if not offer.get("segments"):
+                return None
+            
+            segment = offer["segments"][0]
+            leg = segment["legs"][0]
+            
+            # Get airline info
+            carrier = leg.get("carriersData", [{}])[0]
+            airline = carrier.get("name", "Unknown")
+            flight_number = f"{carrier.get('code', '')} {leg.get('flightInfo', {}).get('flightNumber', '')}"
+            
+            # Get times
+            departure_time = leg.get("departure", "")
+            arrival_time = leg.get("arrival", "")
+            
+            # Get duration
+            duration = segment.get("duration", 0)
+            
+            # Get price
+            price_breakdown = offer.get("priceBreakdown", {})
+            total_price = price_breakdown.get("total", {})
+            price_units = total_price.get("units", 0)
+            
+            # Get booking link
+            booking_link = offer.get("token", "")
+            
+            return {
+                "airline": airline,
+                "flight_number": flight_number,
+                "departure_time": departure_time,
+                "arrival_time": arrival_time,
+                "duration": duration,
+                "price": {
+                    "currencyCode": "USD",
+                    "units": price_units,
+                    "nanos": 0
+                },
+                "stops": len(offer.get("segments", [])) - 1,
+                "booking_link": booking_link
+            }
+            
+        except Exception as e:
+            logger.error(f"Error parsing flight offer: {e}")
+            return None
+
+    @staticmethod
+    def _categorize_flights(flights: list) -> Dict[str, list]:
+        """
+        Categorize flights into fastest, cheapest, and optimal.
+        """
+        if not flights:
+            return {"fastest": [], "cheapest": [], "optimal": []}
+        
+        # Sort by duration for fastest
+        fastest = sorted(flights, key=lambda x: x.get('duration', 0))[:3]
+        
+        # Sort by price for cheapest
+        cheapest = sorted(flights, key=lambda x: x.get('price', {}).get('units', 0))[:3]
+        
+        # Sort by combination of price and duration for optimal
+        optimal = sorted(flights, key=lambda x: (x.get('price', {}).get('units', 0) + x.get('duration', 0) / 3600))[:3]
+        
+        return {
+            "fastest": fastest,
+            "cheapest": cheapest,
+            "optimal": optimal
+        }

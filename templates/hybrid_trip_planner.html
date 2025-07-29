@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hybrid Trip Planner - FlightTickets.ai</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -920,7 +923,7 @@ Let me create your personalized trip plan!`);
             results.style.display = 'none';
 
             try {
-                const response = await fetch('/api/hybrid/plan', {
+                const response = await fetch('/markdown-trip/plan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -940,7 +943,8 @@ Let me create your personalized trip plan!`);
                 
                 const result = await response.json();
                 
-                if (result.success) {
+                // Check if we have agents data (successful response)
+                if (result.agents && Object.keys(result.agents).length > 0) {
                     addMessage('ai', `Perfect! I've created your comprehensive trip plan. Here's your detailed itinerary:`);
                     displayResults(result, tripInfo);
                 } else {
@@ -985,17 +989,23 @@ Let me create your personalized trip plan!`);
             }
             
             // Use tripInfo if available, otherwise fall back to result data
-            const origin = tripInfo?.origin || result.itinerary?.trip_summary?.origin || 'Not specified';
-            const destination = tripInfo?.destination || result.itinerary?.trip_summary?.destination || 'Not specified';
-            const duration = tripInfo?.duration || result.duration_days || result.itinerary?.trip_summary?.duration || 'Not specified';
-            const travelers = tripInfo?.travelers || result.travelers || result.itinerary?.trip_summary?.travelers || 'Not specified';
-            const budget = tripInfo?.budget || result.budget_range || result.itinerary?.trip_summary?.budget || 'Not specified';
+            const origin = tripInfo?.origin || 'Not specified';
+            const destination = tripInfo?.destination || 'Not specified';
+            const duration = tripInfo?.duration || 'Not specified';
+            const travelers = tripInfo?.travelers || 'Not specified';
+            const budget = tripInfo?.budget || 'Not specified';
+            
+            // Extract data from agents response
+            const destinationSpecialist = result.agents?.destination_specialist?.result?.raw_response || '';
+            const budgetAnalyst = result.agents?.budget_analyst?.result || {};
+            const flightSearch = result.agents?.flight_search_agent?.result || {};
+            const hotelSearch = result.agents?.hotel_search_agent?.result || {};
             
             let html = `
                 <div class="row mb-4">
                     <div class="col-md-12">
-                        <h2>${result.itinerary?.trip_summary?.title || 'Your Trip Plan'}</h2>
-                        <p class="text-muted">${result.itinerary?.trip_summary?.overview || ''}</p>
+                        <h2>Your Trip Plan</h2>
+                        <p class="text-muted">Comprehensive travel plan with flights, hotels, and itinerary</p>
                     </div>
                 </div>
                 
@@ -1035,7 +1045,7 @@ Let me create your personalized trip plan!`);
                         <i class="fas fa-bed me-2"></i>Hotels
                     </button>
                     <button class="itinerary-tab" onclick="switchItineraryTab('practical')">
-                        <i class="fas fa-info me-2"></i>Practical Info
+                        <i class="fas fa-dollar-sign me-2"></i>Budget & Tips
                     </button>
                 </div>
 
@@ -1046,17 +1056,10 @@ Let me create your personalized trip plan!`);
                             <h3 class="day-title">Trip Overview</h3>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
-                                <h5>Highlights</h5>
-                                <ul>
-                                    ${(result.itinerary.trip_summary?.highlights || []).map(highlight => `<li>${highlight}</li>`).join('')}
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h5>Best Time to Visit</h5>
-                                <p>${result.itinerary.trip_summary?.best_time_to_visit || 'N/A'}</p>
-                                <h5>Weather</h5>
-                                <p>${result.itinerary.trip_summary?.weather_info || 'N/A'}</p>
+                            <div class="col-md-12">
+                                <div class="markdown-content">
+                                    ${destinationSpecialist.replace(/\n/g, '<br>')}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1079,37 +1082,14 @@ Let me create your personalized trip plan!`);
                 </div>
             `;
             
-            // Display practical info
-            if (result.itinerary.practical_info) {
-                const info = result.itinerary.practical_info;
-                html += `
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <h5>🌍 Practical Information</h5>
-                            <ul class="list-unstyled">
-                                <li><strong>Currency:</strong> ${info.currency}</li>
-                                <li><strong>Language:</strong> ${info.language}</li>
-                                <li><strong>Timezone:</strong> ${info.timezone}</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>🎒 Packing Suggestions</h5>
-                            <ul>
-                                ${info.packing_suggestions?.map(item => `<li>${item}</li>`).join('') || '<li>No specific suggestions</li>'}
-                            </ul>
-                        </div>
-                    </div>
-                `;
-            }
-            
             resultsDiv.innerHTML = html;
             resultsDiv.style.display = 'block';
             
             // Populate tab content AFTER HTML is inserted into DOM
             setTimeout(() => {
-                populateItineraryContent(result);
-                populateFlightsContent(result, origin, destination);
-                populateHotelsContent(result, destination);
+                populateItineraryContent(result, destinationSpecialist);
+                populateFlightsContent(result, origin, destination, flightSearch);
+                populateHotelsContent(result, destination, hotelSearch);
                 populatePracticalContent(result);
             }, 0);
         }
@@ -1124,7 +1104,7 @@ Let me create your personalized trip plan!`);
             document.getElementById(tab + 'Content').classList.add('active');
         }
 
-        function populateItineraryContent(result) {
+        function populateItineraryContent(result, destinationSpecialist) {
             const contentDiv = document.getElementById('itineraryContent');
             
             if (!contentDiv) {
@@ -1132,99 +1112,24 @@ Let me create your personalized trip plan!`);
                 return;
             }
             
-            if (!result.itinerary || !result.itinerary.itinerary) {
+            if (!destinationSpecialist) {
                 contentDiv.innerHTML = '<p>No detailed itinerary available.</p>';
                 return;
             }
             
-            let html = '<h3>📅 Daily Itinerary</h3>';
+            let html = '<h3>📅 Trip Itinerary</h3>';
             
-            // Generate dates based on start date if available
-            let startDate = result.itinerary.trip_summary?.start_date;
-            
-            // If no start date in result, try to get it from current trip info
-            if (!startDate && window.currentTripInfo?.start_date) {
-                startDate = window.currentTripInfo.start_date;
-                console.log('Using start date from current trip info:', startDate);
-            }
-            
-            if (!startDate) {
-                contentDiv.innerHTML = '<p>No start date available for itinerary. Please provide a start date in the trip details.</p>';
-                return;
-            }
-            
-            console.log('Processing itinerary with start date:', startDate);
-            
-            const start = new Date(startDate);
-            if (isNaN(start.getTime())) {
-                console.error('Invalid start date in itinerary:', startDate);
-                contentDiv.innerHTML = `<p>Invalid start date for itinerary: "${startDate}". Please provide a valid date format.</p>`;
-                return;
-            }
-            
-            console.log('Parsed start date:', start.toISOString(), 'Local:', start.toLocaleDateString());
-            
-            Object.entries(result.itinerary.itinerary).forEach(([dayKey, dayData], index) => {
-                // Calculate the date for this day - ensure proper date parsing
-                let dayDate;
-                if (startDate.includes('-')) {
-                    // Handle YYYY-MM-DD format - parse as local date to avoid timezone issues
-                    const [year, month, day] = startDate.split('-').map(Number);
-                    dayDate = new Date(year, month - 1, day + index); // month is 0-indexed
-                    console.log(`Day ${index + 1}: ${year}-${month}-${day + index} -> ${dayDate.toLocaleDateString()}`);
-                } else {
-                    // Fallback to original method
-                    dayDate = new Date(start);
-                    dayDate.setDate(start.getDate() + index);
-                    console.log(`Day ${index + 1} (fallback): ${dayDate.toLocaleDateString()}`);
-                }
-                
-                const dateString = dayDate.toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    month: 'long', 
-                    day: 'numeric',
-                    year: 'numeric'
-                });
-                
-                html += `
-                    <div class="itinerary-day">
-                        <div class="day-header">
-                            <div class="day-title">${dateString}</div>
-                            ${dayData.theme ? `<div class="day-theme">${dayData.theme.replace('_', ' ').toUpperCase()}</div>` : ''}
-                        </div>
-                `;
-                
-                // Display activities for each time slot
-                ['morning', 'lunch', 'afternoon', 'dinner', 'evening'].forEach(timeSlot => {
-                    if (dayData[timeSlot]) {
-                        const activity = dayData[timeSlot];
-                        html += `
-                            <div class="activity">
-                                <div class="activity-time">${timeSlot.charAt(0).toUpperCase() + timeSlot.slice(1)}</div>
-                                <div class="activity-title">${activity.activity || activity.restaurant || 'Activity'}</div>
-                                <div class="activity-description">${activity.description || ''}</div>
-                                <div class="activity-details">
-                                    ${activity.location ? `<span><i class="fas fa-map-marker-alt"></i> ${activity.location}</span>` : ''}
-                                    ${activity.duration ? `<span><i class="fas fa-clock"></i> ${activity.duration}</span>` : ''}
-                                    ${activity.cost ? `<span class="cost-badge">$${activity.cost}</span>` : ''}
-                                </div>
-                                ${activity.tips && activity.tips.length > 0 ? `
-                                    <ul class="tips-list">
-                                        ${activity.tips.map(tip => `<li>${tip}</li>`).join('')}
-                                    </ul>
-                                ` : ''}
-                            </div>
-                        `;
-                    }
-                });
-                
-                html += '</div>';
-            });
+            // Display the destination specialist's response as formatted markdown
+            html += `
+                <div class="markdown-content">
+                    ${destinationSpecialist.replace(/\n/g, '<br>')}
+                </div>
+            `;
             
             contentDiv.innerHTML = html || '<p>No detailed itinerary available.</p>';
         }
 
-        function populateFlightsContent(result, origin, destination) {
+        function populateFlightsContent(result, origin, destination, flightSearch) {
             const contentDiv = document.getElementById('flightsContent');
             
             if (!contentDiv) {
@@ -1234,9 +1139,7 @@ Let me create your personalized trip plan!`);
             
             // Debug: Log the result structure
             console.log('Flight function - result:', result);
-            console.log('Flight function - transportation:', result.itinerary?.transportation);
-            console.log('Flight function - arrival:', result.itinerary?.transportation?.arrival);
-            console.log('Flight function - departure:', result.itinerary?.transportation?.departure);
+            console.log('Flight function - flightSearch:', flightSearch);
             
             // Get trip details for dynamic deep links
             const tripInfo = window.currentTripInfo || {};
@@ -1285,31 +1188,16 @@ Let me create your personalized trip plan!`);
                 return bookingUrl;
             };
             
-            // Check for new flights structure first
-            if (result.itinerary && result.itinerary.flights &&
-                (result.itinerary.flights.fastest || result.itinerary.flights.cheapest || result.itinerary.flights.optimal)) {
-                // New categorized format with flights structure
-                const fastest = result.itinerary.flights.fastest || [];
-                const cheapest = result.itinerary.flights.cheapest || [];
-                const optimal = result.itinerary.flights.optimal || [];
+            // Check for flight data from the flight search agent
+            if (flightSearch && flightSearch.success && flightSearch.flights && flightSearch.flights.length > 0) {
+                // Use real flight data from the API
+                const flights = flightSearch.flights;
+                const categorized = flightSearch.categorized_flights || {};
                 
                 flightOptions = {
-                    fastest: fastest,
-                    cheapest: cheapest,
-                    optimal: optimal,
-                    hasRealData: true
-                };
-            } else if (result.itinerary && result.itinerary.transportation &&
-                (result.itinerary.transportation.fastest || result.itinerary.transportation.cheapest || result.itinerary.transportation.optimal)) {
-                // Legacy categorized format with transportation structure
-                const fastest = result.itinerary.transportation.fastest || [];
-                const cheapest = result.itinerary.transportation.cheapest || [];
-                const optimal = result.itinerary.transportation.optimal || [];
-                
-                flightOptions = {
-                    fastest: fastest,
-                    cheapest: cheapest,
-                    optimal: optimal,
+                    fastest: categorized.fastest || flights.slice(0, 3),
+                    cheapest: categorized.cheapest || flights.slice(0, 3),
+                    optimal: categorized.optimal || flights.slice(0, 3),
                     hasRealData: true
                 };
             } else {
@@ -1580,7 +1468,7 @@ Let me create your personalized trip plan!`);
             contentDiv.innerHTML = html;
         }
 
-        function populateHotelsContent(result, destination) {
+        function populateHotelsContent(result, destination, hotelSearch) {
             const contentDiv = document.getElementById('hotelsContent');
             
             if (!contentDiv) {
@@ -1590,8 +1478,7 @@ Let me create your personalized trip plan!`);
             
             // Debug: Log the result structure
             console.log('Hotel function - result:', result);
-            console.log('Hotel function - accommodation:', result.itinerary?.accommodation);
-            console.log('Hotel function - recommendations:', result.itinerary?.accommodation?.recommendations);
+            console.log('Hotel function - hotelSearch:', hotelSearch);
             
             // Get trip details for dynamic deep links
             const tripInfo = window.currentTripInfo || {};
@@ -1656,23 +1543,14 @@ Let me create your personalized trip plan!`);
                 return bookingUrl;
             };
             
-            // Check if we have real hotel data from the backend
+            // Check if we have real hotel data from the hotel search agent
             let realHotels;
             let hasRealData;
             let hotelOptions;
             
-            if (result.itinerary && result.itinerary.accommodation && 
-                (result.itinerary.accommodation.budget || result.itinerary.accommodation.moderate || result.itinerary.accommodation.luxury)) {
-                // Use real hotel data from backend with categories
-                const budget = result.itinerary.accommodation.budget || [];
-                const moderate = result.itinerary.accommodation.moderate || [];
-                const luxury = result.itinerary.accommodation.luxury || [];
-                
-                realHotels = { budget, moderate, luxury };
-                hasRealData = true;
-            } else if (result.itinerary && result.itinerary.accommodation && result.itinerary.accommodation.recommendations) {
-                // Legacy format - flat recommendations array
-                realHotels = result.itinerary.accommodation.recommendations;
+            if (hotelSearch && hotelSearch.success && hotelSearch.hotels && hotelSearch.hotels.length > 0) {
+                // Use real hotel data from the API
+                realHotels = hotelSearch.hotels;
                 hasRealData = true;
             } else {
                 // No real hotel data available - show message and booking links
@@ -1690,13 +1568,10 @@ Let me create your personalized trip plan!`);
             
             let html = '';
             
-            if (hasRealData && (realHotels.length > 0 || (realHotels.budget && realHotels.moderate && realHotels.luxury))) {
+            if (hasRealData && realHotels.length > 0) {
                 // Show real hotel data from enhanced AI system
-                if (realHotels.budget && realHotels.moderate && realHotels.luxury) {
-                    // New categorized format
-                    const budget = realHotels.budget;
-                    const moderate = realHotels.moderate;
-                    const luxury = realHotels.luxury;
+                // Display hotels in a simple list format
+                const hotels = realHotels;
                     
                     html = `
                         <div class="hotels-section">
@@ -1707,151 +1582,22 @@ Let me create your personalized trip plan!`);
                                 <p><i class="fas fa-check-circle"></i> Real hotel data from our enhanced AI system!</p>
                             </div>
                             
-                            <!-- Budget Hotels -->
-                            <div class="hotel-category mb-4">
-                                <h4>💰 Budget Hotels (Under $100/night)</h4>
-                                <div class="row">
-                                    ${budget.map((hotel, index) => `
-                                        <div class="col-md-4 mb-3">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h6>Option ${index + 1}</h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="hotel-details">
-                                                        <div class="hotel-name">${hotel.name}</div>
-                                                        <div class="hotel-location">
-                                                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
-                                                        </div>
-                                                        <div class="hotel-price">
-                                                            <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
-                                                        </div>
-                                                        <div class="hotel-pros">
-                                                            <strong>Pros:</strong>
-                                                            <ul>
-                                                                ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
-                                                            </ul>
-                                                        </div>
-                                                        <div class="hotel-cons">
-                                                            <strong>Cons:</strong>
-                                                            <ul>
-                                                                ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-external-link-alt"></i> Book Hotel
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            
-                            <!-- Moderate Hotels -->
-                            <div class="hotel-category mb-4">
-                                <h4>⭐ Moderate Hotels ($100-$400/night)</h4>
-                                <div class="row">
-                                    ${moderate.map((hotel, index) => `
-                                        <div class="col-md-4 mb-3">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h6>Option ${index + 1}</h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="hotel-details">
-                                                        <div class="hotel-name">${hotel.name}</div>
-                                                        <div class="hotel-location">
-                                                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
-                                                        </div>
-                                                        <div class="hotel-price">
-                                                            <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
-                                                        </div>
-                                                        <div class="hotel-pros">
-                                                            <strong>Pros:</strong>
-                                                            <ul>
-                                                                ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
-                                                            </ul>
-                                                        </div>
-                                                        <div class="hotel-cons">
-                                                            <strong>Cons:</strong>
-                                                            <ul>
-                                                                ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-external-link-alt"></i> Book Hotel
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            
-                            <!-- Luxury Hotels -->
-                            <div class="hotel-category mb-4">
-                                <h4>👑 Luxury Hotels (Above $500/night)</h4>
-                                <div class="row">
-                                    ${luxury.map((hotel, index) => `
-                                        <div class="col-md-4 mb-3">
-                                            <div class="card">
-                                                <div class="card-header">
-                                                    <h6>Option ${index + 1}</h6>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="hotel-details">
-                                                        <div class="hotel-name">${hotel.name}</div>
-                                                        <div class="hotel-location">
-                                                            <i class="fas fa-map-marker-alt"></i> ${hotel.location}
-                                                        </div>
-                                                        <div class="hotel-price">
-                                                            <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
-                                                        </div>
-                                                        <div class="hotel-pros">
-                                                            <strong>Pros:</strong>
-                                                            <ul>
-                                                                ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
-                                                            </ul>
-                                                        </div>
-                                                        <div class="hotel-cons">
-                                                            <strong>Cons:</strong>
-                                                            <ul>
-                                                                ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                    <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-external-link-alt"></i> Book Hotel
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    // Legacy format - flat array
-                    html = `
-                        <div class="hotels-section">
-                            <h3>🏨 Hotel Options</h3>
-                            <p class="text-muted">${destination}</p>
-                            
-                            <div class="alert alert-success">
-                                <p><i class="fas fa-check-circle"></i> Real hotel data from our enhanced AI system!</p>
-                            </div>
-                            
                             <div class="row">
-                                ${realHotels.map((hotel, index) => `
+                                ${hotels.map((hotel, index) => `
                                     <div class="col-md-6 mb-3">
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5>${hotel.name}</h5>
-                                                <div class="hotel-type">${hotel.type}</div>
+                                                <div class="stars">
+                                                    ${(() => {
+                                                        const rating = hotel.rating || 0;
+                                                        const floorRating = Math.max(0, Math.min(5, Math.floor(rating)));
+                                                        const filledStars = '★'.repeat(floorRating);
+                                                        const emptyStars = '☆'.repeat(5 - floorRating);
+                                                        return `${filledStars}${emptyStars}`;
+                                                    })()}
+                                                    <span class="ms-2">${hotel.rating || 0}/5</span>
+                                                </div>
                                             </div>
                                             <div class="card-body">
                                                 <div class="hotel-details">
@@ -1860,18 +1606,6 @@ Let me create your personalized trip plan!`);
                                                     </div>
                                                     <div class="hotel-price">
                                                         <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
-                                                    </div>
-                                                    <div class="hotel-pros">
-                                                        <strong>Pros:</strong>
-                                                        <ul>
-                                                            ${hotel.pros.map(pro => `<li>${pro}</li>`).join('')}
-                                                        </ul>
-                                                    </div>
-                                                    <div class="hotel-cons">
-                                                        <strong>Cons:</strong>
-                                                        <ul>
-                                                            ${hotel.cons.map(con => `<li>${con}</li>`).join('')}
-                                                        </ul>
                                                     </div>
                                                 </div>
                                                 <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
@@ -1884,7 +1618,7 @@ Let me create your personalized trip plan!`);
                             </div>
                         </div>
                     `;
-                }
+
             } else {
                 // Show message and booking links when no real data is available
                 html = `
@@ -1931,29 +1665,37 @@ Let me create your personalized trip plan!`);
                 return;
             }
             
-            if (!result.itinerary.practical_info) {
+            // Extract budget analyst data for practical information
+            const budgetAnalyst = result.agents?.budget_analyst?.result || {};
+            
+            if (!budgetAnalyst) {
                 contentDiv.innerHTML = '<p>No practical information available.</p>';
                 return;
             }
-            
-            const info = result.itinerary.practical_info;
             let html = `
                 <div class="day-card">
                     <div class="row">
                         <div class="col-md-6">
-                            <h5>🌍 Practical Information</h5>
+                            <h5>💰 Budget Breakdown</h5>
                             <ul class="list-unstyled">
-                                <li><strong>Currency:</strong> ${info.currency || 'N/A'}</li>
-                                <li><strong>Language:</strong> ${info.language || 'N/A'}</li>
-                                <li><strong>Timezone:</strong> ${info.timezone || 'N/A'}</li>
+                                ${budgetAnalyst.budget_breakdown ? 
+                                    Object.entries(budgetAnalyst.budget_breakdown).map(([category, amount]) => 
+                                        `<li><strong>${category}:</strong> ${amount}</li>`
+                                    ).join('') : 
+                                    '<li>No budget breakdown available</li>'
+                                }
                             </ul>
+                            ${budgetAnalyst.total_estimated_cost ? 
+                                `<p><strong>Total Estimated Cost:</strong> ${budgetAnalyst.total_estimated_cost}</p>` : 
+                                ''
+                            }
                         </div>
                         <div class="col-md-6">
-                            <h5>🎒 Packing Suggestions</h5>
+                            <h5>💡 Cost Saving Tips</h5>
                             <ul>
-                                ${info.packing_suggestions && info.packing_suggestions.length > 0 ? 
-                                    info.packing_suggestions.map(item => `<li>${item}</li>`).join('') : 
-                                    '<li>No specific suggestions</li>'
+                                ${budgetAnalyst.cost_saving_tips && budgetAnalyst.cost_saving_tips.length > 0 ? 
+                                    budgetAnalyst.cost_saving_tips.map(tip => `<li>${tip}</li>`).join('') : 
+                                    '<li>No specific tips available</li>'
                                 }
                             </ul>
                         </div>
@@ -2115,8 +1857,6 @@ Let me create your personalized trip plan!`);
         }
 
         async function planTrip(tripInfo) {
-            console.log('planTrip called with:', tripInfo);
-            
             const loading = document.getElementById('loading');
             const results = document.getElementById('results');
             
@@ -2124,35 +1864,28 @@ Let me create your personalized trip plan!`);
             results.style.display = 'none';
 
             try {
-                const requestBody = {
-                    origin: tripInfo.origin,
-                    destination: tripInfo.destination,
-                    duration_days: tripInfo.duration,
-                    start_date: tripInfo.start_date,
-                    travelers: tripInfo.travelers,
-                    budget_range: tripInfo.budget_type,
-                    interests: tripInfo.interests,
-                    trip_type: 'leisure',
-                    special_requirements: null,
-                    preferred_provider: null
-                };
-                
-                console.log('Sending request to backend:', requestBody);
-                
-                const response = await fetch('/api/hybrid/plan', {
+                const response = await fetch('/markdown-trip/plan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify({
+                        origin: tripInfo.origin,
+                        destination: tripInfo.destination,
+                        start_date: tripInfo.start_date,
+                        end_date: tripInfo.start_date, // Use start_date as end_date for now
+                        duration_days: tripInfo.duration,
+                        travelers: tripInfo.travelers,
+                        budget_range: tripInfo.budget_type || 'moderate',
+                        interests: tripInfo.interests,
+                        comprehensive_planning: true
+                    })
                 });
                 
-                console.log('Response status:', response.status);
-                
                 const result = await response.json();
-                console.log('Backend response:', result);
                 
-                if (result.success) {
+                // Check if we have agents data (successful response)
+                if (result.agents && Object.keys(result.agents).length > 0) {
                     addMessage('ai', `Perfect! I've created your comprehensive trip plan. Here's your detailed itinerary:`);
                     displayResults(result, tripInfo);
                 } else {
@@ -2160,12 +1893,13 @@ Let me create your personalized trip plan!`);
                 }
                 
             } catch (error) {
-                console.error('Error in planTrip:', error);
+                console.error('Error:', error);
                 addMessage('ai', `I'm sorry, but I encountered an error while planning your trip: ${error.message}. Please try again.`);
             } finally {
                 loading.style.display = 'none';
             }
         }
+
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

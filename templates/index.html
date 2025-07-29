@@ -28,47 +28,6 @@
             
             <!-- Comprehensive Trip Planner Form -->
             <div id="comprehensivePlannerFormBox" class="mb-4">
-                <form id="comprehensivePlannerForm">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="originInput" class="form-label">Origin City</label>
-                            <input type="text" id="originInput" class="form-control" placeholder="Dallas" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="destinationInput" class="form-label">Destination City</label>
-                            <input type="text" id="destinationInput" class="form-control" placeholder="Los Angeles" required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="startDateInput" class="form-label">Start Date</label>
-                            <input type="date" id="startDateInput" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="returnDateInput" class="form-label">Return Date</label>
-                            <input type="date" id="returnDateInput" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="travelersInput" class="form-label">Travelers</label>
-                            <input type="number" id="travelersInput" class="form-control" min="1" value="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="budgetRangeInput" class="form-label">Budget Range</label>
-                            <select id="budgetRangeInput" class="form-control">
-                                <option value="budget">Budget</option>
-                                <option value="moderate" selected>Moderate</option>
-                                <option value="luxury">Luxury</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="interestsInput" class="form-label">Interests (comma-separated)</label>
-                            <input type="text" id="interestsInput" class="form-control" placeholder="food, culture, art">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Plan My Trip</button>
-                </form>
             </div>
 
             <!-- Comprehensive Plan Display -->
@@ -144,26 +103,9 @@
     <script src="{{ url_for('static', path='script.js') }}"></script>
     <script src="{{ url_for('static', path='comprehensive_plan.js') }}"></script>
     <script>
-        // Instantiate the comprehensive planner
-        window.comprehensivePlanner = new ComprehensiveTripPlanner();
-
-        // Handle comprehensive planner form submission
-        document.getElementById('comprehensivePlannerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Hide basic search UI
-            document.getElementById('basicSearchUI').style.display = 'none';
-            // Gather form data
-            const formData = {
-                origin: document.getElementById('originInput').value,
-                destination: document.getElementById('destinationInput').value,
-                start_date: document.getElementById('startDateInput').value,
-                return_date: document.getElementById('returnDateInput').value,
-                travelers: parseInt(document.getElementById('travelersInput').value, 10),
-                budget_range: document.getElementById('budgetRangeInput').value,
-                interests: document.getElementById('interestsInput').value.split(',').map(s => s.trim()).filter(Boolean)
-            };
-            comprehensivePlanner.createComprehensivePlan(formData);
-        });
+        // This page now redirects to the chatbot interface
+        // The comprehensive planner is handled by the hybrid_trip_planner.html
+        console.log('Index page loaded - chatbot interface is available at /');
     </script>
 </body>
 </html> 
