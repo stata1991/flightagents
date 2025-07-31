@@ -1169,18 +1169,21 @@ Let me create your personalized trip plan!`);
                 // Format date for URLs (YYYY-MM-DD)
                 const formattedDate = new Date(startDate).toISOString().split('T')[0];
                 
-                // Simplified URL generation for better compatibility
+                // Improved URL generation with proper encoding and fallbacks
                 let bookingUrl = '';
                 
-                if (airline.includes('Expedia')) {
-                    // Expedia - use simple search format
-                    bookingUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(tripOrigin)},to:${encodeURIComponent(tripDestination)},departure:${formattedDate}TANYT&passengers=adults:${travelers},children:${children || 0}`;
+                if (airline.includes('Google')) {
+                    // Google Flights - optimized format
+                    bookingUrl = `https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD`;
+                } else if (airline.includes('Kayak')) {
+                    // Kayak - optimized format
+                    bookingUrl = `https://www.kayak.com/flights/${encodeURIComponent(tripOrigin)}-${encodeURIComponent(tripDestination)}/${formattedDate}?adults=${travelers}&children=${children || 0}`;
                 } else if (airline.includes('Skyscanner')) {
-                    // Skyscanner - use simple search format
-                    bookingUrl = `https://www.skyscanner.com/transport/flights/${encodeURIComponent(tripOrigin)}/${encodeURIComponent(tripDestination)}/${formattedDate}/?adults=${travelers}&children=${children || 0}`;
+                    // Skyscanner - optimized format
+                    bookingUrl = `https://www.skyscanner.com/transport/flights/${encodeURIComponent(tripOrigin)}/${encodeURIComponent(tripDestination)}/${formattedDate}/`;
                 } else {
-                    // Default to Expedia for other airlines
-                    bookingUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(tripOrigin)},to:${encodeURIComponent(tripDestination)},departure:${formattedDate}TANYT&passengers=adults:${travelers},children:${children || 0}`;
+                    // Fallback to Google Flights (most reliable)
+                    bookingUrl = `https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD`;
                 }
                 
                 return bookingUrl;
@@ -1206,9 +1209,9 @@ Let me create your personalized trip plan!`);
                 flightOptions = {
                     message: `Flight data for ${tripOrigin} to ${tripDestination} is not available yet. Please use the booking links below to search for flights.`,
                     booking_links: {
-                        expedia: createFlightLink('Expedia', 'https://www.expedia.com/Flights-Search'),
-                        skyscanner: createFlightLink('Skyscanner', 'https://www.skyscanner.com/transport/flights'),
-                        kayak: `https://www.kayak.com/flights/${encodeURIComponent(tripOrigin)}-${encodeURIComponent(tripDestination)}/${formattedDate}?adults=${travelers}&children=${children || 0}`
+                        google: createFlightLink('Google', 'https://www.google.com/travel/flights'),
+                        kayak: createFlightLink('Kayak', 'https://www.kayak.com/flights'),
+                        skyscanner: createFlightLink('Skyscanner', 'https://www.skyscanner.com/transport/flights')
                     }
                 };
             }
@@ -1234,18 +1237,18 @@ Let me create your personalized trip plan!`);
                             <h4>Search for Flights:</h4>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <a href="${flightOptions.booking_links.expedia}" target="_blank" class="btn btn-primary btn-lg w-100">
-                                        <i class="fas fa-external-link-alt"></i> Search on Expedia
+                                    <a href="${flightOptions.booking_links.google}" target="_blank" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Google Flights
                                     </a>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <a href="${flightOptions.booking_links.skyscanner}" target="_blank" class="btn btn-success btn-lg w-100">
-                                        <i class="fas fa-external-link-alt"></i> Search on Skyscanner
-                                    </a>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <a href="${flightOptions.booking_links.kayak}" target="_blank" class="btn btn-info btn-lg w-100">
+                                    <a href="${flightOptions.booking_links.kayak}" target="_blank" class="btn btn-success btn-lg w-100">
                                         <i class="fas fa-external-link-alt"></i> Search on Kayak
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="${flightOptions.booking_links.skyscanner}" target="_blank" class="btn btn-info btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Skyscanner
                                     </a>
                                 </div>
                             </div>
@@ -1291,7 +1294,7 @@ Let me create your personalized trip plan!`);
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
                                                         <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
                                                         <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
-                                                            <i class="fas fa-external-link-alt"></i> Book Flight
+                                                            <i class="fas fa-external-link-alt"></i> Book on Google Flights
                                                         </a>
                                                     </div>
                                                 </div>
@@ -1515,18 +1518,18 @@ Let me create your personalized trip plan!`);
                 const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
                 const formattedEndDate = endDate;
                 
-                // Simplified URL generation for better compatibility
+                // Improved URL generation with reliable platforms
                 let bookingUrl = '';
                 
-                if (hotelName.includes('Booking.com')) {
-                    // Booking.com - use simple search format
+                if (hotelName.includes('Google')) {
+                    // Google Hotels - optimized format
+                    bookingUrl = `https://www.google.com/travel/hotels?q=Hotels%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${formattedEndDate}&hl=en&curr=USD&adults=${travelers}&children=${children || 0}`;
+                } else if (hotelName.includes('Booking.com')) {
+                    // Booking.com - optimized format
                     bookingUrl = `https://www.booking.com/search.html?ss=${encodeURIComponent(tripDestination)}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&group_adults=${travelers}&group_children=${children || 0}&no_rooms=1`;
-                } else if (hotelName.includes('Expedia')) {
-                    // Expedia - use simple search format
-                    bookingUrl = `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(tripDestination)}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&adults=${travelers}&children=${children || 0}`;
                 } else {
-                    // Hotels.com - use simple search format
-                    bookingUrl = `https://www.hotels.com/search.html?destination=${encodeURIComponent(tripDestination)}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&adults=${travelers}&children=${children || 0}`;
+                    // Fallback to Google Hotels (most reliable)
+                    bookingUrl = `https://www.google.com/travel/hotels?q=Hotels%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${formattedEndDate}&hl=en&curr=USD&adults=${travelers}&children=${children || 0}`;
                 }
                 
                 return bookingUrl;
@@ -1548,9 +1551,8 @@ Let me create your personalized trip plan!`);
                 hotelOptions = {
                     message: `Hotel data for ${tripDestination} is not available yet. Please use the booking links below to search for hotels.`,
                     booking_links: {
-                        google: `https://www.google.com/travel/hotels?q=Hotels%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${endDate}`,
-                        booking: createHotelLink('Booking.com', 'https://www.booking.com/search.html'),
-                        expedia: createHotelLink('Expedia', 'https://www.expedia.com/Hotel-Search')
+                        google: createHotelLink('Google', 'https://www.google.com/travel/hotels'),
+                        booking: createHotelLink('Booking.com', 'https://www.booking.com/search.html')
                     }
                 };
             }
@@ -1598,7 +1600,7 @@ Let me create your personalized trip plan!`);
                                                     </div>
                                                 </div>
                                                 <a href="https://www.google.com/travel/hotels?q=${encodeURIComponent(hotel.name)}%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${endDate}&hl=en&curr=USD&adults=${travelers}&children=${children || 0}" target="_blank" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-external-link-alt"></i> Book Hotel
+                                                    <i class="fas fa-external-link-alt"></i> Book on Google Hotels
                                                 </a>
                                             </div>
                                         </div>
@@ -1627,14 +1629,14 @@ Let me create your personalized trip plan!`);
                                         <i class="fab fa-google"></i> Search on Google Hotels
                                     </a>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <a href="${hotelOptions.booking_links.booking}" target="_blank" class="btn btn-success btn-lg w-100">
-                                        <i class="fas fa-external-link-alt"></i> Search on Booking.com
+                                <div class="col-md-6 mb-3">
+                                    <a href="${hotelOptions.booking_links.google}" target="_blank" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Google Hotels
                                     </a>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <a href="${hotelOptions.booking_links.expedia}" target="_blank" class="btn btn-info btn-lg w-100">
-                                        <i class="fas fa-external-link-alt"></i> Search on Expedia
+                                <div class="col-md-6 mb-3">
+                                    <a href="${hotelOptions.booking_links.booking}" target="_blank" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-external-link-alt"></i> Search on Booking.com
                                     </a>
                                 </div>
                             </div>
