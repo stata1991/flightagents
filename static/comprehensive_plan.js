@@ -15,7 +15,7 @@ class ComprehensiveTripPlanner {
             this.showLoadingState();
             
             // Call the comprehensive planning endpoint
-            const response = await fetch('/trip-planner/comprehensive-plan', {
+            const response = await fetch('/markdown-trip/plan', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

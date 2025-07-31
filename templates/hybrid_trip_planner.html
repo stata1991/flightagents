@@ -1169,24 +1169,25 @@ Let me create your personalized trip plan!`);
                 // Format date for URLs (YYYY-MM-DD)
                 const formattedDate = new Date(startDate).toISOString().split('T')[0];
                 
-                // Use the most popular and reliable booking sites
+                // Simplified URL generation for better compatibility
                 let bookingUrl = '';
                 
-                // Use Expedia for most flights (most comprehensive)
-                if (airline.includes('Spirit') || airline.includes('Frontier') || airline.includes('JetBlue') || 
-                    airline.includes('Delta') || airline.includes('American') || airline.includes('United')) {
-                    const params = new URLSearchParams({
-                        'leg1': `from:${tripOrigin},to:${tripDestination},departure:${formattedDate}TANYT`,
-                        'passengers': `adults:${travelers},children:${children || 0}`
-                    });
-                    bookingUrl = `https://www.expedia.com/Flights-Search?${params.toString()}`;
+                if (airline.includes('Expedia')) {
+                    // Expedia - use simple search format
+                    bookingUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(tripOrigin)},to:${encodeURIComponent(tripDestination)},departure:${formattedDate}TANYT&passengers=adults:${travelers},children:${children || 0}`;
+                } else if (airline.includes('Skyscanner')) {
+                    // Skyscanner - use simple search format
+                    bookingUrl = `https://www.skyscanner.com/transport/flights/${encodeURIComponent(tripOrigin)}/${encodeURIComponent(tripDestination)}/${formattedDate}/?adults=${travelers}&children=${children || 0}`;
                 } else {
-                    // Use Skyscanner for international airlines (better for European/Asian carriers)
-                    bookingUrl = `https://www.skyscanner.com/transport/flights/${tripOrigin}/${tripDestination}/${formattedDate}/?adults=${travelers}&children=${children || 0}`;
+                    // Default to Expedia for other airlines
+                    bookingUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(tripOrigin)},to:${encodeURIComponent(tripDestination)},departure:${formattedDate}TANYT&passengers=adults:${travelers},children:${children || 0}`;
                 }
                 
                 return bookingUrl;
             };
+            
+            // Format date for URLs (YYYY-MM-DD) - needed for Kayak URL
+            const formattedDate = new Date(startDate).toISOString().split('T')[0];
             
             // Check for flight data from the flight search agent
             if (flightSearch && flightSearch.success && flightSearch.flights && flightSearch.flights.length > 0) {
@@ -1207,7 +1208,7 @@ Let me create your personalized trip plan!`);
                     booking_links: {
                         expedia: createFlightLink('Expedia', 'https://www.expedia.com/Flights-Search'),
                         skyscanner: createFlightLink('Skyscanner', 'https://www.skyscanner.com/transport/flights'),
-                        kayak: createFlightLink('Kayak', 'https://www.kayak.com/flights')
+                        kayak: `https://www.kayak.com/flights/${encodeURIComponent(tripOrigin)}-${encodeURIComponent(tripDestination)}/${formattedDate}?adults=${travelers}&children=${children || 0}`
                     }
                 };
             }
@@ -1288,8 +1289,8 @@ Let me create your personalized trip plan!`);
                                                             <span class="arrival">${flight.arrival_time || 'N/A'}</span>
                                                         </div>
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
-                                                        <div class="cost">$${flight.cost || 'N/A'}</div>
-                                                        <a href="${flight.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                        <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
+                                                        <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                             <i class="fas fa-external-link-alt"></i> Book Flight
                                                         </a>
                                                     </div>
@@ -1320,8 +1321,8 @@ Let me create your personalized trip plan!`);
                                                             <span class="arrival">${flight.arrival_time || 'N/A'}</span>
                                                         </div>
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
-                                                        <div class="cost">$${flight.cost || 'N/A'}</div>
-                                                        <a href="${flight.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                        <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
+                                                        <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                             <i class="fas fa-external-link-alt"></i> Book Flight
                                                         </a>
                                                     </div>
@@ -1352,8 +1353,8 @@ Let me create your personalized trip plan!`);
                                                             <span class="arrival">${flight.arrival_time || 'N/A'}</span>
                                                         </div>
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
-                                                        <div class="cost">$${flight.cost || 'N/A'}</div>
-                                                        <a href="${flight.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                        <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
+                                                        <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                             <i class="fas fa-external-link-alt"></i> Book Flight
                                                         </a>
                                                     </div>
@@ -1394,11 +1395,11 @@ Let me create your personalized trip plan!`);
                                                     <i class="fas fa-arrow-right mx-2"></i>
                                                     <span class="arrival">${arrival.arrival_time || 'N/A'}</span>
                                                 </div>
-                                                <div class="duration">Duration: ${arrival.duration || 'N/A'}</div>
-                                                <div class="cost">$${arrival.cost || 'N/A'}</div>
-                                                <a href="${arrival.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
-                                                    <i class="fas fa-external-link-alt"></i> Book Flight
-                                                </a>
+                                                                                                    <div class="duration">Duration: ${arrival.duration || 'N/A'}</div>
+                                                    <div class="cost">$${arrival.price?.units || arrival.cost || 'N/A'}</div>
+                                                    <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                        <i class="fas fa-external-link-alt"></i> Book Flight
+                                                    </a>
                                             </div>
                                         </div>
                                     </div>
@@ -1417,11 +1418,11 @@ Let me create your personalized trip plan!`);
                                                     <i class="fas fa-arrow-right mx-2"></i>
                                                     <span class="arrival">${departure.arrival_time || 'N/A'}</span>
                                                 </div>
-                                                <div class="duration">Duration: ${departure.duration || 'N/A'}</div>
-                                                <div class="cost">$${departure.cost || 'N/A'}</div>
-                                                <a href="${departure.booking_link || '#'}" target="_blank" class="btn btn-primary btn-sm mt-2">
-                                                    <i class="fas fa-external-link-alt"></i> Book Flight
-                                                </a>
+                                                                                                    <div class="duration">Duration: ${departure.duration || 'N/A'}</div>
+                                                    <div class="cost">$${departure.price?.units || departure.cost || 'N/A'}</div>
+                                                    <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}" target="_blank" class="btn btn-primary btn-sm mt-2">
+                                                        <i class="fas fa-external-link-alt"></i> Book Flight
+                                                    </a>
                                             </div>
                                         </div>
                                     </div>
@@ -1506,6 +1507,7 @@ Let me create your personalized trip plan!`);
             const end = new Date(start);
             end.setDate(start.getDate() + duration);
             const endDate = end.toISOString().split('T')[0];
+            const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
             
             // Create dynamic deep links with trip parameters
             const createHotelLink = (hotelName, baseUrl) => {
@@ -1513,31 +1515,18 @@ Let me create your personalized trip plan!`);
                 const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
                 const formattedEndDate = endDate;
                 
-                // Use the most popular and reliable booking sites
+                // Simplified URL generation for better compatibility
                 let bookingUrl = '';
                 
-                // Use Booking.com for most hotels (most comprehensive and reliable)
-                if (hotelName.includes('Budget') || hotelName.includes('Formule 1') || hotelName.includes('B&B') || 
-                    hotelName.includes('Holiday Inn') || hotelName.includes('Mercure') || hotelName.includes('Novotel')) {
-                    const params = new URLSearchParams({
-                        'ss': tripDestination,
-                        'checkin': formattedStartDate,
-                        'checkout': formattedEndDate,
-                        'group_adults': travelers,
-                        'group_children': children || 0,
-                        'no_rooms': 1
-                    });
-                    bookingUrl = `https://www.booking.com/search.html?${params.toString()}`;
+                if (hotelName.includes('Booking.com')) {
+                    // Booking.com - use simple search format
+                    bookingUrl = `https://www.booking.com/search.html?ss=${encodeURIComponent(tripDestination)}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&group_adults=${travelers}&group_children=${children || 0}&no_rooms=1`;
+                } else if (hotelName.includes('Expedia')) {
+                    // Expedia - use simple search format
+                    bookingUrl = `https://www.expedia.com/Hotel-Search?destination=${encodeURIComponent(tripDestination)}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&adults=${travelers}&children=${children || 0}`;
                 } else {
-                    // Use Expedia for luxury hotels (often better rates for high-end properties)
-                    const params = new URLSearchParams({
-                        'destination': tripDestination,
-                        'checkin': formattedStartDate,
-                        'checkout': formattedEndDate,
-                        'adults': travelers,
-                        'children': children || 0
-                    });
-                    bookingUrl = `https://www.expedia.com/Hotel-Search?${params.toString()}`;
+                    // Hotels.com - use simple search format
+                    bookingUrl = `https://www.hotels.com/search.html?destination=${encodeURIComponent(tripDestination)}&checkin=${formattedStartDate}&checkout=${formattedEndDate}&adults=${travelers}&children=${children || 0}`;
                 }
                 
                 return bookingUrl;
@@ -1559,9 +1548,9 @@ Let me create your personalized trip plan!`);
                 hotelOptions = {
                     message: `Hotel data for ${tripDestination} is not available yet. Please use the booking links below to search for hotels.`,
                     booking_links: {
+                        google: `https://www.google.com/travel/hotels?q=Hotels%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${endDate}`,
                         booking: createHotelLink('Booking.com', 'https://www.booking.com/search.html'),
-                        expedia: createHotelLink('Expedia', 'https://www.expedia.com/Hotel-Search'),
-                        hotels: createHotelLink('Hotels.com', 'https://www.hotels.com/search.html')
+                        expedia: createHotelLink('Expedia', 'https://www.expedia.com/Hotel-Search')
                     }
                 };
             }
@@ -1608,7 +1597,7 @@ Let me create your personalized trip plan!`);
                                                         <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
                                                     </div>
                                                 </div>
-                                                <a href="${hotel.booking_link}" target="_blank" class="btn btn-primary btn-sm">
+                                                <a href="https://www.google.com/travel/hotels?q=${encodeURIComponent(hotel.name)}%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${endDate}&hl=en&curr=USD&adults=${travelers}&children=${children || 0}" target="_blank" class="btn btn-primary btn-sm">
                                                     <i class="fas fa-external-link-alt"></i> Book Hotel
                                                 </a>
                                             </div>
@@ -1634,18 +1623,18 @@ Let me create your personalized trip plan!`);
                             <h4>Search for Hotels:</h4>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <a href="${hotelOptions.booking_links.booking}" target="_blank" class="btn btn-primary btn-lg w-100">
+                                    <a href="${hotelOptions.booking_links.google}" target="_blank" class="btn btn-primary btn-lg w-100">
+                                        <i class="fab fa-google"></i> Search on Google Hotels
+                                    </a>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <a href="${hotelOptions.booking_links.booking}" target="_blank" class="btn btn-success btn-lg w-100">
                                         <i class="fas fa-external-link-alt"></i> Search on Booking.com
                                     </a>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <a href="${hotelOptions.booking_links.expedia}" target="_blank" class="btn btn-success btn-lg w-100">
+                                    <a href="${hotelOptions.booking_links.expedia}" target="_blank" class="btn btn-info btn-lg w-100">
                                         <i class="fas fa-external-link-alt"></i> Search on Expedia
-                                    </a>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <a href="${hotelOptions.booking_links.hotels}" target="_blank" class="btn btn-info btn-lg w-100">
-                                        <i class="fas fa-external-link-alt"></i> Search on Hotels.com
                                     </a>
                                 </div>
                             </div>

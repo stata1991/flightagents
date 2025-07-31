@@ -137,8 +137,8 @@ class EnhancedAITripProvider(TripPlannerProvider):
             )
             
             if hotel_response.hotels and len(hotel_response.hotels) > 0:
-                # Return top 3 hotels
-                top_hotels = hotel_response.hotels[:3]
+                # Return top 6 hotels (more variety)
+                top_hotels = hotel_response.hotels[:6]
                 return {
                     "success": True,
                     "hotels": [
@@ -796,7 +796,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     
                     # Update fastest flights
                     for i, flight in enumerate(fastest_flights):
-                        if i < 3:  # Ensure we only add 3 flights
+                        if i < 5:  # Ensure we only add 5 flights
                             flight_obj = {
                                 "airline": flight.get("airline", "Unknown"),
                                 "flight_number": flight.get("flight_number", "Unknown"),
@@ -810,7 +810,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     
                     # Update cheapest flights
                     for i, flight in enumerate(cheapest_flights):
-                        if i < 3:  # Ensure we only add 3 flights
+                        if i < 5:  # Ensure we only add 5 flights
                             flight_obj = {
                                 "airline": flight.get("airline", "Unknown"),
                                 "flight_number": flight.get("flight_number", "Unknown"),
@@ -824,7 +824,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     
                     # Update optimal flights
                     for i, flight in enumerate(optimal_flights):
-                        if i < 3:  # Ensure we only add 3 flights
+                        if i < 5:  # Ensure we only add 5 flights
                             flight_obj = {
                                 "airline": flight.get("airline", "Unknown"),
                                 "flight_number": flight.get("flight_number", "Unknown"),
@@ -847,6 +847,12 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
     def _generate_hotel_deep_link(self, hotel: Dict[str, Any], checkin_date: str, checkout_date: str, travelers: int) -> str:
         """Generate a proper deep link for hotel booking"""
         try:
+            # Use the existing booking link if it's already a proper URL
+            existing_link = hotel.get("booking_link", "")
+            if existing_link and existing_link.startswith("https://www.booking.com/hotel/"):
+                logger.info(f"Using existing booking link: {existing_link}")
+                return existing_link
+            
             # Extract hotel ID from the existing booking link
             hotel_id = hotel.get("hotel_id", "")
             if not hotel_id:
@@ -855,18 +861,21 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 if "hotel/" in booking_link:
                     hotel_id = booking_link.split("hotel/")[1].split(".")[0]
             
-            # Generate proper Booking.com deep link
-            params = {
-                "checkin": checkin_date,
-                "checkout": checkout_date,
-                "adults": travelers,
-                "rooms": 1,
-                "currency": "USD",
-                "selected_currency": "USD"
-            }
-            
-            param_string = "&".join([f"{k}={v}" for k, v in params.items()])
-            return f"https://www.booking.com/hotel/{hotel_id}.html?{param_string}"
+            if hotel_id:
+                # Generate proper Booking.com deep link
+                params = {
+                    "checkin": checkin_date,
+                    "checkout": checkout_date,
+                    "adults": travelers,
+                    "rooms": 1,
+                    "currency": "USD"
+                }
+                
+                param_string = "&".join([f"{k}={v}" for k, v in params.items()])
+                return f"https://www.booking.com/hotel/{hotel_id}.html?{param_string}"
+            else:
+                logger.warning(f"No hotel ID found for hotel: {hotel.get('name', 'Unknown')}")
+                return existing_link
             
         except Exception as e:
             logger.error(f"Error generating hotel deep link: {str(e)}")

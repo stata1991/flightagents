@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Flights & Hotels Link Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>🧪 Google Flights & Hotels Link Test</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>✈️ Google Flights Test</h3>
+                    </div>
+                    <div class="card-body">
+                        <h5>Test Links:</h5>
+                        <div class="mb-3">
+                            <a href="https://www.google.com/travel/flights?q=Flights%20from%20Hyderabad%20to%20Bangalore%20on%202025-08-21" target="_blank" class="btn btn-primary">
+                                <i class="fab fa-google"></i> Hyderabad → Bangalore (Aug 21, 2025)
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <a href="https://www.google.com/travel/flights?q=Flights%20from%20New%20York%20to%20London%20on%202025-08-21" target="_blank" class="btn btn-success">
+                                <i class="fab fa-google"></i> New York → London (Aug 21, 2025)
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <a href="https://www.google.com/travel/flights?q=Flights%20from%20Mumbai%20to%20Delhi%20on%202025-08-21" target="_blank" class="btn btn-info">
+                                <i class="fab fa-google"></i> Mumbai → Delhi (Aug 21, 2025)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🏨 Google Hotels Test</h3>
+                    </div>
+                    <div class="card-body">
+                        <h5>Test Links:</h5>
+                        <div class="mb-3">
+                            <a href="https://www.google.com/travel/hotels?q=Hotels%20in%20Bangalore%20from%202025-08-21%20to%202025-08-26" target="_blank" class="btn btn-primary">
+                                <i class="fab fa-google"></i> Hotels in Bangalore (Aug 21-26, 2025)
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <a href="https://www.google.com/travel/hotels?q=Hotels%20in%20London%20from%202025-08-21%20to%202025-08-26" target="_blank" class="btn btn-success">
+                                <i class="fab fa-google"></i> Hotels in London (Aug 21-26, 2025)
+                            </a>
+                        </div>
+                        <div class="mb-3">
+                            <a href="https://www.google.com/travel/hotels?q=Hotels%20in%20Delhi%20from%202025-08-21%20to%202025-08-26" target="_blank" class="btn btn-info">
+                                <i class="fab fa-google"></i> Hotels in Delhi (Aug 21-26, 2025)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>🔧 Link Generation Test</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="linkTestForm">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="origin" class="form-label">Origin:</label>
+                                    <input type="text" class="form-control" id="origin" value="Hyderabad">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="destination" class="form-label">Destination:</label>
+                                    <input type="text" class="form-control" id="destination" value="Bangalore">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="date" class="form-label">Date:</label>
+                                    <input type="date" class="form-control" id="date" value="2025-08-21">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="endDate" class="form-label">End Date:</label>
+                                    <input type="date" class="form-control" id="endDate" value="2025-08-26">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary" onclick="generateLinks()">
+                                    <i class="fas fa-link"></i> Generate Links
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div id="generatedLinks" class="mt-4" style="display: none;">
+                            <h5>Generated Links:</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <strong>Google Flights:</strong><br>
+                                        <a id="googleFlightsLink" href="#" target="_blank">Click to test</a>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-success">
+                                        <strong>Google Hotels:</strong><br>
+                                        <a id="googleHotelsLink" href="#" target="_blank">Click to test</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateLinks() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const date = document.getElementById('date').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            // Generate Google Flights link
+            const flightsLink = `https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(origin)}%20to%20${encodeURIComponent(destination)}%20on%20${date}`;
+            
+            // Generate Google Hotels link
+            const hotelsLink = `https://www.google.com/travel/hotels?q=Hotels%20in%20${encodeURIComponent(destination)}%20from%20${date}%20to%20${endDate}`;
+            
+            // Update the links
+            document.getElementById('googleFlightsLink').href = flightsLink;
+            document.getElementById('googleFlightsLink').textContent = flightsLink;
+            
+            document.getElementById('googleHotelsLink').href = hotelsLink;
+            document.getElementById('googleHotelsLink').textContent = hotelsLink;
+            
+            // Show the results
+            document.getElementById('generatedLinks').style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

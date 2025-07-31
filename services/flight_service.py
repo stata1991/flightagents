@@ -50,8 +50,22 @@ class FlightService:
         """
         try:
             # Step 1: Get airport IDs for origin and destination
+            logger.info(f"Getting airport ID for origin: {origin}")
             origin_id = await FlightService._get_airport_id(origin)
+            logger.info(f"Origin airport ID: {origin_id}")
+            
+            logger.info(f"Getting airport ID for destination: {destination}")
             destination_id = await FlightService._get_airport_id(destination)
+            logger.info(f"Destination airport ID: {destination_id}")
+            
+            # Debug: Check if we have valid airport IDs
+            if not origin_id:
+                logger.error(f"Could not find airport ID for origin: {origin}")
+                return {"success": False, "flights": [], "error": f"Airport not found for origin: {origin}"}
+            
+            if not destination_id:
+                logger.error(f"Could not find airport ID for destination: {destination}")
+                return {"success": False, "flights": [], "error": f"Airport not found for destination: {destination}"}
             
             if not origin_id or not destination_id:
                 logger.error(f"Could not find airport IDs for {origin} or {destination}")
@@ -91,15 +105,27 @@ class FlightService:
                         logger.info(f"Search destination result for {location}: {result}")
                         
                         if result.get("status") and result.get("data"):
+                            logger.info(f"Found {len(result['data'])} results for {location}")
+                            for i, item in enumerate(result["data"]):
+                                logger.info(f"Result {i+1}: {item.get('type')} - {item.get('name')} (ID: {item.get('id')})")
+                            
                             # Get the first airport result
                             for item in result["data"]:
                                 if item.get("type") == "AIRPORT":
+                                    logger.info(f"Found airport: {item.get('name')} (ID: {item.get('id')})")
                                     return item.get("id")
                             
                             # If no airport found, get the first city result
                             for item in result["data"]:
                                 if item.get("type") == "CITY":
+                                    logger.info(f"Found city: {item.get('name')} (ID: {item.get('id')})")
                                     return item.get("id")
+                            
+                            # If no airport or city found, get the first result (for Indian cities)
+                            if result["data"]:
+                                first_item = result["data"][0]
+                                logger.info(f"Using first result: {first_item.get('name')} (ID: {first_item.get('id')})")
+                                return first_item.get("id")
                     
                     logger.error(f"Search destination failed for {location}: {response.status}")
                     return None
@@ -148,12 +174,23 @@ class FlightService:
                         result = await response.json()
                         logger.info(f"Flight search result: {result}")
                         
+                        logger.info(f"API Response status: {result.get('status')}")
+                        logger.info(f"API Response data keys: {result.get('data', {}).keys()}")
+                        logger.info(f"Flight offers count: {len(result.get('data', {}).get('flightOffers', []))}")
+                        
                         if result.get("status") and result.get("data", {}).get("flightOffers"):
                             flights = []
-                            for offer in result["data"]["flightOffers"]:
+                            logger.info(f"Processing {len(result['data']['flightOffers'])} flight offers")
+                            for i, offer in enumerate(result["data"]["flightOffers"]):
+                                logger.info(f"Processing offer {i+1}: {offer.get('token', 'no-token')[:20]}...")
+                                logger.info(f"Offer structure: segments={len(offer.get('segments', []))}, priceBreakdown={bool(offer.get('priceBreakdown'))}")
                                 flight = FlightService._parse_flight_offer(offer)
                                 if flight:
                                     flights.append(flight)
+                                    logger.info(f"Successfully parsed flight: {flight.get('airline')} {flight.get('flight_number')}")
+                                else:
+                                    logger.error(f"Failed to parse flight offer {i+1}")
+                                    logger.error(f"Offer data: {offer}")
                             
                             return {
                                 "success": True,
@@ -161,7 +198,8 @@ class FlightService:
                                 "categorized_flights": FlightService._categorize_flights(flights)
                             }
                         else:
-                            logger.error(f"No flights found in response: {result}")
+                            logger.error(f"No flightOffers found in response. Response keys: {result.get('data', {}).keys()}")
+                            logger.error(f"Full response structure: {result}")
                             return {"success": False, "flights": []}
                     else:
                         error_text = await response.text()
@@ -178,23 +216,53 @@ class FlightService:
         Parse a flight offer from the API response.
         """
         try:
+            logger.info(f"Parsing flight offer with keys: {offer.keys()}")
             if not offer.get("segments"):
+                logger.error("No segments found in offer")
                 return None
             
+            # Get the first segment (outbound flight)
             segment = offer["segments"][0]
+            logger.info(f"Segment keys: {segment.keys()}")
             leg = segment["legs"][0]
+            logger.info(f"Leg keys: {leg.keys()}")
             
             # Get airline info
             carrier = leg.get("carriersData", [{}])[0]
             airline = carrier.get("name", "Unknown")
             flight_number = f"{carrier.get('code', '')} {leg.get('flightInfo', {}).get('flightNumber', '')}"
             
-            # Get times
-            departure_time = leg.get("departure", "")
-            arrival_time = leg.get("arrival", "")
+            # Get times from segment level
+            departure_time = segment.get("departureTime", "")
+            arrival_time = segment.get("arrivalTime", "")
             
-            # Get duration
-            duration = segment.get("duration", 0)
+            # Format times if they exist
+            if departure_time:
+                try:
+                    # Parse ISO datetime and format as HH:MM
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(departure_time.replace('Z', '+00:00'))
+                    departure_time = dt.strftime("%H:%M")
+                except:
+                    departure_time = departure_time[:5] if len(departure_time) >= 5 else departure_time
+            
+            if arrival_time:
+                try:
+                    # Parse ISO datetime and format as HH:MM
+                    from datetime import datetime
+                    dt = datetime.fromisoformat(arrival_time.replace('Z', '+00:00'))
+                    arrival_time = dt.strftime("%H:%M")
+                except:
+                    arrival_time = arrival_time[:5] if len(arrival_time) >= 5 else arrival_time
+            
+            # Get duration and format it
+            duration_seconds = segment.get("totalTime", 0)
+            if duration_seconds:
+                hours = duration_seconds // 3600
+                minutes = (duration_seconds % 3600) // 60
+                duration = f"{hours}h {minutes}m" if hours > 0 else f"{minutes}m"
+            else:
+                duration = "N/A"
             
             # Get price
             price_breakdown = offer.get("priceBreakdown", {})
@@ -231,14 +299,32 @@ class FlightService:
         if not flights:
             return {"fastest": [], "cheapest": [], "optimal": []}
         
+        # Helper function to convert duration string to minutes
+        def duration_to_minutes(duration_str):
+            if not duration_str or duration_str == "N/A":
+                return float('inf')
+            try:
+                # Parse "1h 30m" format
+                parts = duration_str.split()
+                hours = 0
+                minutes = 0
+                for i, part in enumerate(parts):
+                    if 'h' in part:
+                        hours = int(part.replace('h', ''))
+                    elif 'm' in part:
+                        minutes = int(part.replace('m', ''))
+                return hours * 60 + minutes
+            except:
+                return float('inf')
+        
         # Sort by duration for fastest
-        fastest = sorted(flights, key=lambda x: x.get('duration', 0))[:3]
+        fastest = sorted(flights, key=lambda x: duration_to_minutes(x.get('duration', '')))[:5]
         
         # Sort by price for cheapest
-        cheapest = sorted(flights, key=lambda x: x.get('price', {}).get('units', 0))[:3]
+        cheapest = sorted(flights, key=lambda x: x.get('price', {}).get('units', 0))[:5]
         
         # Sort by combination of price and duration for optimal
-        optimal = sorted(flights, key=lambda x: (x.get('price', {}).get('units', 0) + x.get('duration', 0) / 3600))[:3]
+        optimal = sorted(flights, key=lambda x: (x.get('price', {}).get('units', 0) + duration_to_minutes(x.get('duration', '')) / 60))[:5]
         
         return {
             "fastest": fastest,

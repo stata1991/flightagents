@@ -29,6 +29,7 @@ Each agent is a Claude-style subagent defined in a Markdown file with specific s
 | Role            | File                                 | Description |
 |------------------|--------------------------------------|-------------|
 | Itinerary Agent | `operations/itinerary-agent.md`      | Generates personalized, themed daily trip itineraries from natural language prompts. |
+| Destination Specialist | `product/destination_specialist.md` | Creates intelligent multi-city itineraries with smart airport logic and optimal routing. |
 | Budget Analyst  | `operations/budget_analyst.md`       | Analyzes trip costs, provides budget breakdowns and cost-saving strategies. |
 | Flight Search Agent | `operations/flight_search_agent.md` | Searches and analyzes flight options using real-time API data. |
 | Hotel Search Agent | `operations/hotel_search_agent.md` | Searches and analyzes hotel options using real-time API data. |
@@ -89,10 +90,11 @@ graph TD
     B2 --> D2[UX Designer]
 
     B3 --> E1[Itinerary Agent]
-    B3 --> E2[Budget Analyst]
-    B3 --> E3[Flight Search Agent]
-    B3 --> E4[Hotel Search Agent]
-    B3 --> E5[API Error Handler]
+    B3 --> E2[Destination Specialist]
+    B3 --> E3[Budget Analyst]
+    B3 --> E4[Flight Search Agent]
+    B3 --> E5[Hotel Search Agent]
+    B3 --> E6[API Error Handler]
 
     B4 --> F1[Growth Hacker]
 

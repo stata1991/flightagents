@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Link Testing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .url { background: #f5f5f5; padding: 10px; margin: 5px 0; border-radius: 3px; word-break: break-all; }
+        .btn { padding: 10px 15px; margin: 5px; text-decoration: none; border-radius: 3px; display: inline-block; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-info { background: #17a2b8; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Deep Link Testing</h1>
+    
+    <div class="test-section">
+        <h2>🛫 Flight Deep Links</h2>
+        <p>Testing flight booking links for Dallas → Las Vegas on 2025-08-27</p>
+        
+        <div id="flight-links">
+            <div class="url" id="expedia-flight"></div>
+            <div class="url" id="skyscanner-flight"></div>
+            <div class="url" id="kayak-flight"></div>
+        </div>
+        
+        <div id="flight-buttons">
+            <a href="#" id="expedia-btn" class="btn btn-primary" target="_blank">Search on Expedia</a>
+            <a href="#" id="skyscanner-btn" class="btn btn-success" target="_blank">Search on Skyscanner</a>
+            <a href="#" id="kayak-btn" class="btn btn-info" target="_blank">Search on Kayak</a>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🏨 Hotel Deep Links</h2>
+        <p>Testing hotel booking links for Las Vegas from 2025-08-27 to 2025-09-01</p>
+        
+        <div id="hotel-links">
+            <div class="url" id="booking-hotel"></div>
+            <div class="url" id="expedia-hotel"></div>
+            <div class="url" id="hotels-hotel"></div>
+        </div>
+        
+        <div id="hotel-buttons">
+            <a href="#" id="booking-btn" class="btn btn-primary" target="_blank">Search on Booking.com</a>
+            <a href="#" id="expedia-hotel-btn" class="btn btn-success" target="_blank">Search on Expedia</a>
+            <a href="#" id="hotels-btn" class="btn btn-info" target="_blank">Search on Hotels.com</a>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔍 Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // Test parameters
+        const tripOrigin = "Dallas";
+        const tripDestination = "Las Vegas";
+        const startDate = "2025-08-27";
+        const duration = 5;
+        const travelers = 2;
+        const children = 0;
+        
+        // Calculate end date
+        const start = new Date(startDate);
+        const end = new Date(start);
+        end.setDate(start.getDate() + duration);
+        const endDate = end.toISOString().split('T')[0];
+        const formattedStartDate = start.toISOString().split('T')[0];
+        
+        // Flight deep link generation (matching the app logic)
+        function createFlightLink(airline, baseUrl) {
+            const formattedDate = new Date(startDate).toISOString().split('T')[0];
+            
+            let bookingUrl = '';
+            
+            if (airline.includes('Spirit') || airline.includes('Frontier') || airline.includes('JetBlue') || 
+                airline.includes('Delta') || airline.includes('American') || airline.includes('United')) {
+                const params = new URLSearchParams({
+                    'leg1': `from:${tripOrigin},to:${tripDestination},departure:${formattedDate}TANYT`,
+                    'passengers': `adults:${travelers},children:${children}`
+                });
+                bookingUrl = `https://www.expedia.com/Flights-Search?${params.toString()}`;
+            } else {
+                bookingUrl = `https://www.skyscanner.com/transport/flights/${tripOrigin}/${tripDestination}/${formattedDate}/?adults=${travelers}&children=${children}`;
+            }
+            
+            return bookingUrl;
+        }
+        
+        // Hotel deep link generation (matching the app logic)
+        function createHotelLink(hotelName, baseUrl) {
+            const formattedStartDate = new Date(startDate).toISOString().split('T')[0];
+            const formattedEndDate = endDate;
+            
+            let bookingUrl = '';
+            
+            if (hotelName.includes('Budget') || hotelName.includes('Formule 1') || hotelName.includes('B&B') || 
+                hotelName.includes('Holiday Inn') || hotelName.includes('Mercure') || hotelName.includes('Novotel')) {
+                const params = new URLSearchParams({
+                    'ss': tripDestination,
+                    'checkin': formattedStartDate,
+                    'checkout': formattedEndDate,
+                    'group_adults': travelers,
+                    'group_children': children,
+                    'no_rooms': 1
+                });
+                bookingUrl = `https://www.booking.com/search.html?${params.toString()}`;
+            } else {
+                const params = new URLSearchParams({
+                    'destination': tripDestination,
+                    'checkin': formattedStartDate,
+                    'checkout': formattedEndDate,
+                    'adults': travelers,
+                    'children': children
+                });
+                bookingUrl = `https://www.expedia.com/Hotel-Search?${params.toString()}`;
+            }
+            
+            return bookingUrl;
+        }
+        
+        // Generate and display flight links
+        const flightLinks = {
+            expedia: createFlightLink('Expedia', 'https://www.expedia.com/Flights-Search'),
+            skyscanner: createFlightLink('Skyscanner', 'https://www.skyscanner.com/transport/flights'),
+            kayak: `https://www.kayak.com/flights/${tripOrigin}-${tripDestination}/${formattedStartDate}?adults=${travelers}&children=${children}`
+        };
+        
+        // Generate and display hotel links
+        const hotelLinks = {
+            booking: createHotelLink('Booking.com', 'https://www.booking.com/search.html'),
+            expedia: createHotelLink('Expedia', 'https://www.expedia.com/Hotel-Search'),
+            hotels: `https://www.hotels.com/search.html?destination=${tripDestination}&checkin=${formattedStartDate}&checkout=${endDate}&adults=${travelers}&children=${children}`
+        };
+        
+        // Display URLs
+        document.getElementById('expedia-flight').textContent = `Expedia: ${flightLinks.expedia}`;
+        document.getElementById('skyscanner-flight').textContent = `Skyscanner: ${flightLinks.skyscanner}`;
+        document.getElementById('kayak-flight').textContent = `Kayak: ${flightLinks.kayak}`;
+        
+        document.getElementById('booking-hotel').textContent = `Booking.com: ${hotelLinks.booking}`;
+        document.getElementById('expedia-hotel').textContent = `Expedia: ${hotelLinks.expedia}`;
+        document.getElementById('hotels-hotel').textContent = `Hotels.com: ${hotelLinks.hotels}`;
+        
+        // Set button hrefs
+        document.getElementById('expedia-btn').href = flightLinks.expedia;
+        document.getElementById('skyscanner-btn').href = flightLinks.skyscanner;
+        document.getElementById('kayak-btn').href = flightLinks.kayak;
+        
+        document.getElementById('booking-btn').href = hotelLinks.booking;
+        document.getElementById('expedia-hotel-btn').href = hotelLinks.expedia;
+        document.getElementById('hotels-btn').href = hotelLinks.hotels;
+        
+        // Test URL validation
+        function validateUrl(url) {
+            return url.startsWith('http') && url.includes('?');
+        }
+        
+        const allUrls = { ...flightLinks, ...hotelLinks };
+        let results = '<h3>Validation Results:</h3><ul>';
+        
+        for (const [name, url] of Object.entries(allUrls)) {
+            const isValid = validateUrl(url);
+            const status = isValid ? '✅ Valid' : '❌ Invalid';
+            results += `<li><strong>${name}:</strong> ${status}</li>`;
+        }
+        
+        results += '</ul>';
+        document.getElementById('test-results').innerHTML = results;
+        
+        console.log('Flight Links:', flightLinks);
+        console.log('Hotel Links:', hotelLinks);
+    </script>
+</body>
+</html> 
