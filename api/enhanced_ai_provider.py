@@ -17,6 +17,7 @@ from .trip_planner_interface import (
 from .hotel_client import HotelClient
 from .search_one_way import search_one_way_flights
 from .models import HotelSearchRequest
+from services.budget_allocation_service import BudgetAllocationService
 
 load_dotenv()
 
@@ -29,6 +30,7 @@ class EnhancedAITripProvider(TripPlannerProvider):
         self.client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         self._available = bool(os.getenv("ANTHROPIC_API_KEY"))
         self.hotel_client = HotelClient()
+        self.budget_service = BudgetAllocationService()
     
     def get_provider_type(self) -> ProviderType:
         return ProviderType.AI
@@ -43,14 +45,17 @@ class EnhancedAITripProvider(TripPlannerProvider):
         """Generate a comprehensive trip plan using AI with real API integration"""
         
         try:
-            # Get real hotel data
-            hotel_data = await self._get_hotel_recommendations(request)
+            # Calculate budget allocation (30-35% for hotels)
+            budget_allocation = self._calculate_budget_allocation(request)
+            
+            # Get real hotel data with budget constraints
+            hotel_data = await self._get_hotel_recommendations(request, budget_allocation)
             
             # Get real flight data
             flight_data = await self._get_flight_recommendations(request)
             
-            # Create enhanced AI prompt with real data
-            prompt = self._create_enhanced_planning_prompt(request, hotel_data, flight_data)
+            # Create enhanced AI prompt with real data and budget allocation
+            prompt = self._create_enhanced_planning_prompt(request, hotel_data, flight_data, budget_allocation)
             
             # Call Claude
             response = await self._call_claude(prompt)
@@ -106,8 +111,8 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 error_message=f"Enhanced AI trip planning failed: {str(e)}"
             )
     
-    async def _get_hotel_recommendations(self, request: TripPlanRequest) -> Dict[str, Any]:
-        """Get real hotel recommendations using the hotel API"""
+    async def _get_hotel_recommendations(self, request: TripPlanRequest, budget_allocation: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Get real hotel recommendations using the hotel API with budget allocation"""
         try:
             # Handle None start_date
             if not request.start_date:
@@ -130,10 +135,19 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 currency="USD"
             )
             
+            # Use budget allocation for hotel search if available
+            max_budget = None
+            if budget_allocation and budget_allocation.get("hotel_budget_allocation"):
+                hotel_budget = budget_allocation["hotel_budget_allocation"]
+                per_night = float(hotel_budget["per_night"].replace("$", ""))
+                max_budget = per_night * 1.2  # Allow 20% flexibility
+            else:
+                max_budget = self._get_budget_amount(request.budget_range)
+            
             # Search for hotels
             hotel_response = self.hotel_client.smart_hotel_search(
                 hotel_request, 
-                max_budget=self._get_budget_amount(request.budget_range)
+                max_budget=max_budget
             )
             
             if hotel_response.hotels and len(hotel_response.hotels) > 0:
@@ -238,9 +252,36 @@ class EnhancedAITripProvider(TripPlannerProvider):
         }
         return budget_map.get(budget_range, 300)
     
+    def _calculate_budget_allocation(self, request: TripPlanRequest) -> Dict[str, Any]:
+        """Calculate budget allocation with 30-35% for hotels"""
+        try:
+            # Get total budget
+            total_budget = self._get_budget_amount(request.budget_range)
+            if not total_budget:
+                total_budget = 300  # Default moderate budget
+            
+            # Calculate duration
+            start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(request.end_date, "%Y-%m-%d")
+            duration = (end_date - start_date).days
+            
+            # Calculate budget allocation
+            allocation = self.budget_service.calculate_budget_allocation(
+                total_budget=total_budget,
+                trip_duration=duration,
+                travelers=request.travelers
+            )
+            
+            return allocation
+            
+        except Exception as e:
+            logger.error(f"Error calculating budget allocation: {e}")
+            return None
+    
     def _create_enhanced_planning_prompt(self, request: TripPlanRequest, 
                                        hotel_data: Dict[str, Any], 
-                                       flight_data: Dict[str, Any]) -> str:
+                                       flight_data: Dict[str, Any],
+                                       budget_allocation: Dict[str, Any] = None) -> str:
         """Create an enhanced prompt with real API data"""
         
         interests_text = ", ".join(request.interests) if request.interests else "general exploration"
@@ -339,6 +380,14 @@ You are an expert travel planner. Create a comprehensive {request.duration_days}
 - Trip Type: {request.trip_type}
 - Interests: {interests_text}
 - Special Requirements: {request.special_requirements or "None"}
+
+**Smart Budget Allocation (30-35% for Hotels):**
+- Total Budget: {budget_allocation.get('total_estimated_cost', 'N/A') if budget_allocation else 'N/A'}
+- Hotel Budget: {budget_allocation.get('budget_breakdown', {}).get('accommodation', 'N/A') if budget_allocation else 'N/A'} ({budget_allocation.get('budget_percentages', {}).get('accommodation', 'N/A') if budget_allocation else 'N/A'})
+- Flight Budget: {budget_allocation.get('budget_breakdown', {}).get('flights', 'N/A') if budget_allocation else 'N/A'} ({budget_allocation.get('budget_percentages', {}).get('flights', 'N/A') if budget_allocation else 'N/A'})
+- Meal Budget: {budget_allocation.get('budget_breakdown', {}).get('meals', 'N/A') if budget_allocation else 'N/A'} ({budget_allocation.get('budget_percentages', {}).get('meals', 'N/A') if budget_allocation else 'N/A'})
+- Activity Budget: {budget_allocation.get('budget_breakdown', {}).get('activities', 'N/A') if budget_allocation else 'N/A'} ({budget_allocation.get('budget_percentages', {}).get('activities', 'N/A') if budget_allocation else 'N/A'})
+- Hotel Recommendation: {budget_allocation.get('hotel_budget_allocation', {}).get('recommendation', 'N/A') if budget_allocation else 'N/A'}
 
 {hotel_info}
 {flight_info}
