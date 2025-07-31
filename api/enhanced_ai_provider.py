@@ -19,6 +19,7 @@ from .search_one_way import search_one_way_flights
 from .models import HotelSearchRequest
 from services.budget_allocation_service import BudgetAllocationService
 from services.price_display_service import price_display_service
+from services.location_detection_service import location_detection_service
 
 load_dotenv()
 
@@ -155,7 +156,10 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 # Return top 6 hotels (more variety)
                 top_hotels = hotel_response.hotels[:6]
                 
-                # Convert hotel prices to user's local currency (INR for India)
+                # Detect user's currency based on location
+                user_location = await location_detection_service.detect_user_location()
+                user_currency = user_location.get("currency", "USD")
+                
                 hotels_with_prices = [
                     {
                         "name": hotel.hotel.name,
@@ -177,8 +181,8 @@ class EnhancedAITripProvider(TripPlannerProvider):
                     for hotel in top_hotels
                 ]
                 
-                # Convert prices to INR for display
-                converted_hotels = await price_display_service.convert_hotel_prices(hotels_with_prices, "INR")
+                # Convert prices to user's local currency
+                converted_hotels = await price_display_service.convert_hotel_prices(hotels_with_prices, user_currency)
                 
                 return {
                     "success": True,
@@ -233,8 +237,12 @@ class EnhancedAITripProvider(TripPlannerProvider):
                         if result.get("success") and result.get("flights"):
                             logger.info(f"Found {len(result['flights'])} flights")
                             
-                            # Convert flight prices to user's local currency (INR for India)
-                            converted_flights = await price_display_service.convert_flight_prices(result["flights"], "INR")
+                            # Detect user's currency based on location
+                            user_location = await location_detection_service.detect_user_location()
+                            user_currency = user_location.get("currency", "USD")
+                            
+                            # Convert flight prices to user's local currency
+                            converted_flights = await price_display_service.convert_flight_prices(result["flights"], user_currency)
                             
                             return {
                                 "success": True,

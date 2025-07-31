@@ -14,13 +14,13 @@ class PriceDisplayService:
         self.currency_converter = currency_converter
         self.location_service = location_detection_service
     
-    async def convert_and_format_price(self, price_usd: float, user_currency: str = "INR") -> Dict[str, str]:
+    async def convert_and_format_price(self, price_usd: float, user_currency: str = "USD") -> Dict[str, str]:
         """
         Convert USD price to user's local currency and format for display
         
         Args:
             price_usd: Price in USD
-            user_currency: User's local currency (default: INR for India)
+            user_currency: User's local currency (default: USD)
             
         Returns:
             Dictionary with original_price, converted_price, currency_symbol, formatted_price
@@ -71,7 +71,7 @@ class PriceDisplayService:
                 "conversion_failed": True
             }
     
-    async def convert_hotel_prices(self, hotels: List[Dict], user_currency: str = "INR") -> List[Dict]:
+    async def convert_hotel_prices(self, hotels: List[Dict], user_currency: str = "USD") -> List[Dict]:
         """
         Convert hotel prices to user's local currency
         
@@ -113,7 +113,7 @@ class PriceDisplayService:
         
         return converted_hotels
     
-    async def convert_flight_prices(self, flights: List[Dict], user_currency: str = "INR") -> List[Dict]:
+    async def convert_flight_prices(self, flights: List[Dict], user_currency: str = "USD") -> List[Dict]:
         """
         Convert flight prices to user's local currency
         
