@@ -232,9 +232,13 @@ class EnhancedAITripProvider(TripPlannerProvider):
                         
                         if result.get("success") and result.get("flights"):
                             logger.info(f"Found {len(result['flights'])} flights")
+                            
+                            # Convert flight prices to user's local currency (INR for India)
+                            converted_flights = await price_display_service.convert_flight_prices(result["flights"], "INR")
+                            
                             return {
                                 "success": True,
-                                "flights": result["flights"],
+                                "flights": converted_flights,
                                 "categorized_flights": result.get("categorized_flights", {})
                             }
                         else:

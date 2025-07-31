@@ -1399,7 +1399,7 @@ Let me create your personalized trip plan!`);
                                                     <span class="arrival">${arrival.arrival_time || 'N/A'}</span>
                                                 </div>
                                                                                                     <div class="duration">Duration: ${arrival.duration || 'N/A'}</div>
-                                                    <div class="cost">$${arrival.price?.units || arrival.cost || 'N/A'}</div>
+                                                    <div class="cost">${arrival.display_price || `$${arrival.price?.units || arrival.cost || 'N/A'}`}</div>
                                                     <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                         <i class="fas fa-external-link-alt"></i> Book Flight
                                                     </a>
@@ -1422,7 +1422,7 @@ Let me create your personalized trip plan!`);
                                                     <span class="arrival">${departure.arrival_time || 'N/A'}</span>
                                                 </div>
                                                                                                     <div class="duration">Duration: ${departure.duration || 'N/A'}</div>
-                                                    <div class="cost">$${departure.price?.units || departure.cost || 'N/A'}</div>
+                                                    <div class="cost">${departure.display_price || `$${departure.price?.units || departure.cost || 'N/A'}`}</div>
                                                     <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                         <i class="fas fa-external-link-alt"></i> Book Flight
                                                     </a>
