@@ -86,6 +86,34 @@ class CurrencyConverter:
             return float(price) * rate
         return None
     
+    async def convert_price_for_display(self, price: Union[int, float], from_currency: str, to_currency: str) -> Optional[float]:
+        """
+        Convert price for display purposes (USD to local currency)
+        
+        Args:
+            price: Price amount in USD
+            from_currency: Source currency (usually USD)
+            to_currency: Target currency (user's local currency)
+            
+        Returns:
+            Converted price as float, or None if conversion failed
+        """
+        if from_currency == to_currency:
+            return float(price)
+        
+        # For display conversion (USD to local), we need to get the reverse rate
+        if from_currency == "USD" and to_currency != "USD":
+            # Get rate from local currency to USD, then calculate reverse
+            rate = await self.get_exchange_rate(to_currency, "USD")
+            if rate is not None and rate > 0:
+                return float(price) / rate
+            else:
+                logger.error(f"Could not get exchange rate for {to_currency} to USD")
+                return None
+        else:
+            # Standard conversion
+            return await self.convert_price(price, from_currency, to_currency)
+    
 
 
 # Global instance

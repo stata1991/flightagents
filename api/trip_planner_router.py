@@ -1689,7 +1689,7 @@ async def search_hotels_with_filters(
                         "Check for package deals that include accommodation"
                     ]
                 }
-            }
+        }
         
         return {
             "budget": budget_hotels[:3],
@@ -2593,8 +2593,8 @@ class NaturalLanguageTripPlanner:
                     "end_date": extraction["end_date"],
                     "travelers": extraction["travelers"],
                     "budget_preference": extraction["budget_preference"],
-            "budget_amount": extraction.get("budget_amount"),
-            "budget_analysis": extraction.get("budget_analysis"),
+                    "budget_amount": extraction.get("budget_amount"),
+                    "budget_analysis": extraction.get("budget_analysis"),
                     "total_estimated_cost": self._calculate_total_cost(flight_results, hotel_results, extraction["duration"])
                 },
                 "flights": flight_results,
@@ -2799,7 +2799,7 @@ class NaturalLanguageTripPlanner:
         
         if extraction.get("destination_intelligence"):
             destination_type = extraction["destination_intelligence"]["resolved_destination"]["type"]
-        
+            
         # Get destination-specific information
         destination_name = extraction.get("destination", "Unknown")
         destination_info = extraction.get("destination_intelligence", {})
@@ -3476,13 +3476,13 @@ async def plan_trip_natural(request: Dict[str, Any]) -> Dict[str, Any]:
                     "Include specific dates and destinations",
                     "Check that all information is clear"
                 ]
-            }
+        }
         
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in plan_trip_natural: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to plan trip: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to plan trip: {str(e)}") 
 
 @router.post("/plan-trip-natural-with-answers")
 async def plan_trip_natural_with_answers(request: Dict[str, Any]) -> Dict[str, Any]:

@@ -1292,7 +1292,7 @@ Let me create your personalized trip plan!`);
                                                             <span class="arrival">${flight.arrival_time || 'N/A'}</span>
                                                         </div>
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
-                                                        <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
+                                                        <div class="cost">${flight.display_price || `$${flight.price?.units || flight.cost || 'N/A'}`}</div>
                                                         <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                             <i class="fas fa-external-link-alt"></i> Book on Google Flights
                                                         </a>
@@ -1324,7 +1324,7 @@ Let me create your personalized trip plan!`);
                                                             <span class="arrival">${flight.arrival_time || 'N/A'}</span>
                                                         </div>
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
-                                                        <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
+                                                        <div class="cost">${flight.display_price || `$${flight.price?.units || flight.cost || 'N/A'}`}</div>
                                                         <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                             <i class="fas fa-external-link-alt"></i> Book Flight
                                                         </a>
@@ -1356,7 +1356,7 @@ Let me create your personalized trip plan!`);
                                                             <span class="arrival">${flight.arrival_time || 'N/A'}</span>
                                                         </div>
                                                         <div class="duration">Duration: ${flight.duration || 'N/A'}</div>
-                                                        <div class="cost">$${flight.price?.units || flight.cost || 'N/A'}</div>
+                                                        <div class="cost">${flight.display_price || `$${flight.price?.units || flight.cost || 'N/A'}`}</div>
                                                         <a href="https://www.google.com/travel/flights?q=Flights%20from%20${encodeURIComponent(tripOrigin)}%20to%20${encodeURIComponent(tripDestination)}%20on%20${formattedDate}&f=0&t=f&hl=en&curr=USD" target="_blank" class="btn btn-primary btn-sm mt-2">
                                                             <i class="fas fa-external-link-alt"></i> Book Flight
                                                         </a>
@@ -1596,7 +1596,7 @@ Let me create your personalized trip plan!`);
                                                         <i class="fas fa-map-marker-alt"></i> ${hotel.location}
                                                     </div>
                                                     <div class="hotel-price">
-                                                        <span class="price">$${Math.round(hotel.price_per_night)}/night</span>
+                                                        <span class="price">${hotel.display_price || `$${Math.round(hotel.price_per_night)}`}/night</span>
                                                     </div>
                                                 </div>
                                                 <a href="https://www.google.com/travel/hotels?q=${encodeURIComponent(hotel.name)}%20in%20${encodeURIComponent(tripDestination)}%20from%20${formattedStartDate}%20to%20${endDate}&hl=en&curr=USD&adults=${travelers}&children=${children || 0}" target="_blank" class="btn btn-primary btn-sm">

@@ -18,6 +18,7 @@ from .hotel_client import HotelClient
 from .search_one_way import search_one_way_flights
 from .models import HotelSearchRequest
 from services.budget_allocation_service import BudgetAllocationService
+from services.price_display_service import price_display_service
 
 load_dotenv()
 
@@ -153,28 +154,35 @@ class EnhancedAITripProvider(TripPlannerProvider):
             if hotel_response.hotels and len(hotel_response.hotels) > 0:
                 # Return top 6 hotels (more variety)
                 top_hotels = hotel_response.hotels[:6]
+                
+                # Convert hotel prices to user's local currency (INR for India)
+                hotels_with_prices = [
+                    {
+                        "name": hotel.hotel.name,
+                        "rating": hotel.hotel.rating,
+                        "price_per_night": hotel.average_price_per_night,
+                        "location": f"{hotel.hotel.city}, {hotel.hotel.country}",
+                        "amenities": hotel.hotel.amenities or [],
+                        "booking_link": self.hotel_client.generate_hotel_booking_url(
+                            hotel.hotel.hotel_id,
+                            request.start_date,
+                            end_date.strftime("%Y-%m-%d"),
+                            request.travelers,
+                            [],
+                            1,
+                            "USD"
+                        ),
+                        "hotel_id": hotel.hotel.hotel_id
+                    }
+                    for hotel in top_hotels
+                ]
+                
+                # Convert prices to INR for display
+                converted_hotels = await price_display_service.convert_hotel_prices(hotels_with_prices, "INR")
+                
                 return {
                     "success": True,
-                    "hotels": [
-                        {
-                            "name": hotel.hotel.name,
-                            "rating": hotel.hotel.rating,
-                            "price_per_night": hotel.average_price_per_night,
-                            "location": f"{hotel.hotel.city}, {hotel.hotel.country}",
-                            "amenities": hotel.hotel.amenities or [],
-                            "booking_link": self.hotel_client.generate_hotel_booking_url(
-                                hotel.hotel.hotel_id,
-                                request.start_date,
-                                end_date.strftime("%Y-%m-%d"),
-                                request.travelers,
-                                [],
-                                1,
-                                "USD"
-                            ),
-                            "hotel_id": hotel.hotel.hotel_id
-                        }
-                        for hotel in top_hotels
-                    ]
+                    "hotels": converted_hotels
                 }
             else:
                 return {"success": False, "hotels": []}
