@@ -100,6 +100,115 @@ class LocationDetectionService:
         """
         return self.country_currency_map.get(country_code.upper(), self.default_currency)
     
+    def determine_trip_currency_strategy(self, origin_country: str, destination_country: str, user_country: str) -> Dict[str, str]:
+        """
+        Determine currency strategy for international trips
+        
+        Args:
+            origin_country: Country code of trip origin
+            destination_country: Country code of trip destination  
+            user_country: Country code of user's location
+            
+        Returns:
+            Dictionary with primary_currency, secondary_currency, strategy
+        """
+        origin_currency = self.get_currency_for_country(origin_country)
+        destination_currency = self.get_currency_for_country(destination_country)
+        user_currency = self.get_currency_for_country(user_country)
+        
+        # Strategy logic:
+        # 1. If user is in origin country -> use origin currency
+        # 2. If user is in destination country -> use destination currency  
+        # 3. If user is in different country -> use user's currency + destination currency
+        # 4. If same country trip -> use local currency
+        
+        if origin_country == destination_country:
+            # Domestic trip
+            return {
+                "primary_currency": user_currency,
+                "secondary_currency": None,
+                "strategy": "domestic",
+                "origin_currency": origin_currency,
+                "destination_currency": destination_currency
+            }
+        elif user_country == origin_country:
+            # User is in origin country
+            return {
+                "primary_currency": origin_currency,
+                "secondary_currency": destination_currency,
+                "strategy": "origin_based",
+                "origin_currency": origin_currency,
+                "destination_currency": destination_currency
+            }
+        elif user_country == destination_country:
+            # User is in destination country
+            return {
+                "primary_currency": destination_currency,
+                "secondary_currency": origin_currency,
+                "strategy": "destination_based",
+                "origin_currency": origin_currency,
+                "destination_currency": destination_currency
+            }
+        else:
+            # User is in different country (international trip)
+            return {
+                "primary_currency": user_currency,
+                "secondary_currency": destination_currency,
+                "strategy": "international",
+                "origin_currency": origin_currency,
+                "destination_currency": destination_currency
+            }
+    
+    async def get_country_from_city(self, city_name: str) -> str:
+        """
+        Extract country code from city name using geocoding API
+        
+        Args:
+            city_name: City name or location string (e.g., 'Dallas, TX', 'Hyderabad, India')
+            
+        Returns:
+            Country code (e.g., 'US', 'IN')
+        """
+        try:
+            # Use a free geocoding service to get country info
+            async with aiohttp.ClientSession() as session:
+                # Use Nominatim (OpenStreetMap) geocoding service
+                url = "https://nominatim.openstreetmap.org/search"
+                params = {
+                    "q": city_name,
+                    "format": "json",
+                    "limit": 1,
+                    "addressdetails": 1
+                }
+                
+                async with session.get(url, params=params, timeout=10) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        if data and len(data) > 0:
+                            result = data[0]
+                            address = result.get("address", {})
+                            
+                            # Extract country code from address
+                            country_code = address.get("country_code", "").upper()
+                            
+                            if country_code:
+                                logger.info(f"Geocoded {city_name} -> {country_code}")
+                                return country_code
+                            else:
+                                logger.warning(f"No country code found for {city_name}")
+                                return "US"  # Default fallback
+                        else:
+                            logger.warning(f"No geocoding results for {city_name}")
+                            return "US"  # Default fallback
+                    else:
+                        logger.error(f"Geocoding API error: {response.status}")
+                        return "US"  # Default fallback
+                        
+        except Exception as e:
+            logger.error(f"Error geocoding {city_name}: {e}")
+            return "US"  # Default fallback
+    
     def is_currency_different_from_usd(self, currency: str) -> bool:
         """
         Check if currency is different from USD

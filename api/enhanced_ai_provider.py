@@ -156,9 +156,24 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 # Return top 6 hotels (more variety)
                 top_hotels = hotel_response.hotels[:6]
                 
-                # Detect user's currency based on location
+                # Detect user's currency and determine trip currency strategy
                 user_location = await location_detection_service.detect_user_location()
+                user_country = user_location.get("country_code", "US")
                 user_currency = user_location.get("currency", "USD")
+                
+                # Determine origin and destination countries
+                origin_country = await location_detection_service.get_country_from_city(request.origin)
+                destination_country = await location_detection_service.get_country_from_city(request.destination)
+                
+                # Get currency strategy for this trip
+                currency_strategy = location_detection_service.determine_trip_currency_strategy(
+                    origin_country, destination_country, user_country
+                )
+                
+                primary_currency = currency_strategy["primary_currency"]
+                secondary_currency = currency_strategy["secondary_currency"]
+                
+                logger.info(f"Trip currency strategy: {currency_strategy}")
                 
                 hotels_with_prices = [
                     {
@@ -181,8 +196,20 @@ class EnhancedAITripProvider(TripPlannerProvider):
                     for hotel in top_hotels
                 ]
                 
-                # Convert prices to user's local currency
-                converted_hotels = await price_display_service.convert_hotel_prices(hotels_with_prices, user_currency)
+                # Convert prices to primary currency
+                converted_hotels = await price_display_service.convert_hotel_prices(hotels_with_prices, primary_currency)
+                
+                # Add currency strategy info to response
+                converted_hotels.append({
+                    "currency_strategy": currency_strategy,
+                    "trip_info": {
+                        "origin_country": origin_country,
+                        "destination_country": destination_country,
+                        "user_country": user_country,
+                        "primary_currency": primary_currency,
+                        "secondary_currency": secondary_currency
+                    }
+                })
                 
                 return {
                     "success": True,
@@ -237,12 +264,27 @@ class EnhancedAITripProvider(TripPlannerProvider):
                         if result.get("success") and result.get("flights"):
                             logger.info(f"Found {len(result['flights'])} flights")
                             
-                            # Detect user's currency based on location
+                            # Detect user's currency and determine trip currency strategy
                             user_location = await location_detection_service.detect_user_location()
+                            user_country = user_location.get("country_code", "US")
                             user_currency = user_location.get("currency", "USD")
                             
-                            # Convert flight prices to user's local currency
-                            converted_flights = await price_display_service.convert_flight_prices(result["flights"], user_currency)
+                            # Determine origin and destination countries
+                            origin_country = await location_detection_service.get_country_from_city(request.origin)
+                            destination_country = await location_detection_service.get_country_from_city(request.destination)
+                            
+                            # Get currency strategy for this trip
+                            currency_strategy = location_detection_service.determine_trip_currency_strategy(
+                                origin_country, destination_country, user_country
+                            )
+                            
+                            primary_currency = currency_strategy["primary_currency"]
+                            secondary_currency = currency_strategy["secondary_currency"]
+                            
+                            logger.info(f"Flight trip currency strategy: {currency_strategy}")
+                            
+                            # Convert flight prices to primary currency
+                            converted_flights = await price_display_service.convert_flight_prices(result["flights"], primary_currency)
                             
                             return {
                                 "success": True,
