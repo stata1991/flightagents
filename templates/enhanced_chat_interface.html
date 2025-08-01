@@ -603,11 +603,21 @@ What type of experience are you looking for?`;
                 // Dynamic response generation based on user input
                 const response = this.generateUserMessageResponse(message);
                 
-                await this.addMessage('ai', response);
+                // Only add AI message if we have a response
+                if (response) {
+                    await this.addMessage('ai', response);
+                }
             }
             
             generateUserMessageResponse(message) {
                 const input = message.toLowerCase();
+                
+                // Check for "from X to Y" pattern first
+                const fromToResponse = this.handleDestinationRequest(message);
+                if (fromToResponse) {
+                    this.showQuickReplies(['Romantic duo', 'Family expedition', 'Solo explorer', 'Friend squad']);
+                    return fromToResponse;
+                }
                 
                 // Dynamic destination detection
                 const destinations = {
@@ -674,6 +684,31 @@ When's your squad getting together for this adventure?`,
                 
                 // Default response
                 return `That sounds absolutely thrilling! 🌟 I'd love to help you craft that perfect adventure. Could you tell me more about your dream destination and what kind of experience you're seeking?`;
+            }
+            
+            // Add method to handle specific destination requests
+            handleDestinationRequest(message) {
+                const input = message.toLowerCase();
+                
+                // Check for "from X to Y" pattern
+                const fromToPattern = /from\s+(\w+)\s+to\s+(\w+)/i;
+                const match = input.match(fromToPattern);
+                
+                if (match) {
+                    const origin = match[1];
+                    const destination = match[2];
+                    
+                    return `Incredible choice! 🌟 A trip from ${origin} to ${destination} sounds absolutely amazing! I can see you're excited about this adventure.
+
+Now, let's craft your perfect journey:
+• **Who's joining your adventure?** Solo explorer, romantic duo, family expedition, or friend squad?
+• **When's your adventure time?** Dates and how long you want to immerse yourself?
+• **What's your adventure style?** Relaxation, thrill-seeking, cultural immersion, or pure exploration?
+
+Share your vision with me! ✨`;
+                }
+                
+                return null;
             }
 
             scrollToBottom() {
