@@ -533,27 +533,55 @@ Share your dreams with me! ✨`;
             async simulateAIResponse(userInput) {
                 await this.addMessage('ai', '', true); // Show typing indicator
                 
-                let response = '';
-                if (userInput.toLowerCase().includes('beach') || userInput.toLowerCase().includes('paradise')) {
-                    response = `Stunning choice! 🏖️ Beach paradises are perfect for soul-soothing relaxation and pure joy. I'm thinking Bali's hidden beaches, Maldives' crystal waters, or the Caribbean's vibrant shores.
-
-Where's your beach paradise calling from? Any specific destination in mind?`;
-                } else if (userInput.toLowerCase().includes('urban') || userInput.toLowerCase().includes('city')) {
-                    response = `Fantastic! 🏙️ Urban exploration is incredible for culture, cuisine, and city adventures. I'm dreaming of Tokyo's neon streets, Paris's romantic corners, or New York's endless energy.
-
-Which city is whispering your name?`;
-                } else if (userInput.toLowerCase().includes('mountain') || userInput.toLowerCase().includes('adventure')) {
-                    response = `Adventure awaits! 🏔️ Mountain adventures are perfect for thrill-seekers and nature lovers. Think Patagonia's rugged peaks, Nepal's Himalayan trails, or Switzerland's alpine wonders.
-
-Where's your mountain adventure leading you?`;
-                } else {
-                    response = `Incredible choice! 🌟 Cultural journeys are perfect for discovering traditions and creating meaningful connections. Places like India's spiritual centers, Japan's ancient temples, or Morocco's vibrant markets offer unforgettable experiences.
-
-Which culture-rich destination is calling your soul?`;
-                }
-
+                // Dynamic response generation based on user input
+                const response = this.generateDynamicResponse(userInput);
+                
                 await this.addMessage('ai', response);
                 this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
+            }
+            
+            generateDynamicResponse(userInput) {
+                const input = userInput.toLowerCase();
+                
+                // Dynamic category detection
+                const categories = {
+                    beach: {
+                        keywords: ['beach', 'coastal', 'island', 'ocean', 'sea', 'shore', 'paradise'],
+                        response: `Stunning choice! 🏖️ Beach paradises are perfect for soul-soothing relaxation and pure joy. I'm thinking of incredible coastal destinations that will take your breath away.
+
+Where's your beach paradise calling from? Any specific destination in mind?`
+                    },
+                    urban: {
+                        keywords: ['urban', 'city', 'metropolitan', 'downtown'],
+                        response: `Fantastic! 🏙️ Urban exploration is incredible for culture, cuisine, and city adventures. I'm dreaming of vibrant cityscapes and endless urban possibilities.
+
+Which city is whispering your name?`
+                    },
+                    mountain: {
+                        keywords: ['mountain', 'alpine', 'hiking', 'trekking', 'peak', 'adventure'],
+                        response: `Adventure awaits! 🏔️ Mountain adventures are perfect for thrill-seekers and nature lovers. Think of breathtaking peaks and incredible outdoor experiences.
+
+Where's your mountain adventure leading you?`
+                    },
+                    cultural: {
+                        keywords: ['cultural', 'temple', 'museum', 'historic', 'ancient', 'heritage'],
+                        response: `Incredible choice! 🌟 Cultural journeys are perfect for discovering traditions and creating meaningful connections. Places rich in heritage offer unforgettable experiences.
+
+Which culture-rich destination is calling your soul?`
+                    }
+                };
+                
+                // Find matching category
+                for (const [category, config] of Object.entries(categories)) {
+                    if (config.keywords.some(keyword => input.includes(keyword))) {
+                        return config.response;
+                    }
+                }
+                
+                // Default response for unmatched input
+                return `Amazing choice! 🌟 I can see you're excited about exploring new places. Let me help you discover the perfect destination for your adventure.
+
+What type of experience are you looking for?`;
             }
 
             async sendMessage() {
@@ -572,31 +600,80 @@ Which culture-rich destination is calling your soul?`;
             }
 
             async processUserMessage(message) {
-                // Simple keyword-based responses for demo
-                let response = '';
+                // Dynamic response generation based on user input
+                const response = this.generateUserMessageResponse(message);
                 
-                if (message.toLowerCase().includes('goa') || message.toLowerCase().includes('india')) {
-                    response = `Incredible choice! 🏖️ Goa is a paradise of golden beaches, vibrant culture, and endless adventures. I can already see you exploring ancient Portuguese churches, dancing to beachside music, and discovering hidden beach shacks!
+                await this.addMessage('ai', response);
+            }
+            
+            generateUserMessageResponse(message) {
+                const input = message.toLowerCase();
+                
+                // Dynamic destination detection
+                const destinations = {
+                    goa: {
+                        keywords: ['goa', 'india'],
+                        response: `Incredible choice! 🏖️ Goa is a paradise of golden beaches, vibrant culture, and endless adventures. I can already see you exploring ancient Portuguese churches, dancing to beachside music, and discovering hidden beach shacks!
 
 Now, let's craft your perfect Goa adventure:
 • **Who's joining your journey?** Solo explorer, romantic duo, family expedition, or friend squad?
 • **When's your adventure time?** Dates and how long you want to immerse yourself?
 • **What's your adventure style?** Beach relaxation, cultural exploration, nightlife excitement, or pure discovery?
 
-Share your vision with me! ✨`;
-                    
-                    this.showQuickReplies(['Romantic duo', 'Family expedition', 'Solo explorer', 'Friend squad']);
-                } else if (message.toLowerCase().includes('couple') || message.toLowerCase().includes('romantic')) {
-                    response = `Magical! 💕 A romantic Goa adventure sounds absolutely enchanting. I'm dreaming of candlelit dinners by the Arabian Sea, sunset walks on pristine beaches, and couples' spa experiences that will create memories forever.
-
-When are you planning this romantic journey?`;
-                    
-                    this.showQuickReplies(['August 25th', 'September', 'October', 'Flexible dates']);
-                } else {
-                    response = `That sounds absolutely thrilling! 🌟 I'd love to help you craft that perfect adventure. Could you tell me more about your dream destination and what kind of experience you're seeking?`;
+Share your vision with me! ✨`,
+                        quickReplies: ['Romantic duo', 'Family expedition', 'Solo explorer', 'Friend squad']
+                    }
+                };
+                
+                // Check for destination matches
+                for (const [dest, config] of Object.entries(destinations)) {
+                    if (config.keywords.some(keyword => input.includes(keyword))) {
+                        this.showQuickReplies(config.quickReplies);
+                        return config.response;
+                    }
                 }
+                
+                // Check for traveler type matches
+                const travelerTypes = {
+                    couple: {
+                        keywords: ['couple', 'romantic', 'boyfriend', 'girlfriend', 'husband', 'wife'],
+                        response: `Magical! 💕 A romantic adventure sounds absolutely enchanting. I'm dreaming of romantic experiences that will create memories forever.
 
-                await this.addMessage('ai', response);
+When are you planning this romantic journey?`,
+                        quickReplies: ['August 25th', 'September', 'October', 'Flexible dates']
+                    },
+                    family: {
+                        keywords: ['family', 'kids', 'children', 'parents'],
+                        response: `Wonderful! 👨‍👩‍👧‍👦 Family expeditions are truly special. I'll craft experiences that everyone will treasure - from little explorers to wise grandparents.
+
+When's the perfect time for your family adventure?`,
+                        quickReplies: ['Summer break', 'Spring break', 'Holiday season', 'Any time']
+                    },
+                    solo: {
+                        keywords: ['solo', 'alone', 'myself'],
+                        response: `Adventurous! 🧳 Solo exploration is incredibly rewarding. I'll focus on experiences perfect for independent discovery and meaningful connections.
+
+When are you ready to embark on this solo journey?`,
+                        quickReplies: ['Next month', 'In 3 months', 'Flexible', 'Show me adventures']
+                    },
+                    friends: {
+                        keywords: ['friends', 'group', 'squad'],
+                        response: `Epic! 👥 Group adventures with friends create the best memories. I'll plan activities perfect for shared experiences and group excitement.
+
+When's your squad getting together for this adventure?`,
+                        quickReplies: ['Next weekend', 'Next month', 'Summer', 'Flexible']
+                    }
+                };
+                
+                for (const [type, config] of Object.entries(travelerTypes)) {
+                    if (config.keywords.some(keyword => input.includes(keyword))) {
+                        this.showQuickReplies(config.quickReplies);
+                        return config.response;
+                    }
+                }
+                
+                // Default response
+                return `That sounds absolutely thrilling! 🌟 I'd love to help you craft that perfect adventure. Could you tell me more about your dream destination and what kind of experience you're seeking?`;
             }
 
             scrollToBottom() {

@@ -23,31 +23,35 @@ class ConversationService:
             'modification': 'modifying_plan'
         }
         
-        # Destination-specific responses for contextual conversations
-        self.destination_contexts = {
-            'goa': {
-                'description': "Goa is a paradise of golden beaches, vibrant culture, and endless adventures",
-                'highlights': ['golden beaches', 'Portuguese churches', 'beachside music', 'hidden beach shacks', 'Arabian Sea'],
-                'quick_replies': ['Beach relaxation', 'Cultural exploration', 'Nightlife excitement', 'Pure discovery'],
-                'romantic_tips': "candlelit dinners by the Arabian Sea, sunset walks on pristine beaches, couples' spa experiences"
+        # Dynamic destination context generation - no hardcoding
+        self.destination_categories = {
+            'beach': {
+                'keywords': ['beach', 'coastal', 'island', 'ocean', 'sea', 'shore'],
+                'description_template': "{destination} offers stunning beaches and coastal adventures",
+                'highlights': ['beautiful beaches', 'water activities', 'coastal culture', 'ocean views'],
+                'quick_replies': ['Beach relaxation', 'Water adventures', 'Coastal exploration', 'Island discovery'],
+                'romantic_tips': "romantic beach dinners, sunset walks by the water, couples' beach activities"
             },
-            'bali': {
-                'description': "Bali is a spiritual paradise with ancient temples, lush rice terraces, and pristine beaches",
-                'highlights': ['ancient temples', 'rice terraces', 'pristine beaches', 'spiritual vibes', 'Ubud culture'],
-                'quick_replies': ['Temple exploration', 'Beach paradise', 'Rice terrace adventures', 'Wellness retreat'],
-                'romantic_tips': "romantic dinners overlooking emerald rice terraces, couples' traditional massages, sunset at Tanah Lot temple"
+            'city': {
+                'keywords': ['city', 'urban', 'metropolitan', 'downtown'],
+                'description_template': "{destination} is a vibrant city with endless urban adventures",
+                'highlights': ['urban culture', 'city attractions', 'local cuisine', 'city life'],
+                'quick_replies': ['Urban exploration', 'Cultural discovery', 'City adventures', 'Local experiences'],
+                'romantic_tips': "romantic city dinners, sunset city views, couples' urban exploration"
             },
-            'paris': {
-                'description': "Paris is the city of love, art, and culinary excellence",
-                'highlights': ['romance', 'art', 'culinary excellence', 'Eiffel Tower', 'Louvre Museum'],
-                'quick_replies': ['Romantic escape', 'Art exploration', 'Culinary journey', 'Fashion discovery'],
-                'romantic_tips': "romantic dinners by the Seine River, sunset at Trocadéro, couples' wine tasting in hidden bistros"
+            'mountain': {
+                'keywords': ['mountain', 'alpine', 'hiking', 'trekking', 'peak'],
+                'description_template': "{destination} offers breathtaking mountain adventures",
+                'highlights': ['mountain views', 'outdoor activities', 'nature trails', 'alpine culture'],
+                'quick_replies': ['Mountain adventures', 'Hiking exploration', 'Nature discovery', 'Outdoor activities'],
+                'romantic_tips': "romantic mountain dinners, sunset peak views, couples' hiking adventures"
             },
-            'tokyo': {
-                'description': "Tokyo is a mesmerizing blend of ancient traditions and futuristic innovation",
-                'highlights': ['ancient traditions', 'futuristic innovation', 'culinary excellence', 'sacred temples', 'fashion districts'],
-                'quick_replies': ['Culinary adventure', 'Tech exploration', 'Cultural immersion', 'Fashion discovery'],
-                'romantic_tips': "romantic dinners in hidden izakayas, couples' traditional onsen experience, cherry blossom viewing in peaceful gardens"
+            'cultural': {
+                'keywords': ['temple', 'museum', 'historic', 'ancient', 'heritage'],
+                'description_template': "{destination} is rich in culture and heritage",
+                'highlights': ['cultural sites', 'historic landmarks', 'local traditions', 'heritage'],
+                'quick_replies': ['Cultural exploration', 'Heritage discovery', 'Traditional experiences', 'Historic sites'],
+                'romantic_tips': "romantic cultural experiences, sunset at historic sites, couples' cultural immersion"
             }
         }
     
@@ -77,24 +81,11 @@ Share your dreams with me! ✨""",
         }
     
     def get_destination_response(self, destination: str, user_input: str) -> Dict[str, Any]:
-        """Generate contextual response based on destination."""
+        """Generate contextual response based on destination using dynamic categorization."""
         destination_lower = destination.lower()
         
-        # Find matching destination context
-        context = None
-        for key, dest_context in self.destination_contexts.items():
-            if key in destination_lower:
-                context = dest_context
-                break
-        
-        if not context:
-            # Generic response for unknown destinations
-            context = {
-                'description': f"{destination} sounds amazing! I'd love to help you plan the perfect trip there.",
-                'highlights': ['exploration', 'adventure', 'discovery'],
-                'quick_replies': ['Tell me more', 'Show me options', 'Plan this trip'],
-                'romantic_tips': "romantic experiences and memorable moments"
-            }
+        # Dynamically categorize destination based on keywords
+        context = self._categorize_destination(destination)
         
         response = f"Incredible choice! 🌟 {context['description']}. I can already see you experiencing all the magical moments this destination has to offer!\n\nNow, let's craft your perfect adventure:\n• **Who's joining your journey?** Solo explorer, romantic duo, family expedition, or friend squad?\n• **When's your adventure time?** Dates and how long you want to immerse yourself?\n• **What's your adventure style?** {', '.join(context['quick_replies'])} or pure discovery?\n\nShare your vision with me! ✨"
         
@@ -205,15 +196,47 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             'state': 'modification'
         }
     
+    def _categorize_destination(self, destination: str) -> Dict[str, Any]:
+        """Dynamically categorize destination based on keywords and generate context."""
+        destination_lower = destination.lower()
+        
+        # Find matching category based on keywords
+        matched_category = None
+        for category, config in self.destination_categories.items():
+            if any(keyword in destination_lower for keyword in config['keywords']):
+                matched_category = category
+                break
+        
+        # If no specific category found, use a general category
+        if not matched_category:
+            matched_category = 'general'
+            general_config = {
+                'description_template': "{destination} offers incredible adventures and unique experiences",
+                'highlights': ['local culture', 'unique experiences', 'adventure', 'discovery'],
+                'quick_replies': ['Local exploration', 'Adventure discovery', 'Cultural immersion', 'Unique experiences'],
+                'romantic_tips': "romantic local experiences, sunset views, couples' adventures"
+            }
+        else:
+            general_config = self.destination_categories[matched_category]
+        
+        # Generate dynamic description
+        description = general_config['description_template'].format(destination=destination)
+        
+        return {
+            'description': description,
+            'highlights': general_config['highlights'],
+            'quick_replies': general_config['quick_replies'],
+            'romantic_tips': general_config['romantic_tips'],
+            'category': matched_category
+        }
+    
     def _get_romantic_tips(self, destination: str) -> str:
-        """Get romantic tips for a destination."""
-        destination_lower = destination.lower() if destination else ''
+        """Get romantic tips for a destination using dynamic categorization."""
+        if not destination:
+            return "romantic dinners, sunset walks, and unforgettable moments"
         
-        for key, context in self.destination_contexts.items():
-            if key in destination_lower:
-                return context['romantic_tips']
-        
-        return "romantic dinners, sunset walks, and unforgettable moments"
+        context = self._categorize_destination(destination)
+        return context['romantic_tips']
     
     def _get_destination_image(self, destination: str) -> str:
         """Get destination image URL (placeholder for now)."""
@@ -262,18 +285,32 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             }
     
     def _extract_destination(self, text: str) -> str:
-        """Extract destination from user input."""
-        # Simple extraction - in real implementation, use NLP
-        common_destinations = ['goa', 'bali', 'paris', 'tokyo', 'new york', 'london', 'barcelona']
+        """Extract destination from user input using dynamic analysis."""
         text_lower = text.lower()
         
-        for dest in common_destinations:
-            if dest in text_lower:
-                return dest.title()
+        # Look for destination indicators
+        destination_indicators = ['to', 'visit', 'go to', 'travel to', 'explore', 'see']
         
-        # Return first few words as destination
+        # Find destination after indicators
+        for indicator in destination_indicators:
+            if indicator in text_lower:
+                parts = text_lower.split(indicator)
+                if len(parts) > 1:
+                    potential_dest = parts[1].strip()
+                    # Clean up the destination name
+                    words = potential_dest.split()
+                    if words:
+                        return ' '.join(word.capitalize() for word in words[:3])
+        
+        # If no clear indicator, look for capitalized words (likely place names)
         words = text.split()
-        return ' '.join(words[:3]) if words else "Unknown Destination"
+        capitalized_words = [word for word in words if word[0].isupper() and len(word) > 2]
+        if capitalized_words:
+            return ' '.join(capitalized_words[:3])
+        
+        # Fallback: return first few meaningful words
+        meaningful_words = [word for word in words if len(word) > 2 and word.lower() not in ['the', 'and', 'for', 'with']]
+        return ' '.join(meaningful_words[:3]).title() if meaningful_words else "Your Dream Destination"
     
     def _extract_travelers(self, text: str) -> str:
         """Extract traveler type from user input."""
@@ -291,16 +328,54 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             return 'couple'  # Default
     
     def _extract_dates(self, text: str) -> str:
-        """Extract dates from user input."""
-        # Simple extraction - in real implementation, use date parsing
-        if 'august' in text.lower():
-            return 'August 25th'
-        elif 'september' in text.lower():
-            return 'September'
-        elif 'october' in text.lower():
-            return 'October'
-        else:
-            return 'Flexible dates'
+        """Extract dates from user input using dynamic analysis."""
+        text_lower = text.lower()
+        
+        # Month patterns
+        months = {
+            'january': 'January', 'february': 'February', 'march': 'March', 'april': 'April',
+            'may': 'May', 'june': 'June', 'july': 'July', 'august': 'August',
+            'september': 'September', 'october': 'October', 'november': 'November', 'december': 'December'
+        }
+        
+        # Look for month mentions
+        for month_lower, month_proper in months.items():
+            if month_lower in text_lower:
+                return month_proper
+        
+        # Look for time indicators
+        time_indicators = {
+            'next month': 'Next month',
+            'next week': 'Next week',
+            'this weekend': 'This weekend',
+            'summer': 'Summer',
+            'winter': 'Winter',
+            'spring': 'Spring',
+            'fall': 'Fall',
+            'autumn': 'Autumn',
+            'holiday': 'Holiday season',
+            'christmas': 'Christmas',
+            'new year': 'New Year'
+        }
+        
+        for indicator, response in time_indicators.items():
+            if indicator in text_lower:
+                return response
+        
+        # Look for specific date patterns
+        import re
+        date_patterns = [
+            r'(\d{1,2})/(\d{1,2})',  # MM/DD or DD/MM
+            r'(\d{1,2})-(\d{1,2})',  # MM-DD or DD-MM
+            r'(\d{1,2})\.(\d{1,2})',  # MM.DD or DD.MM
+        ]
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, text)
+            if match:
+                return f"Date: {match.group(1)}/{match.group(2)}"
+        
+        return 'Flexible dates'
     
     def _extract_vibe(self, text: str) -> str:
         """Extract travel vibe from user input."""
