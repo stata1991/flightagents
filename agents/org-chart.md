@@ -28,6 +28,7 @@ Each agent is a Claude-style subagent defined in a Markdown file with specific s
 
 | Role            | File                                 | Description |
 |------------------|--------------------------------------|-------------|
+| Conversation Agent | `operations/conversation_agent.md`   | Creates engaging conversational experiences with structured questioning and personality. |
 | Itinerary Agent | `operations/itinerary-agent.md`      | Generates personalized, themed daily trip itineraries from natural language prompts. |
 | Destination Specialist | `product/destination_specialist.md` | Creates intelligent multi-city itineraries with smart airport logic and optimal routing. |
 | Budget Analyst  | `operations/budget_analyst.md`       | Analyzes trip costs, provides budget breakdowns and cost-saving strategies. |
