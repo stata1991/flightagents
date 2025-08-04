@@ -423,11 +423,25 @@
                 this.sendBtn = document.getElementById('sendBtn');
                 this.quickReplies = document.getElementById('quickReplies');
                 
-                this.conversationState = 'greeting';
+                // Session and state management
+                this.sessionId = this.generateSessionId();
+                this.conversationState = {
+                    origin: null,
+                    destination: null,
+                    travelers: null,
+                    start_date: null,
+                    end_date: null,
+                    budget_range: null,
+                    interests: []
+                };
                 this.tripData = {};
                 
                 this.initializeEventListeners();
                 this.startConversation();
+            }
+            
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
 
             initializeEventListeners() {
@@ -594,19 +608,123 @@ What type of experience are you looking for?`;
                 this.updateSendButton();
                 this.hideQuickReplies();
 
-                // Simulate AI processing
-                await this.addMessage('ai', '', true);
+                // Process message with backend integration
                 await this.processUserMessage(message);
             }
 
             async processUserMessage(message) {
-                // Dynamic response generation based on user input
-                const response = this.generateUserMessageResponse(message);
-                
-                // Only add AI message if we have a response
-                if (response) {
-                    await this.addMessage('ai', response);
+                try {
+                    // Send message to backend for processing
+                    const response = await this.sendMessageToBackend(message);
+                    
+                    if (response.can_start_planning) {
+                        // We have enough info to start planning
+                        await this.addMessage('ai', response.response);
+                        await this.startTripPlanning(response.trip_request);
+                    } else {
+                        // Continue conversation
+                        await this.addMessage('ai', response.response);
+                        if (response.missing_info) {
+                            this.showMissingInfoSuggestions(response.missing_info);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error processing message:', error);
+                    // Fallback to local response generation
+                    const response = this.generateUserMessageResponse(message);
+                    if (response) {
+                        await this.addMessage('ai', response);
+                    }
                 }
+            }
+            
+            async sendMessageToBackend(message) {
+                const response = await fetch('/chat-integration/process-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        session_id: this.sessionId,
+                        conversation_state: this.conversationState
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            }
+            
+            async startTripPlanning(tripRequest) {
+                try {
+                    // Show planning in progress message
+                    await this.addMessage('ai', '🎯 Perfect! I have enough information to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...', true);
+                    
+                    const response = await fetch('/chat-integration/start-planning', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            trip_request: tripRequest
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Show the itinerary
+                        await this.showItinerary(result);
+                    } else {
+                        await this.addMessage('ai', 'I apologize, but I encountered an issue while planning your trip. Let me try a different approach or you can provide more details.');
+                    }
+                } catch (error) {
+                    console.error('Error starting trip planning:', error);
+                    await this.addMessage('ai', 'I apologize, but I encountered an issue while planning your trip. Let me try a different approach or you can provide more details.');
+                }
+            }
+            
+            async showItinerary(result) {
+                const itinerary = result.itinerary;
+                const costs = result.estimated_costs;
+                
+                let itineraryMessage = `🎉 **Your Perfect Trip is Ready!** 🌟\n\n`;
+                
+                if (itinerary.summary) {
+                    itineraryMessage += `**Trip Summary:** ${itinerary.summary}\n\n`;
+                }
+                
+                if (costs) {
+                    itineraryMessage += `**Estimated Costs:**\n`;
+                    if (costs.flights) itineraryMessage += `✈️ Flights: $${costs.flights}\n`;
+                    if (costs.hotels) itineraryMessage += `🏨 Hotels: $${costs.hotels}\n`;
+                    if (costs.total) itineraryMessage += `💰 Total: $${costs.total}\n\n`;
+                }
+                
+                if (itinerary.recommendations) {
+                    itineraryMessage += `**Top Recommendations:**\n`;
+                    itinerary.recommendations.forEach((rec, index) => {
+                        itineraryMessage += `${index + 1}. ${rec}\n`;
+                    });
+                    itineraryMessage += `\n`;
+                }
+                
+                itineraryMessage += `Would you like me to show you the detailed itinerary with booking links?`;
+                
+                await this.addMessage('ai', itineraryMessage);
+                this.showQuickReplies(['Show detailed itinerary', 'Modify trip details', 'Start over']);
+            }
+            
+            showMissingInfoSuggestions(missingInfo) {
+                const suggestions = missingInfo.map(info => `Please provide ${info}`).join(', ');
+                this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
             }
             
             generateUserMessageResponse(message) {

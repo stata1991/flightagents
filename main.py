@@ -8,6 +8,7 @@ from api.destination_router import router as destination_router
 from api.hotel_router import router as hotel_router
 from api.hybrid_trip_router import router as hybrid_router
 from api.markdown_trip_router import router as markdown_trip_router
+from api.chat_integration_router import router as chat_integration_router
 
 app = FastAPI(title="FlightTickets.ai API")
 
@@ -23,6 +24,7 @@ app.include_router(destination_router)
 app.include_router(hotel_router)
 app.include_router(hybrid_router)
 app.include_router(markdown_trip_router)
+app.include_router(chat_integration_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
