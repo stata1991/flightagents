@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import re
 from dateutil import parser as date_parser
 
-from api.models import TripPlanningRequest
+from api.models import TripPlanningRequest, TripType, BudgetRange
 from api.enhanced_ai_provider import EnhancedAITripProvider
 from api.trip_planner_interface import TripPlanRequest
 from services.conversation_service import ConversationService
@@ -172,9 +172,9 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
             travelers=travelers or 1,
             start_date=start_date,
             end_date=end_date,
-            duration_days=_extract_duration_days(message) or 7,  # Default to 7 days
-            budget_range=budget_range or "moderate",  # Changed from "medium" to "moderate"
-            trip_type="leisure",
+            duration_days=_extract_duration_days(message),
+            budget_range=budget_range or BudgetRange.MODERATE,  # Use model default if None
+            trip_type=TripType.LEISURE,  # Use model default
             interests=interests or [],
             special_requirements=""
         )
@@ -244,6 +244,10 @@ def _extract_travelers(message: str) -> Optional[int]:
             elif pattern == r"(couple|romantic|boyfriend|girlfriend)":
                 return 2
             elif pattern == r"(family|kids|children)":
+                # Extract family size if mentioned, otherwise default to 4 for family
+                family_size_match = re.search(r"(\d+)\s+(people|travelers|guests|adults)", message.lower())
+                if family_size_match:
+                    return int(family_size_match.group(1))
                 return 4  # Default family size
             else:
                 return int(match.group(1))
@@ -270,6 +274,7 @@ def _extract_start_date(message: str) -> Optional[str]:
             except:
                 continue
     
+    # If no specific date found, return None and let the planning system handle it
     return None
 
 def _extract_end_date(message: str) -> Optional[str]:
@@ -339,8 +344,8 @@ def _has_sufficient_info(trip_request: TripPlanningRequest) -> bool:
     return (
         trip_request.origin and 
         trip_request.destination and 
-        trip_request.travelers and 
-        trip_request.start_date
+        trip_request.travelers
+        # start_date is optional - we can plan without a specific date
     )
 
 def _get_missing_info(trip_request: TripPlanningRequest) -> List[str]:
