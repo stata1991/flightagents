@@ -1,7 +1,9 @@
 import json
 import logging
+import re
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+from services.contextual_followup_service import contextual_followup_service
 
 logger = logging.getLogger(__name__)
 
@@ -243,11 +245,18 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         # In a real implementation, this would fetch from an image service
         return f"/static/images/destinations/{destination.lower().replace(' ', '-')}.jpg"
     
-    def process_user_input(self, user_input: str, current_state: str, trip_data: Dict = None) -> Dict[str, Any]:
+    async def process_user_input(self, user_input: str, current_state: str, trip_data: Dict = None, missing_info: List[str] = None) -> Dict[str, Any]:
         """Process user input and return appropriate response."""
         trip_data = trip_data or {}
+        missing_info = missing_info or []
         
-        if current_state == 'greeting':
+        # Extract information from user input and update trip_data
+        self._update_trip_data_from_input(user_input, trip_data)
+        
+        # If we have missing info, ask specific follow-up questions
+        if missing_info:
+            return await self._get_follow_up_questions(missing_info, trip_data)
+        elif current_state == 'greeting':
             if any(word in user_input.lower() for word in ['itinerary', 'plan', 'trip']):
                 return self.get_structured_questions()
             else:
@@ -277,6 +286,34 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         elif current_state == 'summary':
             return self.get_modification_options()
         
+        elif current_state == 'gathering_info':
+            # Handle gathering_info state - check if we have all required info
+            required_fields = ['origin', 'destination', 'travelers', 'duration_days', 'start_date', 'budget_range']
+            missing_fields = [field for field in required_fields if not trip_data.get(field)]
+            
+            if not missing_fields:
+                # We have all the information, ready to start planning
+                return {
+                    'message': "🎯 Perfect! I have all the information I need to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...",
+                    'quick_replies': ['Show me the plan', 'Modify details', 'Start over'],
+                    'state': 'planning',
+                    'missing_info': [],
+                    'trip_data': trip_data
+                }
+            else:
+                # Still missing some information, ask for the next missing field
+                return await self._get_follow_up_questions(missing_fields, trip_data)
+        
+        elif current_state == 'planning':
+            # We have all the information, ready to start planning
+            return {
+                'message': "🎯 Perfect! I have all the information I need to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...",
+                'quick_replies': ['Show me the plan', 'Modify details', 'Start over'],
+                'state': 'planning',
+                'missing_info': [],
+                'trip_data': trip_data
+            }
+        
         else:
             return {
                 'message': "I'm not sure what you mean. Could you tell me more about your travel plans?",
@@ -284,9 +321,264 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                 'state': 'greeting'
             }
     
+    async def _get_follow_up_questions(self, missing_info: List[str], trip_data: Dict) -> Dict[str, Any]:
+        """Generate conversational follow-up questions based on missing information."""
+        questions = []
+        quick_replies = []
+        
+        # Check what's actually missing based on what's already in trip_data
+        actual_missing = []
+        
+        # Mandatory fields only
+        if 'origin' in missing_info and 'origin' not in trip_data:
+            actual_missing.append('origin')
+            questions.append("**Where are you traveling from**?")
+            quick_replies.extend(['I have a destination in mind', 'Show me options'])
+        
+        if 'destination' in missing_info and 'destination' not in trip_data:
+            actual_missing.append('destination')
+            questions.append("**Where would you like to go**?")
+            quick_replies.extend(['Beach paradise', 'Urban exploration', 'Mountain adventure', 'Cultural journey'])
+        
+        if 'number of travelers' in missing_info and 'travelers' not in trip_data:
+            actual_missing.append('travelers')
+            questions.append("**Who's joining** your adventure?")
+            quick_replies.extend(['Solo explorer', 'Romantic duo', 'Family trip', 'Friend squad'])
+        
+        if 'duration_days' in missing_info and 'duration_days' not in trip_data:
+            actual_missing.append('duration_days')
+            questions.append("**How many days** would you like to travel?")
+            quick_replies.extend(['3 days', '5 days', '1 week', '2 weeks'])
+        
+        if 'start date' in missing_info and 'start_date' not in trip_data:
+            actual_missing.append('start_date')
+            questions.append("**When** would you like to travel?")
+            quick_replies.extend(['Next month', 'Summer vacation', 'Holiday season', 'Flexible dates'])
+        
+        if 'budget preference' in missing_info and 'budget_range' not in trip_data:
+            actual_missing.append('budget_range')
+            questions.append("**What's your budget preference** for this trip?")
+            quick_replies.extend(['Budget-friendly ($50-100/day)', 'Moderate ($100-300/day)', 'Luxury ($300+/day)'])
+        
+        # Interests are optional, but if mentioned in missing_info, ask for them
+        if 'interests' in missing_info and 'interests' not in trip_data:
+            # Don't add to actual_missing since interests are optional
+            questions.append("**What type of experiences** are you looking for?")
+            quick_replies.extend(['Adventure & Nature', 'Culture & History', 'Food & Dining', 'Relaxation', 'Nightlife'])
+        
+        # If we have all the information, start planning
+        if not actual_missing:
+            return {
+                'message': "🎯 Perfect! I have all the information I need to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...",
+                'quick_replies': ['Show me the plan', 'Modify details', 'Start over'],
+                'state': 'planning',
+                'missing_info': [],
+                'trip_data': trip_data
+            }
+        
+        # Generate contextual follow-up if available
+        if contextual_followup_service.is_available():
+            try:
+                contextual_response = await contextual_followup_service.generate_contextual_followup(actual_missing, trip_data)
+                return {
+                    'message': contextual_response.get('question', ' '.join(questions)),
+                    'quick_replies': contextual_response.get('quick_replies', quick_replies),
+                    'state': 'gathering_info',
+                    'missing_info': actual_missing,
+                    'trip_data': trip_data
+                }
+            except Exception as e:
+                logger.error(f"Contextual followup failed: {e}")
+                # Fallback to rule-based questions
+        
+        # Fallback to rule-based questions
+        if len(questions) == 1:
+            message = f"Great! I can see you want to plan a trip. {questions[0]}"
+        else:
+            message = f"Perfect! I can see you want to plan a trip. Let me ask a few quick questions:\n\n" + "\n".join(questions)
+        
+        return {
+            'message': message,
+            'quick_replies': quick_replies[:6],  # Limit to 6 quick replies
+            'state': 'gathering_info',
+            'missing_info': actual_missing,
+            'trip_data': trip_data
+        }
+    
+    def _update_trip_data_from_input(self, user_input: str, trip_data: Dict) -> None:
+        """Extract and update trip data from user input."""
+        user_input_lower = user_input.lower()
+        
+        # Extract duration if mentioned
+        duration_match = re.search(r'(\d+)\s+days?', user_input_lower)
+        if duration_match:
+            trip_data['duration_days'] = int(duration_match.group(1))
+        
+        # Extract travelers if mentioned
+        # Convert word numbers to digits for easier processing
+        word_to_number = {
+            'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10
+        }
+        
+        # Replace word numbers with digits
+        user_input_processed = user_input_lower
+        for word, number in word_to_number.items():
+            user_input_processed = user_input_processed.replace(word, str(number))
+        
+        if any(word in user_input_lower for word in ['solo', 'alone', 'myself']):
+            trip_data['travelers'] = 1
+        elif any(word in user_input_lower for word in ['couple', 'romantic', 'boyfriend', 'girlfriend']):
+            trip_data['travelers'] = 2
+        elif any(word in user_input_lower for word in ['family', 'kids', 'children']):
+            trip_data['travelers'] = 4
+        elif any(word in user_input_lower for word in ['friends', 'group', 'squad']):
+            # Extract number if mentioned, otherwise default to 4
+            number_match = re.search(r'(\d+)\s+(?:of us|people|travelers)', user_input_processed)
+            if number_match:
+                trip_data['travelers'] = int(number_match.group(1))
+            else:
+                trip_data['travelers'] = 4
+        else:
+            # Look for number + people/travelers pattern
+            number_match = re.search(r'(\d+)\s+(people|travelers|guests|adults)', user_input_processed)
+            if number_match:
+                trip_data['travelers'] = int(number_match.group(1))
+        
+        # Extract dates if mentioned - only match actual month names
+        month_names = ['january', 'february', 'march', 'april', 'may', 'june', 
+                      'july', 'august', 'september', 'october', 'november', 'december']
+        month_abbr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 
+                     'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        
+        date_patterns = [
+            r'from\s+(\w+\s+\d+)',  # "from August 28th"
+            r'starting\s+(\w+\s+\d+)',  # "starting August 28th"
+        ]
+        
+        # Add patterns for each month name
+        for month in month_names + month_abbr:
+            date_patterns.append(rf'({month}\s+\d+)(?:st|nd|rd|th)?')
+        
+        for pattern in date_patterns:
+            date_match = re.search(pattern, user_input_lower)
+            if date_match:
+                date_str = date_match.group(1)
+                # Use the same date parsing logic as the working endpoints
+                try:
+                    from datetime import datetime
+                    import calendar
+                    
+                    # Remove ordinal suffixes (th, st, nd, rd)
+                    date_str = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
+                    
+                    # Try to parse month names
+                    month_names = {name.lower(): i for i, name in enumerate(calendar.month_name) if name}
+                    month_abbr = {name.lower(): i for i, name in enumerate(calendar.month_abbr) if name}
+                    
+                    parts = date_str.split()
+                    if len(parts) >= 2:
+                        month_str = parts[0].lower()
+                        day_str = parts[1]
+                        
+                        month = month_names.get(month_str) or month_abbr.get(month_str)
+                        if month and day_str.isdigit():
+                            day = int(day_str)
+                            # Assume current year or next year
+                            current_year = datetime.now().year
+                            date_obj = datetime(current_year, month, day)
+                            
+                            # If the date has passed, use next year
+                            if date_obj < datetime.now():
+                                date_obj = datetime(current_year + 1, month, day)
+                            
+                            trip_data['start_date'] = date_obj.strftime('%Y-%m-%d')
+                except (ValueError, TypeError):
+                    # Fallback to original format if parsing fails
+                    trip_data['start_date'] = date_str
+                break
+        
+        # Extract budget if mentioned
+        budget_keywords = {
+            "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty"],
+            "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable"],
+            "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe"]
+        }
+        
+        for budget_range, keywords in budget_keywords.items():
+            if any(keyword in user_input_lower for keyword in keywords):
+                trip_data['budget_range'] = budget_range
+                break
+        
+        # Also check for specific budget patterns like "Luxury ($300+/day)"
+        # Since the $ and numbers might be processed, just check for the key words
+        if "luxury" in user_input_lower and ("300" in user_input or "day" in user_input_lower):
+            trip_data['budget_range'] = "luxury"
+        elif "moderate" in user_input_lower and ("100" in user_input or "300" in user_input or "day" in user_input_lower):
+            trip_data['budget_range'] = "moderate"
+        elif "budget-friendly" in user_input_lower or ("budget" in user_input_lower and "50" in user_input):
+            trip_data['budget_range'] = "budget"
+        
+        # Extract interests if mentioned
+        interest_keywords = {
+            "beach": ["beach", "ocean", "sea", "coastal"],
+            "culture": ["culture", "museum", "history", "art", "heritage"],
+            "adventure": ["adventure", "hiking", "outdoor", "nature"],
+            "nightlife": ["nightlife", "party", "club", "bar", "night life"],
+            "shopping": ["shopping", "market", "mall", "retail"],
+            "food": ["food", "cuisine", "restaurant", "dining", "gastronomy"],
+            "relaxation": ["relax", "spa", "wellness", "peaceful"],
+            "romance": ["romantic", "couple", "honeymoon", "romance"]
+        }
+        
+        interests = []
+        for interest, keywords in interest_keywords.items():
+            if any(keyword in user_input_lower for keyword in keywords):
+                interests.append(interest)
+        
+        if interests:
+            trip_data['interests'] = interests
+        
+        # Extract origin and destination if mentioned
+        origin_dest_patterns = [
+            r'from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+for\s+\d+|\s+with|\s+in|\s+on|$)',  # "from dallas to los angeles"
+            r'plan.*?from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+for\s+\d+|\s+with|\s+in|\s+on|$)',  # "plan a trip from dallas to los angeles"
+            r'trip.*?from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+for\s+\d+|\s+with|\s+in|\s+on|$)',  # "trip from dallas to los angeles"
+        ]
+        
+        for pattern in origin_dest_patterns:
+            match = re.search(pattern, user_input_lower)
+            if match:
+                origin = match.group(1).strip().title()
+                destination = match.group(2).strip().title()
+                
+                # Clean up destination - remove any trailing words that are not city names
+                destination_words = destination.split()
+                non_city_words = ['for', 'with', 'in', 'on', 'and', 'or']
+                while destination_words and destination_words[-1].lower() in non_city_words:
+                    destination_words.pop()
+                destination = ' '.join(destination_words)
+                
+                trip_data['origin'] = origin
+                trip_data['destination'] = destination
+                break
+    
     def _extract_destination(self, text: str) -> str:
         """Extract destination from user input using dynamic analysis."""
         text_lower = text.lower()
+        
+        # Look for "from X to Y" pattern first (most specific)
+        from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+for\s+\d+|\s+with|\s+in|\s+on|$)"
+        match = re.search(from_to_pattern, text_lower)
+        if match:
+            destination = match.group(2).strip()
+            # Clean up destination - remove any trailing words that are not city names
+            destination_words = destination.split()
+            # Remove common non-city words from the end
+            non_city_words = ['for', 'with', 'in', 'on', 'and', 'or']
+            while destination_words and destination_words[-1].lower() in non_city_words:
+                destination_words.pop()
+            return ' '.join(destination_words).title()
         
         # Look for destination indicators
         destination_indicators = ['to', 'visit', 'go to', 'travel to', 'explore', 'see']
@@ -297,8 +589,12 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                 parts = text_lower.split(indicator)
                 if len(parts) > 1:
                     potential_dest = parts[1].strip()
-                    # Clean up the destination name
+                    # Clean up the destination name - remove trailing non-city words
                     words = potential_dest.split()
+                    # Remove common non-city words from the end
+                    non_city_words = ['for', 'with', 'in', 'on', 'and', 'or']
+                    while words and words[-1].lower() in non_city_words:
+                        words.pop()
                     if words:
                         return ' '.join(word.capitalize() for word in words[:3])
         

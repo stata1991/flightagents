@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 from .search_one_way import search_one_way_flights
 from .search_round_trip import search_round_trip_flights
 from .booking_client import booking_client
+from services.flight_service import FlightService
 from pydantic import BaseModel
 import os
 import logging
@@ -70,148 +71,27 @@ async def search_flights(query: SearchQuery) -> Dict[str, Any]:
             "X-RapidAPI-Host": "booking-com15.p.rapidapi.com"
         }
         
-        # First, we need to get the airport IDs for origin and destination
-        # For now, let's use the airport codes directly as IDs (this is a simplification)
-        # In a real implementation, you'd want to search for airports first
-        
-        # Construct query parameters for flight search
-        params = {
-            "fromId": f"{query.origin}.AIRPORT",  # Assuming airport code format
-            "toId": f"{query.destination}.AIRPORT",  # Assuming airport code format
-            "departDate": formatted_date,
-            "stops": "none",
-            "pageNo": "1",
-            "adults": "1",
-            "children": "0,17",
-            "sort": "BEST",
-            "cabinClass": "ECONOMY",
-            "currency_code": "USD"
+        # Use the FlightService to search for flights with proper airport ID lookup
+        context = {
+            "origin": query.origin,
+            "destination": query.destination,
+            "start_date": formatted_date,
+            "return_date": formatted_return_date,
+            "travelers": 1
         }
-        if formatted_return_date:
-            params["returnDate"] = formatted_return_date
         
-        logger.info(f"Searching for flights with parameters: {json.dumps(params, indent=2)}")
-        logger.info(f"Request headers: {json.dumps({k: v[:10] + '...' if k == 'X-RapidAPI-Key' else v for k, v in headers.items()}, indent=2)}")
+        logger.info(f"Searching for flights with context: {context}")
         
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://booking-com15.p.rapidapi.com/api/v1/flights/searchFlights",
-                headers=headers,
-                params=params
-            ) as response:
-                logger.info(f"Response status: {response.status}")
-                logger.info(f"Response URL: {response.url}")
-                
-                if response.status != 200:
-                    error_text = await response.text()
-                    logger.error(f"Booking.com API flight search error: {error_text}")
-                    logger.error(f"Request URL: {response.url}")
-                    logger.error(f"Request headers: {json.dumps({k: v[:10] + '...' if k == 'X-RapidAPI-Key' else v for k, v in headers.items()}, indent=2)}")
-                    logger.error(f"Request params: {json.dumps(params, indent=2)}")
-                    raise HTTPException(status_code=500, detail=f"Error searching for flights: {error_text}")
-                
-                result = await response.json()
-                logger.info(f"Booking.com API flight search response: {json.dumps(result, indent=2)}")
-                
-                # Extract flights from the response
-                flights = []
-                categorized_flights = {
-                    "fastest": [],
-                    "cheapest": [],
-                    "optimal": []
-                }
-                
-                if "data" in result and "flightOffers" in result["data"]:
-                    # Extract all flights for fallback categorization
-                    for flight_offer in result["data"]["flightOffers"]:
-                        # Get the first segment for flight details
-                        if "segments" in flight_offer and len(flight_offer["segments"]) > 0:
-                            segment = flight_offer["segments"][0]
-                            
-                            # Get airline info from legs
-                            airline_name = "Unknown"
-                            flight_number = "Unknown"
-                            if "legs" in segment and len(segment["legs"]) > 0:
-                                leg = segment["legs"][0]
-                                # Get airline info from carriersData
-                                if "carriersData" in leg and len(leg["carriersData"]) > 0:
-                                    carrier = leg["carriersData"][0]
-                                    airline_name = carrier.get("name", "Unknown")
-                                    flight_number = f"{carrier.get('code', 'Unknown')} {leg.get('flightNumber', '')}"
-                                else:
-                                    # Fallback to marketingCarrier if carriersData is not available
-                                    airline_name = leg.get("marketingCarrier", {}).get("name", "Unknown")
-                                    flight_number = f"{leg.get('marketingCarrier', {}).get('code', 'Unknown')} {leg.get('marketingCarrier', {}).get('flightNumber', '')}"
-                            
-                            # Get price from priceBreakdown
-                            price = 0
-                            if "priceBreakdown" in flight_offer:
-                                price = flight_offer["priceBreakdown"].get("total", 0)
-                            
-                            flight_info = {
-                                "airline": airline_name,
-                                "flight_number": flight_number,
-                                "departure_time": segment.get("departureTime", ""),
-                                "arrival_time": segment.get("arrivalTime", ""),
-                                "duration": segment.get("totalTime", ""),
-                                "price": price,
-                                "stops": len(segment.get("legs", [])) - 1,
-                                "booking_link": flight_offer.get("token", "")  # Use token as booking link
-                            }
-                            flights.append(flight_info)
-                
-                # Extract categorized deals from flightDeals if available
-                if "data" in result and "flightDeals" in result["data"]:
-                    logger.info("Found flightDeals, using categorized deals")
-                    for deal in result["data"]["flightDeals"]:
-                        deal_key = deal.get("key", "").lower()
-                        if deal_key in ["cheapest", "fastest", "best"]:
-                            # Map "best" to "optimal" for our structure
-                            category = "optimal" if deal_key == "best" else deal_key
-                            
-                            # Find the corresponding flight offer using the offerToken
-                            offer_token = deal.get("offerToken", "")
-                            corresponding_flight = None
-                            
-                            # Find the flight that matches this deal
-                            for flight in flights:
-                                if flight.get("booking_link") == offer_token:
-                                    corresponding_flight = flight
-                                    break
-                            
-                            if corresponding_flight:
-                                categorized_flights[category].append(corresponding_flight)
-                                logger.info(f"Added {deal_key} flight: {corresponding_flight['airline']}")
-                
-                # If no categorized deals found, use manual categorization
-                if not any(categorized_flights.values()):
-                    logger.info("No categorized deals found, using manual categorization")
-                    if flights:
-                        # Sort by duration for fastest
-                        fastest_flights = sorted(flights, key=lambda x: x.get('duration', 0))[:3]
-                        # Sort by price for cheapest
-                        cheapest_flights = sorted(flights, key=lambda x: x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0))[:3]
-                        # Sort by combination of price and duration for optimal
-                        optimal_flights = sorted(flights, key=lambda x: (x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0) + x.get('duration', 0)))[:3]
-                        
-                        categorized_flights["fastest"] = fastest_flights
-                        categorized_flights["cheapest"] = cheapest_flights
-                        categorized_flights["optimal"] = optimal_flights
-                
-                logger.info(f"Found {len(flights)} total flights")
-                logger.info(f"Categorized: {len(categorized_flights['fastest'])} fastest, {len(categorized_flights['cheapest'])} cheapest, {len(categorized_flights['optimal'])} optimal")
-                
-                if not flights:
-                    logger.error("No flights found in API response")
-                    logger.error(f"Full API response: {json.dumps(result, indent=2)}")
-                    raise HTTPException(status_code=500, detail="No flights found in API response")
-                
-                return {
-                    "success": True,
-                    "flights": flights,
-                    "categorized_flights": categorized_flights,
-                    "message": "Flight search completed"
-                }
+        # Use FlightService to get recommendations
+        result = await FlightService.search_flights(context)
+        
+        if not result.get("success"):
+            logger.error(f"Flight search failed: {result.get('error')}")
+            raise HTTPException(status_code=500, detail=result.get("error", "Flight search failed"))
+        
+        logger.info(f"Flight search successful, found {len(result.get('flights', []))} flights")
+        
+        return result
         
     except HTTPException as he:
         raise he

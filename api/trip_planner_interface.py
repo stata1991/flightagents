@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from enum import Enum
 
 class ProviderType(str, Enum):
@@ -46,7 +46,25 @@ class TripPlanResponse(BaseModel):
     error_message: Optional[str] = None
     warnings: List[str] = []
     booking_links: Dict[str, str] = {}
-    estimated_costs: Dict[str, float] = {}
+    estimated_costs: Dict[str, Any] = {}  # Changed from float to Any to handle string values
+    
+    @validator('estimated_costs', pre=True)
+    def convert_cost_strings(cls, v):
+        """Convert string costs like '$32' to float values"""
+        if isinstance(v, dict):
+            converted = {}
+            for key, value in v.items():
+                if isinstance(value, str):
+                    # Remove dollar sign and convert to float
+                    clean_value = value.replace('$', '').replace(',', '')
+                    try:
+                        converted[key] = float(clean_value)
+                    except ValueError:
+                        converted[key] = value  # Keep as string if conversion fails
+                else:
+                    converted[key] = value
+            return converted
+        return v
 
 class TripPlannerProvider(ABC):
     """Abstract base class for all trip planning providers"""

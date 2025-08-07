@@ -1,6 +1,8 @@
 import os
 import json
 import logging
+import re
+import calendar
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import anthropic
@@ -83,46 +85,68 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 ]
             )
             
+            # Add budget allocation to estimated costs
+            estimated_costs = itinerary.get("estimated_costs", {})
+            if budget_allocation:
+                estimated_costs.update(budget_allocation.get("budget_breakdown", {}))
+            
             return TripPlanResponse(
                 success=True,
                 itinerary=itinerary,
                 metadata=metadata,
                 booking_links=itinerary.get("booking_links", {}),
-                estimated_costs=itinerary.get("estimated_costs", {})
+                estimated_costs=estimated_costs
             )
             
         except Exception as e:
             logger.error(f"Enhanced AI trip planning failed: {str(e)}")
+            
+            # Return a fallback response
             return TripPlanResponse(
                 success=False,
-                itinerary={},
+                itinerary={
+                    "trip_summary": {
+                        "title": "Trip Planning",
+                        "overview": "I'm experiencing temporary issues with my AI planning service. Please try again in a few moments.",
+                        "highlights": ["Please retry", "Contact support if issue persists"]
+                    },
+                    "transportation": {"fastest": [], "cheapest": [], "optimal": []},
+                    "accommodation": {"moderate": []},
+                    "itinerary": {},
+                    "estimated_costs": {"total": "$0"},
+                    "practical_info": {"currency": "USD", "language": "English"}
+                },
                 metadata=TripPlanMetadata(
                     provider=ProviderType.AI,
-                    quality=TripPlanQuality.UNKNOWN,
+                    quality=TripPlanQuality.BASIC,
                     confidence_score=0.0,
                     data_freshness="unknown",
                     last_updated=datetime.now().isoformat(),
-                    source_notes=[f"Enhanced AI planning failed: {str(e)}"]
+                    source_notes=["Fallback response due to API error"],
+                    fallback_used=True
                 ),
-                booking_links={
-                    "flights": "",
-                    "hotels": "",
-                    "activities": ""
-                },
-                estimated_costs={},
-                error_message=f"Enhanced AI trip planning failed: {str(e)}"
+                error_message=f"AI planning service temporarily unavailable: {str(e)}"
             )
     
     async def _get_hotel_recommendations(self, request: TripPlanRequest, budget_allocation: Dict[str, Any] = None) -> Dict[str, Any]:
         """Get real hotel recommendations using the hotel API with budget allocation"""
         try:
-            # Handle None start_date
+            # Require start_date to be provided
             if not request.start_date:
-                # Use a default date (next week)
-                start_date = datetime.now() + timedelta(days=7)
-                request.start_date = start_date.strftime("%Y-%m-%d")
+                logger.error("Start date is required for hotel search")
+                return {"success": False, "hotels": [], "error": "Start date is required"}
             
             # Calculate check-in and check-out dates
+            # Handle month-year format (e.g., "august 2025")
+            if re.match(r'^[a-zA-Z]+\s+\d{4}$', request.start_date):
+                # Convert "august 2025" to "2025-08-01"
+                month_names = {name.lower(): i for i, name in enumerate(calendar.month_name) if name}
+                parts = request.start_date.lower().split()
+                if len(parts) == 2 and parts[0] in month_names:
+                    month = month_names[parts[0]]
+                    year = int(parts[1])
+                    request.start_date = f"{year}-{month:02d}-01"
+            
             start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
             end_date = start_date + timedelta(days=request.duration_days)
             
@@ -153,8 +177,8 @@ class EnhancedAITripProvider(TripPlannerProvider):
             )
             
             if hotel_response.hotels and len(hotel_response.hotels) > 0:
-                # Return top 6 hotels (more variety)
-                top_hotels = hotel_response.hotels[:6]
+                # Return top 8 hotels (minimum as requested)
+                top_hotels = hotel_response.hotels[:8]
                 
                 # Detect user's currency and determine trip currency strategy
                 user_location = await location_detection_service.detect_user_location()
@@ -175,32 +199,33 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 
                 logger.info(f"Trip currency strategy: {currency_strategy}")
                 
-                hotels_with_prices = [
-                    {
-                        "name": hotel.hotel.name,
-                        "rating": hotel.hotel.rating,
-                        "price_per_night": hotel.average_price_per_night,
-                        "location": f"{hotel.hotel.city}, {hotel.hotel.country}",
-                        "amenities": hotel.hotel.amenities or [],
-                        "booking_link": self.hotel_client.generate_hotel_booking_url(
-                            hotel.hotel.hotel_id,
-                            request.start_date,
-                            end_date.strftime("%Y-%m-%d"),
-                            request.travelers,
-                            [],
-                            1,
-                            "USD"
-                        ),
-                        "hotel_id": hotel.hotel.hotel_id
-                    }
-                    for hotel in top_hotels
-                ]
+                hotels_with_prices = []
+                for hotel in top_hotels:
+                    if hotel.hotel and hotel.hotel.name:  # Check if hotel exists and has a name
+                        hotels_with_prices.append({
+                            "name": hotel.hotel.name,
+                            "rating": hotel.hotel.rating,
+                            "price_per_night": hotel.average_price_per_night,
+                            "location": f"{hotel.hotel.city}, {hotel.hotel.country}",
+                            "amenities": hotel.hotel.amenities or [],
+                            "booking_link": self.hotel_client.generate_hotel_booking_url(
+                                hotel.hotel.hotel_id,
+                                request.start_date,
+                                end_date.strftime("%Y-%m-%d"),
+                                request.travelers,
+                                [],
+                                1,
+                                "USD"
+                            ),
+                            "hotel_id": hotel.hotel.hotel_id
+                        })
                 
                 # Convert prices to primary currency
                 converted_hotels = await price_display_service.convert_hotel_prices(hotels_with_prices, primary_currency)
                 
-                # Add currency strategy info to response
-                converted_hotels.append({
+                return {
+                    "success": True,
+                    "hotels": converted_hotels,
                     "currency_strategy": currency_strategy,
                     "trip_info": {
                         "origin_country": origin_country,
@@ -209,11 +234,6 @@ class EnhancedAITripProvider(TripPlannerProvider):
                         "primary_currency": primary_currency,
                         "secondary_currency": secondary_currency
                     }
-                })
-                
-                return {
-                    "success": True,
-                    "hotels": converted_hotels
                 }
             else:
                 return {"success": False, "hotels": []}
@@ -225,13 +245,22 @@ class EnhancedAITripProvider(TripPlannerProvider):
     async def _get_flight_recommendations(self, request: TripPlanRequest) -> Dict[str, Any]:
         """Get real flight recommendations using the flight API"""
         try:
-            # Handle None start_date
+            # Require start_date to be provided
             if not request.start_date:
-                # Use a default date (next week)
-                start_date = datetime.now() + timedelta(days=7)
-                request.start_date = start_date.strftime("%Y-%m-%d")
+                logger.error("Start date is required for flight search")
+                return {"success": False, "flights": [], "error": "Start date is required"}
             
             # Calculate return date (for round trip)
+            # Handle month-year format (e.g., "august 2025")
+            if re.match(r'^[a-zA-Z]+\s+\d{4}$', request.start_date):
+                # Convert "august 2025" to "2025-08-01"
+                month_names = {name.lower(): i for i, name in enumerate(calendar.month_name) if name}
+                parts = request.start_date.lower().split()
+                if len(parts) == 2 and parts[0] in month_names:
+                    month = month_names[parts[0]]
+                    year = int(parts[1])
+                    request.start_date = f"{year}-{month:02d}-01"
+            
             start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
             return_date = start_date + timedelta(days=request.duration_days)
             
@@ -350,27 +379,28 @@ class EnhancedAITripProvider(TripPlannerProvider):
         
         # Format hotel data for the prompt
         hotel_info = ""
+        logger.info(f"Hotel data structure: {hotel_data}")
         if hotel_data.get("success") and hotel_data.get("hotels"):
             hotel_info = "\n**Real Hotel Options Available:**\n"
             hotel_info += "**Budget Hotels (Under $100/night):**\n"
-            budget_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) < 100]
+            budget_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) < 100 and h.get('name')]
             for i, hotel in enumerate(budget_hotels[:3], 1):
-                hotel_info += f"{i}. {hotel['name']} - ${hotel['price_per_night']}/night, {hotel.get('rating', 'N/A')}★\n"
-                hotel_info += f"   Location: {hotel['location']}\n"
+                hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
                 hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
             
             hotel_info += "**Moderate Hotels ($100-$400/night):**\n"
-            moderate_hotels = [h for h in hotel_data["hotels"] if 100 <= h.get('price_per_night', 0) < 400]
+            moderate_hotels = [h for h in hotel_data["hotels"] if 100 <= h.get('price_per_night', 0) < 400 and h.get('name')]
             for i, hotel in enumerate(moderate_hotels[:3], 1):
-                hotel_info += f"{i}. {hotel['name']} - ${hotel['price_per_night']}/night, {hotel.get('rating', 'N/A')}★\n"
-                hotel_info += f"   Location: {hotel['location']}\n"
+                hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
                 hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
             
             hotel_info += "**Luxury Hotels (Above $500/night):**\n"
-            luxury_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) >= 500]
+            luxury_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) >= 500 and h.get('name')]
             for i, hotel in enumerate(luxury_hotels[:3], 1):
-                hotel_info += f"{i}. {hotel['name']} - ${hotel['price_per_night']}/night, {hotel.get('rating', 'N/A')}★\n"
-                hotel_info += f"   Location: {hotel['location']}\n"
+                hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
                 hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
         
         # Format flight data for the prompt
@@ -409,7 +439,26 @@ class EnhancedAITripProvider(TripPlannerProvider):
             
             flight_info += "**Optimal Flights (Best Value):**\n"
             # Sort by combination of price and duration
-            optimal_flights = sorted(flight_data["flights"], key=lambda x: (x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0)) + x.get('duration', 0))[:3]
+            def parse_duration(duration):
+                """Parse duration string like '3h 13m' to minutes"""
+                if isinstance(duration, int):
+                    return duration
+                if isinstance(duration, str):
+                    # Parse format like "3h 13m" or "3h" or "13m"
+                    hours = 0
+                    minutes = 0
+                    if 'h' in duration:
+                        hours = int(duration.split('h')[0])
+                    if 'm' in duration:
+                        parts = duration.split('h')
+                        if len(parts) > 1:
+                            minutes = int(parts[1].split('m')[0])
+                        else:
+                            minutes = int(duration.split('m')[0])
+                    return hours * 60 + minutes
+                return 0
+            
+            optimal_flights = sorted(flight_data["flights"], key=lambda x: (x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0)) + parse_duration(x.get('duration', 0)))[:3]
             for i, flight in enumerate(optimal_flights, 1):
                 # Format duration from seconds to readable format
                 duration_seconds = flight.get('duration', 0)
@@ -781,7 +830,48 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
             
         except Exception as e:
             logger.error(f"Claude API call failed: {str(e)}")
-            raise e
+            # Return a fallback response instead of raising
+            return self._generate_fallback_response()
+    
+    def _generate_fallback_response(self) -> str:
+        """Generate a fallback response when Claude API is unavailable"""
+        return """```json
+{
+  "trip_summary": {
+    "title": "Trip Planning",
+    "overview": "I'm experiencing temporary issues with my AI planning service. Please try again in a few moments.",
+    "highlights": ["Please retry", "Contact support if issue persists"],
+    "best_time_to_visit": "TBD",
+    "weather_info": "TBD",
+    "start_date": "TBD",
+    "end_date": "TBD"
+  },
+  "transportation": {
+    "fastest": [],
+    "cheapest": [],
+    "optimal": []
+  },
+  "accommodation": {
+    "moderate": []
+  },
+  "itinerary": {},
+  "estimated_costs": {
+    "accommodation": "$0",
+    "transportation": "$0",
+    "meals": "$0",
+    "activities": "$0",
+    "total": "$0"
+  },
+  "practical_info": {
+    "currency": "USD",
+    "language": "English",
+    "timezone": "TBD",
+    "emergency_numbers": ["911"],
+    "cultural_tips": ["Please retry"],
+    "packing_suggestions": ["TBD"]
+  }
+}
+```"""
     
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
         """Parse the AI response into structured data"""
@@ -843,8 +933,8 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     "optimal": []
                 }
                 
-                # Update fastest flights
-                for flight in categorized_flights.get("fastest", []):
+                # Update fastest flights (limit to 3)
+                for flight in categorized_flights.get("fastest", [])[:3]:
                     flight_obj = {
                         "airline": flight.get("airline", "Unknown"),
                         "flight_number": flight.get("flight_number", "Unknown"),
@@ -856,8 +946,8 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     }
                     itinerary["flights"]["fastest"].append(flight_obj)
                 
-                # Update cheapest flights
-                for flight in categorized_flights.get("cheapest", []):
+                # Update cheapest flights (limit to 3)
+                for flight in categorized_flights.get("cheapest", [])[:3]:
                     flight_obj = {
                         "airline": flight.get("airline", "Unknown"),
                         "flight_number": flight.get("flight_number", "Unknown"),
@@ -869,8 +959,8 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     }
                     itinerary["flights"]["cheapest"].append(flight_obj)
                 
-                # Update optimal flights
-                for flight in categorized_flights.get("optimal", []):
+                # Update optimal flights (limit to 3)
+                for flight in categorized_flights.get("optimal", [])[:3]:
                     flight_obj = {
                         "airline": flight.get("airline", "Unknown"),
                         "flight_number": flight.get("flight_number", "Unknown"),
@@ -893,7 +983,26 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     # Sort by price for cheapest
                     cheapest_flights = sorted(all_flights, key=lambda x: x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0))[:3]
                     # Sort by combination of price and duration for optimal
-                    optimal_flights = sorted(all_flights, key=lambda x: (x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0) + x.get('duration', 0)))[:3]
+                    def parse_duration_for_sorting(duration):
+                        """Parse duration string like '3h 13m' to minutes for sorting"""
+                        if isinstance(duration, int):
+                            return duration
+                        if isinstance(duration, str):
+                            # Parse format like "3h 13m" or "3h" or "13m"
+                            hours = 0
+                            minutes = 0
+                            if 'h' in duration:
+                                hours = int(duration.split('h')[0])
+                            if 'm' in duration:
+                                parts = duration.split('h')
+                                if len(parts) > 1:
+                                    minutes = int(parts[1].split('m')[0])
+                                else:
+                                    minutes = int(duration.split('m')[0])
+                            return hours * 60 + minutes
+                        return 0
+                    
+                    optimal_flights = sorted(all_flights, key=lambda x: (x.get('price', {}).get('units', 0) if isinstance(x.get('price'), dict) else x.get('price', 0)) + parse_duration_for_sorting(x.get('duration', 0)))[:3]
                     
                     # Replace AI-generated flights with real API data
                     logger.info("Replacing AI-generated flights with real API data...")

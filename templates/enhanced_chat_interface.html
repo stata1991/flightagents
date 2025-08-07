@@ -98,6 +98,528 @@
 
         .message {
             max-width: 80%;
+            
+        /* Loading Animation */
+        .loading-message {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            margin: 16px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e9ecef;
+            border-top: 3px solid #3B82F6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .loading-text {
+            color: #495057;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .loading-text small {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Itinerary Tabs */
+        .itinerary-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .itinerary-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .tab-btn:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .tab-btn.active {
+            background: white;
+            color: #3B82F6;
+            border-bottom: 2px solid #3B82F6;
+        }
+        
+        .tab-icon {
+            font-size: 16px;
+        }
+        
+        .tab-content {
+            padding: 24px;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        /* Summary Tab */
+        .trip-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .trip-header h3 {
+            color: white;
+            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .trip-overview {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        .summary-content h3 {
+            color: #212529;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        
+        .summary-content p {
+            color: #6c757d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .costs-section {
+            margin-bottom: 24px;
+        }
+        
+        .costs-section h4 {
+            color: #495057;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .cost-grid {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .cost-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .flight-cost {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+        }
+        
+        .hotel-cost {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+        }
+        
+        .activity-cost {
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+        }
+        
+        .food-cost {
+            background: linear-gradient(135deg, #55a3ff, #273c75);
+            color: white;
+        }
+        
+        .total-cost {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            font-weight: 700;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .highlights-section h4 {
+            color: #495057;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .highlights-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .highlight-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .highlight-item:hover {
+            transform: translateX(4px);
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        }
+        
+        .highlight-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .highlight-text {
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        .weather-section {
+            margin-top: 24px;
+            padding: 16px;
+            background: linear-gradient(135deg, #a8edea, #fed6e3);
+            border-radius: 12px;
+        }
+        
+        .weather-section h4 {
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .weather-section p {
+            color: #6c757d;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        /* Itinerary Tab */
+        .day-item {
+            margin-bottom: 32px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .day-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .day-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .day-date {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .day-theme {
+            font-size: 16px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .day-timeline {
+            padding: 24px;
+        }
+        
+        .time-slot {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .time-slot:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+        }
+        
+        .time-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            z-index: 1;
+        }
+        
+        .morning-marker {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        }
+        
+        .afternoon-marker {
+            background: linear-gradient(135deg, #feca57, #ff9ff3);
+        }
+        
+        .evening-marker {
+            background: linear-gradient(135deg, #48dbf6, #0abde3);
+        }
+        
+        .activity-card {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .activity-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .morning-card {
+            border-left: 4px solid #f368e0;
+        }
+        
+        .afternoon-card {
+            border-left: 4px solid #feca57;
+        }
+        
+        .evening-card {
+            border-left: 4px solid #48dbf6;
+        }
+        
+        .activity-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .activity-name {
+            font-weight: 600;
+            color: #212529;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .activity-details {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .activity-cost {
+            color: #00b894;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .no-itinerary {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .no-itinerary-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        /* Flights Tab */
+        .flight-option {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .flight-option h4 {
+            color: #212529;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .flight-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .flight-details > div {
+            text-align: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .airline {
+            font-weight: 600;
+            color: #212529;
+        }
+        
+        .duration {
+            color: #6c757d;
+        }
+        
+        .cost {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        /* Hotels Tab */
+        .hotel-option {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .hotel-option h4 {
+            color: #212529;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .hotel-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .location {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .price {
+            color: #28a745;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        /* Practical Tab */
+        .practical-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        
+        .practical-section h4 {
+            color: #212529;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .practical-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .practical-section li {
+            padding: 6px 0;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        /* Itinerary Message */
+        .itinerary-message {
+            max-width: 100% !important;
+            padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
             padding: 12px 16px;
             border-radius: 18px;
             animation: fadeInUp 0.3s ease;
@@ -425,15 +947,7 @@
                 
                 // Session and state management
                 this.sessionId = this.generateSessionId();
-                this.conversationState = {
-                    origin: null,
-                    destination: null,
-                    travelers: null,
-                    start_date: null,
-                    end_date: null,
-                    budget_range: null,
-                    interests: []
-                };
+                this.conversationState = {};
                 this.tripData = {};
                 
                 this.initializeEventListeners();
@@ -535,6 +1049,31 @@ Share your dreams with me! ✨`;
                 this.quickReplies.style.display = 'none';
                 this.quickReplies.innerHTML = '';
             }
+            
+            showLoadingAnimation() {
+                const loadingMessage = document.createElement('div');
+                loadingMessage.className = 'loading-message';
+                loadingMessage.innerHTML = `
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="loading-text">
+                        🎯 AI Trip Planner is working on your request...<br>
+                        <small>Searching flights, hotels, and crafting your perfect itinerary</small>
+                    </div>
+                `;
+                
+                const chatContainer = document.getElementById('chat-container');
+                chatContainer.appendChild(loadingMessage);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            hideLoadingAnimation() {
+                const loadingMessage = document.querySelector('.loading-message');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+            }
 
             async handleQuickReply(reply) {
                 await this.addMessage('user', reply);
@@ -617,13 +1156,33 @@ What type of experience are you looking for?`;
                     // Send message to backend for processing
                     const response = await this.sendMessageToBackend(message);
                     
+                    // Update conversation state with backend response
+                    if (response.session_id) {
+                        this.sessionId = response.session_id;
+                    }
+                    if (response.conversation_state) {
+                        this.conversationState = { ...this.conversationState, ...response.conversation_state };
+                        console.log('Updated conversation state:', this.conversationState);
+                    }
+                    
+                    console.log('Backend response:', response);
+                    console.log('Current conversation state:', this.conversationState);
+                    
                     if (response.can_start_planning) {
-                        // We have enough info to start planning
-                        await this.addMessage('ai', response.response);
-                        await this.startTripPlanning(response.trip_request);
+                        console.log('Can start planning, planning_result:', response.planning_result);
+                        // We have enough info to start planning - use the planning result from response
+                        if (response.planning_result && response.planning_result.success) {
+                            console.log('Showing itinerary with planning result');
+                            await this.showItinerary(response.planning_result);
+                        } else {
+                            console.log('No planning result, making separate planning call');
+                            // Fallback to making a separate planning call
+                            await this.startTripPlanning(response.trip_request);
+                        }
                     } else {
                         // Continue conversation
-                        await this.addMessage('ai', response.response);
+                        const aiMessage = response.response.message || response.response;
+                        await this.addMessage('ai', aiMessage);
                         if (response.missing_info) {
                             this.showMissingInfoSuggestions(response.missing_info);
                         }
@@ -660,8 +1219,12 @@ What type of experience are you looking for?`;
             
             async startTripPlanning(tripRequest) {
                 try {
-                    // Show planning in progress message
-                    await this.addMessage('ai', '🎯 Perfect! I have enough information to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...', true);
+                    // Show planning in progress message with loading animation
+                    const loadingMessage = '🎯 Perfect! I have enough information to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...';
+                    await this.addMessage('ai', loadingMessage, true);
+                    
+                    // Add loading animation
+                    this.showLoadingAnimation();
                     
                     const response = await fetch('/chat-integration/start-planning', {
                         method: 'POST',
@@ -679,6 +1242,9 @@ What type of experience are you looking for?`;
                     
                     const result = await response.json();
                     
+                    // Hide loading animation
+                    this.hideLoadingAnimation();
+                    
                     if (result.success) {
                         // Show the itinerary
                         await this.showItinerary(result);
@@ -692,39 +1258,335 @@ What type of experience are you looking for?`;
             }
             
             async showItinerary(result) {
+                console.log('showItinerary called with result:', result);
                 const itinerary = result.itinerary;
                 const costs = result.estimated_costs;
                 
-                let itineraryMessage = `🎉 **Your Perfect Trip is Ready!** 🌟\n\n`;
+                console.log('Itinerary:', itinerary);
+                console.log('Costs:', costs);
                 
-                if (itinerary.summary) {
-                    itineraryMessage += `**Trip Summary:** ${itinerary.summary}\n\n`;
+                // Create the tabbed itinerary interface
+                const itineraryHTML = this.createTabbedItinerary(result);
+                
+                // Add the itinerary as a special message
+                await this.addItineraryMessage(itineraryHTML);
+                
+                // Show action buttons
+                this.showQuickReplies(['Modify trip details', 'Book now', 'Start over']);
+            }
+            
+            createTabbedItinerary(result) {
+                const itinerary = result.itinerary;
+                const costs = result.estimated_costs;
+                
+                return `
+                    <div class="itinerary-container">
+                        <div class="itinerary-tabs">
+                            <button class="tab-btn active" onclick="switchTab('summary')">
+                                <i class="tab-icon">ℹ️</i> Summary
+                            </button>
+                            <button class="tab-btn" onclick="switchTab('itinerary')">
+                                <i class="tab-icon">📅</i> Itinerary
+                            </button>
+                            <button class="tab-btn" onclick="switchTab('flights')">
+                                <i class="tab-icon">✈️</i> Flights
+                            </button>
+                            <button class="tab-btn" onclick="switchTab('hotels')">
+                                <i class="tab-icon">🛏️</i> Hotels
+                            </button>
+                            <button class="tab-btn" onclick="switchTab('practical')">
+                                <i class="tab-icon">ℹ️</i> Practical Info
+                            </button>
+                        </div>
+                        
+                        <div class="tab-content">
+                            <div id="summary-tab" class="tab-pane active">
+                                ${this.createSummaryTab(itinerary, costs)}
+                            </div>
+                            <div id="itinerary-tab" class="tab-pane">
+                                ${this.createItineraryTab(itinerary)}
+                            </div>
+                            <div id="flights-tab" class="tab-pane">
+                                ${this.createFlightsTab(itinerary)}
+                            </div>
+                            <div id="hotels-tab" class="tab-pane">
+                                ${this.createHotelsTab(itinerary)}
+                            </div>
+                            <div id="practical-tab" class="tab-pane">
+                                ${this.createPracticalTab(itinerary)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            createSummaryTab(itinerary, costs) {
+                let html = '<div class="summary-content">';
+                
+                if (itinerary.trip_summary) {
+                    html += `<div class="trip-header">`;
+                    html += `<h3>🌟 ${itinerary.trip_summary.title}</h3>`;
+                    html += `<p class="trip-overview">${itinerary.trip_summary.overview}</p>`;
+                    html += `</div>`;
                 }
                 
                 if (costs) {
-                    itineraryMessage += `**Estimated Costs:**\n`;
-                    if (costs.flights) itineraryMessage += `✈️ Flights: $${costs.flights}\n`;
-                    if (costs.hotels) itineraryMessage += `🏨 Hotels: $${costs.hotels}\n`;
-                    if (costs.total) itineraryMessage += `💰 Total: $${costs.total}\n\n`;
+                    html += '<div class="costs-section">';
+                    html += '<h4>💰 Budget Breakdown</h4>';
+                    html += '<div class="cost-grid">';
+                    if (costs.transportation) html += `<div class="cost-item flight-cost"><span>✈️ Flights:</span> $${costs.transportation}</div>`;
+                    if (costs.accommodation) html += `<div class="cost-item hotel-cost"><span>🏨 Hotels:</span> $${costs.accommodation}</div>`;
+                    if (costs.activities) html += `<div class="cost-item activity-cost"><span>🎯 Activities:</span> $${costs.activities}</div>`;
+                    if (costs.food) html += `<div class="cost-item food-cost"><span>🍽️ Food:</span> $${costs.food}</div>`;
+                    if (costs.total) html += `<div class="cost-item total-cost"><span>💎 Total Investment:</span> $${costs.total}</div>`;
+                    html += '</div></div>';
                 }
                 
-                if (itinerary.recommendations) {
-                    itineraryMessage += `**Top Recommendations:**\n`;
-                    itinerary.recommendations.forEach((rec, index) => {
-                        itineraryMessage += `${index + 1}. ${rec}\n`;
+                if (itinerary.trip_summary && itinerary.trip_summary.highlights) {
+                    html += '<div class="highlights-section">';
+                    html += '<h4>✨ Must-See Highlights</h4>';
+                    html += '<div class="highlights-grid">';
+                    itinerary.trip_summary.highlights.forEach((highlight, index) => {
+                        html += `<div class="highlight-item">`;
+                        html += `<span class="highlight-number">${index + 1}</span>`;
+                        html += `<span class="highlight-text">${highlight}</span>`;
+                        html += `</div>`;
                     });
-                    itineraryMessage += `\n`;
+                    html += '</div></div>';
                 }
                 
-                itineraryMessage += `Would you like me to show you the detailed itinerary with booking links?`;
+                // Add weather and best time info
+                if (itinerary.trip_summary && itinerary.trip_summary.weather_info) {
+                    html += '<div class="weather-section">';
+                    html += '<h4>🌤️ Weather & Best Time</h4>';
+                    html += `<p>${itinerary.trip_summary.weather_info}</p>`;
+                    html += '</div>';
+                }
                 
-                await this.addMessage('ai', itineraryMessage);
-                this.showQuickReplies(['Show detailed itinerary', 'Modify trip details', 'Start over']);
+                html += '</div>';
+                return html;
+            }
+            
+            createItineraryTab(itinerary) {
+                let html = '<div class="itinerary-content">';
+                
+                if (itinerary.itinerary) {
+                    Object.keys(itinerary.itinerary).forEach(dayKey => {
+                        const day = itinerary.itinerary[dayKey];
+                        if (day.date && day.theme) {
+                            html += `<div class="day-item">`;
+                            html += `<div class="day-header">`;
+                            html += `<div class="day-number">Day ${dayKey.split('_')[1]}</div>`;
+                            html += `<div class="day-date">${day.date}</div>`;
+                            html += `<div class="day-theme">${day.theme.replace('_', ' ')}</div>`;
+                            html += `</div>`;
+                            
+                            html += `<div class="day-timeline">`;
+                            
+                            if (day.morning) {
+                                html += `<div class="time-slot morning">`;
+                                html += `<div class="time-marker morning-marker">🌅</div>`;
+                                html += `<div class="activity-card morning-card">`;
+                                html += `<div class="activity-header">Morning Adventure</div>`;
+                                html += `<div class="activity-name">${day.morning.activity}</div>`;
+                                html += `<div class="activity-details">`;
+                                html += `<span class="activity-location">📍 ${day.morning.location || 'Location TBD'}</span>`;
+                                html += `<span class="activity-duration">⏱️ ${day.morning.duration || '2-3 hours'}</span>`;
+                                html += `</div>`;
+                                html += `<div class="activity-cost">$${day.morning.cost}</div>`;
+                                html += `</div></div>`;
+                            }
+                            
+                            if (day.afternoon) {
+                                html += `<div class="time-slot afternoon">`;
+                                html += `<div class="time-marker afternoon-marker">🌞</div>`;
+                                html += `<div class="activity-card afternoon-card">`;
+                                html += `<div class="activity-header">Afternoon Discovery</div>`;
+                                html += `<div class="activity-name">${day.afternoon.activity}</div>`;
+                                html += `<div class="activity-details">`;
+                                html += `<span class="activity-location">📍 ${day.afternoon.location || 'Location TBD'}</span>`;
+                                html += `<span class="activity-duration">⏱️ ${day.afternoon.duration || '2-3 hours'}</span>`;
+                                html += `</div>`;
+                                html += `<div class="activity-cost">$${day.afternoon.cost}</div>`;
+                                html += `</div></div>`;
+                            }
+                            
+                            if (day.evening) {
+                                html += `<div class="time-slot evening">`;
+                                html += `<div class="time-marker evening-marker">🌙</div>`;
+                                html += `<div class="activity-card evening-card">`;
+                                html += `<div class="activity-header">Evening Magic</div>`;
+                                html += `<div class="activity-name">${day.evening.activity}</div>`;
+                                html += `<div class="activity-details">`;
+                                html += `<span class="activity-location">📍 ${day.evening.location || 'Location TBD'}</span>`;
+                                html += `<span class="activity-duration">⏱️ ${day.evening.duration || '2-3 hours'}</span>`;
+                                html += `</div>`;
+                                html += `<div class="activity-cost">$${day.evening.cost}</div>`;
+                                html += `</div></div>`;
+                            }
+                            
+                            html += `</div></div>`;
+                        }
+                    });
+                } else {
+                    html += '<div class="no-itinerary">';
+                    html += '<div class="no-itinerary-icon">📅</div>';
+                    html += '<p>No start date available for itinerary.</p>';
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+                return html;
+            }
+            
+            createFlightsTab(itinerary) {
+                let html = '<div class="flights-content">';
+                
+                if (itinerary.transportation) {
+                    if (itinerary.transportation.fastest && itinerary.transportation.fastest.length > 0) {
+                        const flight = itinerary.transportation.fastest[0];
+                        html += '<div class="flight-option">';
+                        html += '<h4>Fastest Option</h4>';
+                        html += `<div class="flight-details">`;
+                        html += `<div class="airline">${flight.airline}</div>`;
+                        html += `<div class="duration">${flight.duration}</div>`;
+                        html += `<div class="cost">$${flight.cost}</div>`;
+                        html += `</div></div>`;
+                    }
+                    
+                    if (itinerary.transportation.cheapest && itinerary.transportation.cheapest.length > 0) {
+                        const flight = itinerary.transportation.cheapest[0];
+                        html += '<div class="flight-option">';
+                        html += '<h4>Cheapest Option</h4>';
+                        html += `<div class="flight-details">`;
+                        html += `<div class="airline">${flight.airline}</div>`;
+                        html += `<div class="duration">${flight.duration}</div>`;
+                        html += `<div class="cost">$${flight.cost}</div>`;
+                        html += `</div></div>`;
+                    }
+                } else {
+                    html += '<p>Flight information not available.</p>';
+                }
+                
+                html += '</div>';
+                return html;
+            }
+            
+            createHotelsTab(itinerary) {
+                let html = '<div class="hotels-content">';
+                
+                if (itinerary.accommodation && itinerary.accommodation.moderate && itinerary.accommodation.moderate.length > 0) {
+                    const hotel = itinerary.accommodation.moderate[0];
+                    html += '<div class="hotel-option">';
+                    html += `<h4>${hotel.name}</h4>`;
+                    html += `<div class="hotel-details">`;
+                    html += `<div class="location">📍 ${hotel.location}</div>`;
+                    html += `<div class="price">$${hotel.price_per_night}/night</div>`;
+                    html += `</div></div>`;
+                } else {
+                    html += '<p>Hotel information not available.</p>';
+                }
+                
+                html += '</div>';
+                return html;
+            }
+            
+            createPracticalTab(itinerary) {
+                let html = '<div class="practical-content">';
+                html += '<div class="practical-grid">';
+                
+                html += '<div class="practical-section">';
+                html += '<h4>🌍 Practical Information</h4>';
+                html += '<ul>';
+                html += '<li><strong>Currency:</strong> USD</li>';
+                html += '<li><strong>Language:</strong> English</li>';
+                html += '<li><strong>Timezone:</strong> Varies by destination</li>';
+                html += '</ul>';
+                html += '</div>';
+                
+                html += '<div class="practical-section">';
+                html += '<h4>🎒 Packing Suggestions</h4>';
+                html += '<ul>';
+                html += '<li>Comfortable walking shoes</li>';
+                html += '<li>Universal power adapter</li>';
+                html += '<li>Light raincoat</li>';
+                html += '<li>Smart casual attire</li>';
+                html += '</ul>';
+                html += '</div>';
+                
+                html += '</div></div>';
+                return html;
+            }
+            
+            async addItineraryMessage(html) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message ai-message itinerary-message';
+                messageDiv.innerHTML = html;
+                
+                const chatArea = document.getElementById('chatArea');
+                if (chatArea) {
+                    chatArea.appendChild(messageDiv);
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                } else {
+                    console.error('Chat area element not found');
+                }
+            }
+            
+            switchTab(tabName) {
+                // Hide all tab panes
+                const tabPanes = document.querySelectorAll('.tab-pane');
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                
+                // Remove active class from all tab buttons
+                const tabButtons = document.querySelectorAll('.tab-btn');
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Show selected tab pane
+                const selectedPane = document.getElementById(tabName + '-tab');
+                if (selectedPane) {
+                    selectedPane.classList.add('active');
+                }
+                
+                // Add active class to selected tab button
+                const selectedButton = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+                if (selectedButton) {
+                    selectedButton.classList.add('active');
+                }
             }
             
             showMissingInfoSuggestions(missingInfo) {
+                if (!missingInfo || !Array.isArray(missingInfo)) {
+                    console.error('Invalid missingInfo:', missingInfo);
+                    this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
+                    return;
+                }
+                
                 const suggestions = missingInfo.map(info => `Please provide ${info}`).join(', ');
-                this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
+                console.log('Missing info suggestions:', suggestions);
+                
+                // Show follow-up questions based on what's missing
+                const followUpQuestions = [];
+                if (missingInfo.includes('duration_days') || missingInfo.includes('duration')) {
+                    followUpQuestions.push('How many days?', 'Weekend trip?', 'Week-long adventure?');
+                }
+                if (missingInfo.includes('travelers') || missingInfo.includes('number of travelers')) {
+                    followUpQuestions.push('Solo explorer?', 'Romantic duo?', 'Family trip?');
+                }
+                if (missingInfo.includes('start_date') || missingInfo.includes('start date')) {
+                    followUpQuestions.push('When to travel?', 'Next month?', 'Summer vacation?');
+                }
+                if (missingInfo.includes('budget_range') || missingInfo.includes('budget preference')) {
+                    followUpQuestions.push('Budget-friendly ($50-100/day)', 'Moderate ($100-300/day)', 'Luxury ($300+/day)');
+                }
+                if (missingInfo.includes('interests') || missingInfo.includes('preferences')) {
+                    followUpQuestions.push('Adventure & Nature', 'Culture & History', 'Food & Dining', 'Relaxation');
+                }
+                
+                if (followUpQuestions.length > 0) {
+                    this.showQuickReplies(followUpQuestions);
+                } else {
+                    this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
+                }
             }
             
             generateUserMessageResponse(message) {
@@ -842,6 +1704,31 @@ Share your vision with me! ✨`;
         document.addEventListener('DOMContentLoaded', () => {
             new EnhancedChatInterface();
         });
-    </script>
-</body>
+            </script>
+        
+        <script>
+            // Global function for tab switching
+            function switchTab(tabName) {
+                // Hide all tab panes
+                const tabPanes = document.querySelectorAll('.tab-pane');
+                tabPanes.forEach(pane => pane.classList.remove('active'));
+                
+                // Remove active class from all tab buttons
+                const tabButtons = document.querySelectorAll('.tab-btn');
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                
+                // Show selected tab pane
+                const selectedPane = document.getElementById(tabName + '-tab');
+                if (selectedPane) {
+                    selectedPane.classList.add('active');
+                }
+                
+                // Add active class to selected tab button
+                const selectedButton = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+                if (selectedButton) {
+                    selectedButton.classList.add('active');
+                }
+            }
+        </script>
+    </body>
 </html> 

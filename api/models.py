@@ -124,12 +124,12 @@ class BudgetRange(str, Enum):
 class TripPlanningRequest(BaseModel):
     origin: str = Field(..., description="Origin city/airport")
     destination: str = Field(..., description="Destination country/region")
-    duration_days: int = Field(..., description="Number of days for the trip")
+    duration_days: Optional[int] = Field(None, description="Number of days for the trip")
     start_date: Optional[str] = Field(None, description="Preferred start date (YYYY-MM-DD)")
     end_date: Optional[str] = Field(None, description="Preferred end date (YYYY-MM-DD)")
-    travelers: int = Field(1, description="Number of travelers")
+    travelers: Optional[int] = Field(None, description="Number of travelers")
     trip_type: TripType = Field(TripType.LEISURE, description="Type of trip")
-    budget_range: BudgetRange = Field(BudgetRange.MODERATE, description="Budget preference")
+    budget_range: Optional[BudgetRange] = Field(None, description="Budget preference")
     interests: Optional[List[str]] = Field([], description="Specific interests (food, art, history, etc.)")
     special_requirements: Optional[str] = Field(None, description="Any special requirements")
 
