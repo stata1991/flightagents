@@ -2,6 +2,10 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from api.search_router import router as search_router
 from api.trip_planner_router import router as trip_planner_router
 from api.destination_router import router as destination_router

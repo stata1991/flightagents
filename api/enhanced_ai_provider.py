@@ -336,12 +336,45 @@ class EnhancedAITripProvider(TripPlannerProvider):
     
     def _get_budget_amount(self, budget_range: str) -> Optional[float]:
         """Convert budget range to dollar amount"""
+        if not budget_range:
+            return 300  # Default moderate budget
+            
+        budget_range_lower = budget_range.lower()
+        
+        # Check for exact matches first
         budget_map = {
             "budget": 100,
             "moderate": 300,
             "luxury": 500
         }
-        return budget_map.get(budget_range, 300)
+        
+        if budget_range_lower in budget_map:
+            return budget_map[budget_range_lower]
+        
+        # Check for patterns like "Budget ($1000)" or "Luxury ($300+/day)"
+        import re
+        
+        # Extract dollar amount from patterns like "($1000)" or "($300+)"
+        dollar_pattern = r'\$(\d+(?:\+)?)'
+        match = re.search(dollar_pattern, budget_range)
+        if match:
+            amount_str = match.group(1)
+            if amount_str.endswith('+'):
+                # For ranges like "$300+", use the base amount
+                return float(amount_str[:-1])
+            else:
+                return float(amount_str)
+        
+        # Check for keywords in the string
+        if "budget" in budget_range_lower:
+            return 100
+        elif "luxury" in budget_range_lower:
+            return 500
+        elif "moderate" in budget_range_lower:
+            return 300
+        
+        # Default fallback
+        return 300
     
     def _calculate_budget_allocation(self, request: TripPlanRequest) -> Dict[str, Any]:
         """Calculate budget allocation with 30-35% for hotels"""
@@ -351,10 +384,14 @@ class EnhancedAITripProvider(TripPlannerProvider):
             if not total_budget:
                 total_budget = 300  # Default moderate budget
             
-            # Calculate duration
-            start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
-            end_date = datetime.strptime(request.end_date, "%Y-%m-%d")
-            duration = (end_date - start_date).days
+            # Calculate duration - handle None dates
+            if not request.start_date or not request.end_date:
+                # Use duration_days if available, otherwise default to 3 days
+                duration = request.duration_days or 3
+            else:
+                start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
+                end_date = datetime.strptime(request.end_date, "%Y-%m-%d")
+                duration = (end_date - start_date).days
             
             # Calculate budget allocation
             allocation = self.budget_service.calculate_budget_allocation(
@@ -377,31 +414,71 @@ class EnhancedAITripProvider(TripPlannerProvider):
         
         interests_text = ", ".join(request.interests) if request.interests else "general exploration"
         
-        # Format hotel data for the prompt
+        # Format hotel data for the prompt based on budget allocation
         hotel_info = ""
         logger.info(f"Hotel data structure: {hotel_data}")
         if hotel_data.get("success") and hotel_data.get("hotels"):
-            hotel_info = "\n**Real Hotel Options Available:**\n"
-            hotel_info += "**Budget Hotels (Under $100/night):**\n"
-            budget_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) < 100 and h.get('name')]
-            for i, hotel in enumerate(budget_hotels[:3], 1):
-                hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
-                hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
-                hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+            hotel_info = "\n**Real Hotel Options Available (Based on Budget Allocation):**\n"
             
-            hotel_info += "**Moderate Hotels ($100-$400/night):**\n"
-            moderate_hotels = [h for h in hotel_data["hotels"] if 100 <= h.get('price_per_night', 0) < 400 and h.get('name')]
-            for i, hotel in enumerate(moderate_hotels[:3], 1):
-                hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
-                hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
-                hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
-            
-            hotel_info += "**Luxury Hotels (Above $500/night):**\n"
-            luxury_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) >= 500 and h.get('name')]
-            for i, hotel in enumerate(luxury_hotels[:3], 1):
-                hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
-                hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
-                hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+            # Calculate budget-based hotel categories
+            if budget_allocation and budget_allocation.get('hotel_budget_allocation'):
+                allocated_amount = budget_allocation['hotel_budget_allocation'].get('allocated_amount', 0)
+                # Convert to float if it's a string
+                if isinstance(allocated_amount, str):
+                    # Remove currency symbols and convert to float
+                    allocated_amount = float(allocated_amount.replace('$', '').replace(',', ''))
+                else:
+                    allocated_amount = float(allocated_amount)
+                
+                duration = request.duration_days or 3
+                nightly_budget = allocated_amount / duration if duration > 0 else allocated_amount / 3
+                
+                logger.info(f"Budget allocation: {allocated_amount}, Duration: {duration}, Nightly budget: {nightly_budget}")
+                
+                # Categorize hotels based on allocated budget
+                budget_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) <= nightly_budget * 0.6 and h.get('name')]
+                moderate_hotels = [h for h in hotel_data["hotels"] if nightly_budget * 0.6 < h.get('price_per_night', 0) <= nightly_budget * 1.2 and h.get('name')]
+                luxury_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) > nightly_budget * 1.2 and h.get('name')]
+                
+                hotel_info += f"**Budget Hotels (Under ${nightly_budget * 0.6:.0f}/night - {len(budget_hotels)} available):**\n"
+                for i, hotel in enumerate(budget_hotels[:8], 1):
+                    hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                    hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
+                    hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+                
+                hotel_info += f"**Moderate Hotels (${nightly_budget * 0.6:.0f}-${nightly_budget * 1.2:.0f}/night - {len(moderate_hotels)} available):**\n"
+                for i, hotel in enumerate(moderate_hotels[:8], 1):
+                    hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                    hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
+                    hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+                
+                hotel_info += f"**Luxury Hotels (Above ${nightly_budget * 1.2:.0f}/night - {len(luxury_hotels)} available):**\n"
+                for i, hotel in enumerate(luxury_hotels[:8], 1):
+                    hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                    hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
+                    hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+            else:
+                # Fallback to fixed categories if no budget allocation
+                hotel_info += "**Budget Hotels (Under $100/night):**\n"
+                budget_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) < 100 and h.get('name')]
+                for i, hotel in enumerate(budget_hotels[:6], 1):
+                    hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                    hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
+                    hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+                
+                hotel_info += "**Moderate Hotels ($100-$400/night):**\n"
+                moderate_hotels = [h for h in hotel_data["hotels"] if 100 <= h.get('price_per_night', 0) < 400 and h.get('name')]
+                for i, hotel in enumerate(moderate_hotels[:6], 1):
+                    hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                    hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
+                    hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
+                
+                hotel_info += "**Luxury Hotels (Above $500/night):**\n"
+                luxury_hotels = [h for h in hotel_data["hotels"] if h.get('price_per_night', 0) >= 500 and h.get('name')]
+                for i, hotel in enumerate(luxury_hotels[:6], 1):
+                    hotel_info += f"{i}. {hotel.get('name', 'Hotel')} - ${hotel.get('price_per_night', 0)}/night, {hotel.get('rating', 'N/A')}★\n"
+                    hotel_info += f"   Location: {hotel.get('location', 'N/A')}\n"
+                    hotel_info += f"   Amenities: {', '.join(hotel.get('amenities', [])[:3])}\n\n"
         
         # Format flight data for the prompt
         flight_info = ""
@@ -509,9 +586,9 @@ You are an expert travel planner. Create a comprehensive {request.duration_days}
 3. Provide realistic time allocations for each activity
 4. Include transportation options between locations in {request.destination}
 5. Include SPECIFIC flight recommendations with airline names, prices, and booking links
-6. Include SPECIFIC hotel recommendations with names, prices, and booking links
-7. Generate REAL booking URLs for flights (e.g., https://booking.com/flights/{request.origin}-{request.destination})
-8. Generate REAL booking URLs for hotels (e.g., https://booking.com/hotel/...)
+6. Include SPECIFIC hotel recommendations with names, prices, and booking links - IMPORTANT: Use the budget-based hotel categories provided above and include at least 8-10 hotels total across all categories based on the allocated budget
+7. Generate REAL booking URLs for flights using Google Flights (e.g., https://www.google.com/travel/flights?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date})
+8. Generate REAL booking URLs for hotels using Google Hotels (e.g., https://www.google.com/travel/hotels?q=Hotels%20in%20{request.destination}%20from%20{request.start_date}%20to%20{request.end_date})
 9. Include estimated costs for each category
 10. Add cultural tips and practical advice for {request.destination}
 
@@ -535,7 +612,7 @@ You are an expert travel planner. Create a comprehensive {request.duration_days}
                 "arrival_time": "HH:MM",
                 "duration": "XhYm",
                 "cost": 0,
-                "booking_link": "https://booking.com/flights/{{origin}}-{{destination}}"
+                "booking_link": "https://www.google.com/travel/flights?q=Flights%20from%20{{origin}}%20to%20{{destination}}%20on%20{{date}}"
             }},
             {{
                 "airline": "Specific airline name",
@@ -916,7 +993,43 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                                        request: TripPlanRequest) -> Dict[str, Any]:
         """Enhance the AI-generated itinerary with real booking links and data"""
         
-        # Generate proper deep links for flights
+        # Always enhance booking links with Google links, regardless of API data
+        logger.info("Enhancing booking links with Google Flights and Hotels links...")
+        
+        # Enhance flight booking links
+        if itinerary.get("transportation"):
+            for category in ["fastest", "cheapest", "optimal"]:
+                if itinerary["transportation"].get(category):
+                    for flight in itinerary["transportation"][category]:
+                        # Generate Google Flights link for this specific flight
+                        flight["booking_link"] = self._generate_flight_deep_link(
+                            request.origin, 
+                            request.destination, 
+                            request.start_date, 
+                            request.travelers, 
+                            flight
+                        )
+        
+        # Enhance hotel booking links
+        if itinerary.get("accommodation"):
+            # Calculate checkout date
+            from datetime import datetime, timedelta
+            start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
+            checkout_date = start_date + timedelta(days=request.duration_days)
+            checkout_date_str = checkout_date.strftime("%Y-%m-%d")
+            
+            for category in ["budget", "moderate", "luxury"]:
+                if itinerary["accommodation"].get(category):
+                    for hotel in itinerary["accommodation"][category]:
+                        # Generate Google Hotels link for this specific hotel
+                        hotel["booking_link"] = self._generate_hotel_deep_link(
+                            hotel, 
+                            request.start_date, 
+                            checkout_date_str, 
+                            request.travelers
+                        )
+        
+        # Generate proper deep links for flights (if API data is available)
         if flight_data.get("success") and flight_data.get("flights"):
             # Use categorized flights from API if available
             if flight_data.get("categorized_flights"):
@@ -926,8 +1039,8 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 # Replace AI-generated flights with real API data
                 logger.info("Replacing AI-generated flights with real API data...")
                 
-                # Completely replace the flights structure with categorized format
-                itinerary["flights"] = {
+                # Completely replace the transportation structure with categorized format
+                itinerary["transportation"] = {
                     "fastest": [],
                     "cheapest": [],
                     "optimal": []
@@ -942,9 +1055,9 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                         "arrival_time": flight.get("arrival_time", ""),
                         "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m" if isinstance(flight.get('duration'), int) else flight.get('duration', ''),
                         "cost": flight.get("price", {}).get("units", 0) if isinstance(flight.get("price"), dict) else flight.get("price", 0),
-                        "booking_link": flight.get("booking_link", "")
+                        "booking_link": self._generate_flight_deep_link(request.origin, request.destination, request.start_date, request.travelers, flight)
                     }
-                    itinerary["flights"]["fastest"].append(flight_obj)
+                    itinerary["transportation"]["fastest"].append(flight_obj)
                 
                 # Update cheapest flights (limit to 3)
                 for flight in categorized_flights.get("cheapest", [])[:3]:
@@ -955,9 +1068,9 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                         "arrival_time": flight.get("arrival_time", ""),
                         "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m" if isinstance(flight.get('duration'), int) else flight.get('duration', ''),
                         "cost": flight.get("price", {}).get("units", 0) if isinstance(flight.get("price"), dict) else flight.get("price", 0),
-                        "booking_link": flight.get("booking_link", "")
+                        "booking_link": self._generate_flight_deep_link(request.origin, request.destination, request.start_date, request.travelers, flight)
                     }
-                    itinerary["flights"]["cheapest"].append(flight_obj)
+                    itinerary["transportation"]["cheapest"].append(flight_obj)
                 
                 # Update optimal flights (limit to 3)
                 for flight in categorized_flights.get("optimal", [])[:3]:
@@ -968,9 +1081,9 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                         "arrival_time": flight.get("arrival_time", ""),
                         "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m" if isinstance(flight.get('duration'), int) else flight.get('duration', ''),
                         "cost": flight.get("price", {}).get("units", 0) if isinstance(flight.get("price"), dict) else flight.get("price", 0),
-                        "booking_link": flight.get("booking_link", "")
+                        "booking_link": self._generate_flight_deep_link(request.origin, request.destination, request.start_date, request.travelers, flight)
                     }
-                    itinerary["flights"]["optimal"].append(flight_obj)
+                    itinerary["transportation"]["optimal"].append(flight_obj)
                 
                 logger.info(f"Replaced flights with {len(categorized_flights.get('fastest', []))} fastest, {len(categorized_flights.get('cheapest', []))} cheapest, {len(categorized_flights.get('optimal', []))} optimal flights")
             else:
@@ -1007,8 +1120,8 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     # Replace AI-generated flights with real API data
                     logger.info("Replacing AI-generated flights with real API data...")
                     
-                    # Completely replace the flights structure with categorized format
-                    itinerary["flights"] = {
+                    # Completely replace the transportation structure with categorized format
+                    itinerary["transportation"] = {
                         "fastest": [],
                         "cheapest": [],
                         "optimal": []
@@ -1024,9 +1137,9 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                                 "arrival_time": flight.get("arrival_time", ""),
                                 "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m",
                                 "cost": flight.get("price", {}).get("units", 0) if isinstance(flight.get("price"), dict) else flight.get("price", 0),
-                                "booking_link": flight.get("booking_link", "")
+                                "booking_link": self._generate_flight_deep_link(request.origin, request.destination, request.start_date, request.travelers, flight)
                             }
-                            itinerary["flights"]["fastest"].append(flight_obj)
+                            itinerary["transportation"]["fastest"].append(flight_obj)
                     
                     # Update cheapest flights
                     for i, flight in enumerate(cheapest_flights):
@@ -1038,9 +1151,9 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                                 "arrival_time": flight.get("arrival_time", ""),
                                 "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m",
                                 "cost": flight.get("price", {}).get("units", 0) if isinstance(flight.get("price"), dict) else flight.get("price", 0),
-                                "booking_link": flight.get("booking_link", "")
+                                "booking_link": self._generate_flight_deep_link(request.origin, request.destination, request.start_date, request.travelers, flight)
                             }
-                            itinerary["flights"]["cheapest"].append(flight_obj)
+                            itinerary["transportation"]["cheapest"].append(flight_obj)
                     
                     # Update optimal flights
                     for i, flight in enumerate(optimal_flights):
@@ -1052,9 +1165,9 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                                 "arrival_time": flight.get("arrival_time", ""),
                                 "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m",
                                 "cost": flight.get("price", {}).get("units", 0) if isinstance(flight.get("price"), dict) else flight.get("price", 0),
-                                "booking_link": flight.get("booking_link", "")
+                                "booking_link": self._generate_flight_deep_link(request.origin, request.destination, request.start_date, request.travelers, flight)
                             }
-                            itinerary["flights"]["optimal"].append(flight_obj)
+                            itinerary["transportation"]["optimal"].append(flight_obj)
                     
                     logger.info(f"Replaced flights with {len(fastest_flights)} fastest, {len(cheapest_flights)} cheapest, {len(optimal_flights)} optimal flights")
                 else:
@@ -1062,64 +1175,134 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
         else:
             logger.warning("Flight data not successful, keeping AI-generated flights")
         
+        # Enhance with real hotel data (if available)
+        if hotel_data.get("success") and hotel_data.get("hotels"):
+            logger.info("Enhancing with real hotel data...")
+            
+            # Calculate checkout date
+            from datetime import datetime, timedelta
+            start_date = datetime.strptime(request.start_date, "%Y-%m-%d")
+            checkout_date = start_date + timedelta(days=request.duration_days)
+            checkout_date_str = checkout_date.strftime("%Y-%m-%d")
+            
+            # Ensure accommodation structure exists
+            if "accommodation" not in itinerary:
+                itinerary["accommodation"] = {}
+            
+            # Categorize hotels based on price
+            budget_hotels = []
+            moderate_hotels = []
+            luxury_hotels = []
+            
+            for hotel in hotel_data["hotels"]:
+                price = hotel.get('price_per_night', 0)
+                if price <= 50:  # Budget threshold
+                    budget_hotels.append(hotel)
+                elif price <= 150:  # Moderate threshold
+                    moderate_hotels.append(hotel)
+                else:  # Luxury threshold
+                    luxury_hotels.append(hotel)
+            
+            # Replace AI-generated hotels with real API data
+            itinerary["accommodation"] = {
+                "budget": [],
+                "moderate": [],
+                "luxury": []
+            }
+            
+            # Add budget hotels (up to 8)
+            for hotel in budget_hotels[:8]:
+                hotel_obj = {
+                    "name": hotel.get('name', 'Hotel'),
+                    "location": hotel.get('location', 'Unknown'),
+                    "price_per_night": hotel.get('price_per_night', 0),
+                    "rating": hotel.get('rating', 'N/A'),
+                    "amenities": hotel.get('amenities', []),
+                    "booking_link": self._generate_hotel_deep_link(hotel, request.start_date, checkout_date_str, request.travelers)
+                }
+                itinerary["accommodation"]["budget"].append(hotel_obj)
+            
+            # Add moderate hotels (up to 8)
+            for hotel in moderate_hotels[:8]:
+                hotel_obj = {
+                    "name": hotel.get('name', 'Hotel'),
+                    "location": hotel.get('location', 'Unknown'),
+                    "price_per_night": hotel.get('price_per_night', 0),
+                    "rating": hotel.get('rating', 'N/A'),
+                    "amenities": hotel.get('amenities', []),
+                    "booking_link": self._generate_hotel_deep_link(hotel, request.start_date, checkout_date_str, request.travelers)
+                }
+                itinerary["accommodation"]["moderate"].append(hotel_obj)
+            
+            # Add luxury hotels (up to 8)
+            for hotel in luxury_hotels[:8]:
+                hotel_obj = {
+                    "name": hotel.get('name', 'Hotel'),
+                    "location": hotel.get('location', 'Unknown'),
+                    "price_per_night": hotel.get('price_per_night', 0),
+                    "rating": hotel.get('rating', 'N/A'),
+                    "amenities": hotel.get('amenities', []),
+                    "booking_link": self._generate_hotel_deep_link(hotel, request.start_date, checkout_date_str, request.travelers)
+                }
+                itinerary["accommodation"]["luxury"].append(hotel_obj)
+            
+            logger.info(f"Replaced hotels with {len(budget_hotels[:8])} budget, {len(moderate_hotels[:8])} moderate, {len(luxury_hotels[:8])} luxury hotels")
+        else:
+            logger.warning("Hotel data not successful, keeping AI-generated hotels")
+        
         return itinerary
     
     def _generate_hotel_deep_link(self, hotel: Dict[str, Any], checkin_date: str, checkout_date: str, travelers: int) -> str:
-        """Generate a proper deep link for hotel booking"""
+        """Generate a proper deep link for specific hotel booking using Google Hotels"""
         try:
-            # Use the existing booking link if it's already a proper URL
+            # Use the existing booking link if it's already a proper Google Hotels URL
             existing_link = hotel.get("booking_link", "")
-            if existing_link and existing_link.startswith("https://www.booking.com/hotel/"):
-                logger.info(f"Using existing booking link: {existing_link}")
+            if existing_link and existing_link.startswith("https://www.google.com/travel/hotels"):
+                logger.info(f"Using existing Google Hotels link: {existing_link}")
                 return existing_link
             
-            # Extract hotel ID from the existing booking link
-            hotel_id = hotel.get("hotel_id", "")
-            if not hotel_id:
-                # Try to extract from booking link
-                booking_link = hotel.get("booking_link", "")
-                if "hotel/" in booking_link:
-                    hotel_id = booking_link.split("hotel/")[1].split(".")[0]
+            # Get specific hotel details
+            hotel_name = hotel.get("name", "")
+            destination = hotel.get("location", "").split(",")[0] if hotel.get("location") else "Unknown"
             
-            if hotel_id:
-                # Generate proper Booking.com deep link
-                params = {
-                    "checkin": checkin_date,
-                    "checkout": checkout_date,
-                    "adults": travelers,
-                    "rooms": 1,
-                    "currency": "USD"
-                }
-                
-                param_string = "&".join([f"{k}={v}" for k, v in params.items()])
-                return f"https://www.booking.com/hotel/{hotel_id}.html?{param_string}"
+            # Generate specific hotel query
+            from urllib.parse import quote
+            if hotel_name:
+                # Include specific hotel name
+                query = f"{hotel_name} in {destination} from {checkin_date} to {checkout_date}"
             else:
-                logger.warning(f"No hotel ID found for hotel: {hotel.get('name', 'Unknown')}")
-                return existing_link
+                # Fallback to general hotel search
+                query = f"Hotels in {destination} from {checkin_date} to {checkout_date}"
+            
+            encoded_query = quote(query)
+            return f"https://www.google.com/travel/hotels?q={encoded_query}"
             
         except Exception as e:
             logger.error(f"Error generating hotel deep link: {str(e)}")
-            return hotel.get("booking_link", "")
+            # Fallback to Google Hotels with basic parameters
+            destination = hotel.get("location", "").split(",")[0] if hotel.get("location") else "Unknown"
+            return f"https://www.google.com/travel/hotels?q=Hotels%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
     
     def _generate_flight_deep_link(self, origin: str, destination: str, date: str, travelers: int, flight: Dict[str, Any]) -> str:
-        """Generate a proper deep link for flight booking"""
+        """Generate a proper deep link for specific flight booking using Google Flights"""
         try:
-            # Use Expedia for most flights (most comprehensive)
-            airline = flight.get("airline", "").lower()
+            # Get specific flight details
+            airline = flight.get("airline", "")
+            flight_number = flight.get("flight_number", "")
             
-            if any(airline_name in airline for airline_name in ["spirit", "frontier", "jetblue", "delta", "american", "united"]):
-                # Use Expedia for US carriers
-                params = {
-                    "leg1": f"from:{origin},to:{destination},departure:{date}TANYT",
-                    "passengers": f"adults:{travelers}",
-                    "cabin": "economy"
-                }
-                param_string = "&".join([f"{k}={v}" for k, v in params.items()])
-                return f"https://www.expedia.com/Flights-Search?{param_string}"
+            # Generate specific flight query
+            from urllib.parse import quote
+            if airline and flight_number:
+                # Include specific airline and flight number
+                query = f"{airline} {flight_number} from {origin} to {destination} on {date}"
             else:
-                # Use Skyscanner for international carriers
-                return f"https://www.skyscanner.com/transport/flights/{origin}/{destination}/{date}/?adults={travelers}&children=0"
+                # Fallback to general flight search
+                query = f"Flights from {origin} to {destination} on {date}"
+            
+            encoded_query = quote(query)
+            return f"https://www.google.com/travel/flights?q={encoded_query}"
                 
         except Exception as e:
             logger.error(f"Error generating flight deep link: {str(e)}")
-            return f"https://www.expedia.com/Flights-Search?leg1=from:{origin},to:{destination},departure:{date}TANYT&passengers=adults:{travelers}" 
+            # Fallback to Google Flights with basic parameters
+            return f"https://www.google.com/travel/flights?q=Flights%20from%20{origin}%20to%20{destination}%20on%20{date}" 

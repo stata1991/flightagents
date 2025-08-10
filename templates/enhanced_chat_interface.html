@@ -533,7 +533,7 @@
         
         .flight-details {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             gap: 12px;
         }
         
@@ -557,6 +557,48 @@
         .cost {
             color: #28a745;
             font-weight: 600;
+        }
+        
+        .times {
+            color: #495057;
+            font-size: 13px;
+        }
+        
+        .book-btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 8px;
+            transition: background 0.2s ease;
+        }
+        
+        .book-btn:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .flight-category, .hotel-category {
+            margin-bottom: 24px;
+        }
+        
+        .flight-category h3, .hotel-category h3 {
+            color: #212529;
+            margin-bottom: 16px;
+            font-size: 18px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 8px;
+        }
+        
+        .amenities {
+            color: #6c757d;
+            font-size: 13px;
+            font-style: italic;
         }
         
         /* Hotels Tab */
@@ -898,7 +940,7 @@
     </style>
 </head>
 <body>
-    <div class="chat-container">
+    <div class="chat-container" id="chat-container">
         <!-- Header -->
         <div class="header">
             <div class="agent-info">
@@ -1079,8 +1121,8 @@ Share your dreams with me! ✨`;
                 await this.addMessage('user', reply);
                 this.hideQuickReplies();
                 
-                // Simulate AI response based on reply
-                await this.simulateAIResponse(reply);
+                // Process quick reply with backend
+                await this.processUserMessage(reply);
             }
 
             async simulateAIResponse(userInput) {
@@ -1167,6 +1209,9 @@ What type of experience are you looking for?`;
                     
                     console.log('Backend response:', response);
                     console.log('Current conversation state:', this.conversationState);
+                    console.log('can_start_planning:', response.can_start_planning);
+                    console.log('missing_info:', response.missing_info);
+                    console.log('Response keys:', Object.keys(response));
                     
                     if (response.can_start_planning) {
                         console.log('Can start planning, planning_result:', response.planning_result);
@@ -1183,7 +1228,7 @@ What type of experience are you looking for?`;
                         // Continue conversation
                         const aiMessage = response.response.message || response.response;
                         await this.addMessage('ai', aiMessage);
-                        if (response.missing_info) {
+                        if (response.missing_info && response.missing_info.length > 0) {
                             this.showMissingInfoSuggestions(response.missing_info);
                         }
                     }
@@ -1443,26 +1488,64 @@ What type of experience are you looking for?`;
                 let html = '<div class="flights-content">';
                 
                 if (itinerary.transportation) {
+                    // Fastest flights
                     if (itinerary.transportation.fastest && itinerary.transportation.fastest.length > 0) {
-                        const flight = itinerary.transportation.fastest[0];
-                        html += '<div class="flight-option">';
-                        html += '<h4>Fastest Option</h4>';
-                        html += `<div class="flight-details">`;
-                        html += `<div class="airline">${flight.airline}</div>`;
-                        html += `<div class="duration">${flight.duration}</div>`;
-                        html += `<div class="cost">$${flight.cost}</div>`;
-                        html += `</div></div>`;
+                        html += '<div class="flight-category">';
+                        html += '<h3>✈️ Fastest Flights</h3>';
+                        itinerary.transportation.fastest.forEach((flight, index) => {
+                            html += '<div class="flight-option">';
+                            html += `<h4>Option ${index + 1}</h4>`;
+                            html += `<div class="flight-details">`;
+                            html += `<div class="airline">${flight.airline} ${flight.flight_number || ''}</div>`;
+                            html += `<div class="times">${flight.departure_time} → ${flight.arrival_time}</div>`;
+                            html += `<div class="duration">${flight.duration}</div>`;
+                            html += `<div class="cost">$${flight.cost}</div>`;
+                            if (flight.booking_link) {
+                                html += `<a href="${flight.booking_link}" target="_blank" class="book-btn">Book Flight</a>`;
+                            }
+                            html += `</div></div>`;
+                        });
+                        html += '</div>';
                     }
                     
+                    // Cheapest flights
                     if (itinerary.transportation.cheapest && itinerary.transportation.cheapest.length > 0) {
-                        const flight = itinerary.transportation.cheapest[0];
-                        html += '<div class="flight-option">';
-                        html += '<h4>Cheapest Option</h4>';
-                        html += `<div class="flight-details">`;
-                        html += `<div class="airline">${flight.airline}</div>`;
-                        html += `<div class="duration">${flight.duration}</div>`;
-                        html += `<div class="cost">$${flight.cost}</div>`;
-                        html += `</div></div>`;
+                        html += '<div class="flight-category">';
+                        html += '<h3>💰 Cheapest Flights</h3>';
+                        itinerary.transportation.cheapest.forEach((flight, index) => {
+                            html += '<div class="flight-option">';
+                            html += `<h4>Option ${index + 1}</h4>`;
+                            html += `<div class="flight-details">`;
+                            html += `<div class="airline">${flight.airline} ${flight.flight_number || ''}</div>`;
+                            html += `<div class="times">${flight.departure_time} → ${flight.arrival_time}</div>`;
+                            html += `<div class="duration">${flight.duration}</div>`;
+                            html += `<div class="cost">$${flight.cost}</div>`;
+                            if (flight.booking_link) {
+                                html += `<a href="${flight.booking_link}" target="_blank" class="book-btn">Book Flight</a>`;
+                            }
+                            html += `</div></div>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // Optimal flights
+                    if (itinerary.transportation.optimal && itinerary.transportation.optimal.length > 0) {
+                        html += '<div class="flight-category">';
+                        html += '<h3>⭐ Optimal Flights</h3>';
+                        itinerary.transportation.optimal.forEach((flight, index) => {
+                            html += '<div class="flight-option">';
+                            html += `<h4>Option ${index + 1}</h4>`;
+                            html += `<div class="flight-details">`;
+                            html += `<div class="airline">${flight.airline} ${flight.flight_number || ''}</div>`;
+                            html += `<div class="times">${flight.departure_time} → ${flight.arrival_time}</div>`;
+                            html += `<div class="duration">${flight.duration}</div>`;
+                            html += `<div class="cost">$${flight.cost}</div>`;
+                            if (flight.booking_link) {
+                                html += `<a href="${flight.booking_link}" target="_blank" class="book-btn">Book Flight</a>`;
+                            }
+                            html += `</div></div>`;
+                        });
+                        html += '</div>';
                     }
                 } else {
                     html += '<p>Flight information not available.</p>';
@@ -1475,14 +1558,69 @@ What type of experience are you looking for?`;
             createHotelsTab(itinerary) {
                 let html = '<div class="hotels-content">';
                 
-                if (itinerary.accommodation && itinerary.accommodation.moderate && itinerary.accommodation.moderate.length > 0) {
-                    const hotel = itinerary.accommodation.moderate[0];
-                    html += '<div class="hotel-option">';
-                    html += `<h4>${hotel.name}</h4>`;
-                    html += `<div class="hotel-details">`;
-                    html += `<div class="location">📍 ${hotel.location}</div>`;
-                    html += `<div class="price">$${hotel.price_per_night}/night</div>`;
-                    html += `</div></div>`;
+                if (itinerary.accommodation) {
+                    // Budget hotels
+                    if (itinerary.accommodation.budget && itinerary.accommodation.budget.length > 0) {
+                        html += '<div class="hotel-category">';
+                        html += '<h3>💰 Budget Hotels</h3>';
+                        itinerary.accommodation.budget.forEach((hotel, index) => {
+                            html += '<div class="hotel-option">';
+                            html += `<h4>${hotel.name}</h4>`;
+                            html += `<div class="hotel-details">`;
+                            html += `<div class="location">📍 ${hotel.location}</div>`;
+                            html += `<div class="price">$${hotel.price_per_night}/night</div>`;
+                            if (hotel.amenities && hotel.amenities.length > 0) {
+                                html += `<div class="amenities">🏨 ${hotel.amenities.slice(0, 3).join(', ')}</div>`;
+                            }
+                            if (hotel.booking_link) {
+                                html += `<a href="${hotel.booking_link}" target="_blank" class="book-btn">Book Hotel</a>`;
+                            }
+                            html += `</div></div>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // Moderate hotels
+                    if (itinerary.accommodation.moderate && itinerary.accommodation.moderate.length > 0) {
+                        html += '<div class="hotel-category">';
+                        html += '<h3>🏨 Moderate Hotels</h3>';
+                        itinerary.accommodation.moderate.forEach((hotel, index) => {
+                            html += '<div class="hotel-option">';
+                            html += `<h4>${hotel.name}</h4>`;
+                            html += `<div class="hotel-details">`;
+                            html += `<div class="location">📍 ${hotel.location}</div>`;
+                            html += `<div class="price">$${hotel.price_per_night}/night</div>`;
+                            if (hotel.amenities && hotel.amenities.length > 0) {
+                                html += `<div class="amenities">🏨 ${hotel.amenities.slice(0, 3).join(', ')}</div>`;
+                            }
+                            if (hotel.booking_link) {
+                                html += `<a href="${hotel.booking_link}" target="_blank" class="book-btn">Book Hotel</a>`;
+                            }
+                            html += `</div></div>`;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    // Luxury hotels
+                    if (itinerary.accommodation.luxury && itinerary.accommodation.luxury.length > 0) {
+                        html += '<div class="hotel-category">';
+                        html += '<h3>🌟 Luxury Hotels</h3>';
+                        itinerary.accommodation.luxury.forEach((hotel, index) => {
+                            html += '<div class="hotel-option">';
+                            html += `<h4>${hotel.name}</h4>`;
+                            html += `<div class="hotel-details">`;
+                            html += `<div class="location">📍 ${hotel.location}</div>`;
+                            html += `<div class="price">$${hotel.price_per_night}/night</div>`;
+                            if (hotel.amenities && hotel.amenities.length > 0) {
+                                html += `<div class="amenities">🏨 ${hotel.amenities.slice(0, 3).join(', ')}</div>`;
+                            }
+                            if (hotel.booking_link) {
+                                html += `<a href="${hotel.booking_link}" target="_blank" class="book-btn">Book Hotel</a>`;
+                            }
+                            html += `</div></div>`;
+                        });
+                        html += '</div>';
+                    }
                 } else {
                     html += '<p>Hotel information not available.</p>';
                 }
@@ -1555,6 +1693,7 @@ What type of experience are you looking for?`;
             }
             
             showMissingInfoSuggestions(missingInfo) {
+                console.log('showMissingInfoSuggestions called with:', missingInfo);
                 if (!missingInfo || !Array.isArray(missingInfo)) {
                     console.error('Invalid missingInfo:', missingInfo);
                     this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);

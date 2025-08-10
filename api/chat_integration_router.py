@@ -41,7 +41,11 @@ async def process_chat_message(request: Dict[str, Any]):
             raise HTTPException(status_code=400, detail="Message is required")
         
         # Check if we have existing trip_data in conversation_state
+        # Handle both flat structure (from frontend) and nested structure
         existing_trip_data = conversation_state.get("trip_data", {})
+        if not existing_trip_data and any(key in conversation_state for key in ["origin", "destination", "travelers", "duration_days", "start_date", "budget_range"]):
+            # Frontend is sending flat structure, treat the conversation_state as trip_data
+            existing_trip_data = {k: v for k, v in conversation_state.items() if k not in ["current_state", "session_id"]}
         
         # If we have existing trip_data, always use conversation service to allow updates
         if existing_trip_data:
@@ -100,12 +104,17 @@ async def process_chat_message(request: Dict[str, Any]):
                 
                 # Update conversation state with the response state
                 conversation_state["current_state"] = response.get("state", "greeting")
-                conversation_state.update(response.get("trip_data", {}))
+                # Merge trip_data properly to preserve existing fields
+                if response.get("trip_data"):
+                    conversation_state.update(response.get("trip_data"))
                 
                 # Check if we now have sufficient info after the update
                 if _has_sufficient_info(trip_request):
                     # We now have enough info to start planning
                     planning_result = await _start_trip_planning(trip_request)
+                    
+                    # Ensure conversation_state includes all trip_request fields
+                    conversation_state.update(trip_request.dict())
                     
                     return {
                         "session_id": session_id,
@@ -154,7 +163,9 @@ async def process_chat_message(request: Dict[str, Any]):
                     
                     # Update conversation state with the response state
                     conversation_state["current_state"] = response.get("state", "greeting")
-                    conversation_state.update(response.get("trip_data", {}))
+                    # Merge trip_data properly to preserve existing fields
+                    if response.get("trip_data"):
+                        conversation_state.update(response.get("trip_data"))
                     
                     return {
                         "session_id": session_id,
@@ -524,6 +535,9 @@ def _extract_budget(message: str) -> Optional[str]:
         r"(\d+)(?:-\d+)?\s*dollars?\s*(?:per\s+day|daily|budget)",
         r"budget\s*of\s*\$?(\d+)",
         r"spend\s*\$?(\d+)",
+        r"^\$(\d+)$",  # Just "$2000" 
+        r"^(\d+)\$$",  # Just "2000$"
+        r"^(\d+)$",    # Just "2000"
         r"luxury\s*\(\$(\d+)\+/day\)",  # "Luxury ($300+/day)"
         r"moderate\s*\(\$(\d+)-(\d+)/day\)",  # "Moderate ($100-300/day)"
         r"budget-friendly\s*\(\$(\d+)-(\d+)/day\)"  # "Budget-friendly ($50-100/day)"
@@ -683,8 +697,8 @@ async def _start_trip_planning(trip_request: TripPlanningRequest) -> Dict[str, A
             start_date=trip_request.start_date,
             end_date=trip_request.end_date,
             travelers=trip_request.travelers,
-            budget_range=str(trip_request.budget_range.value),  # Convert enum to string
-            trip_type=str(trip_request.trip_type.value),  # Convert enum to string
+            budget_range=trip_request.budget_range.value if trip_request.budget_range else "moderate",  # Get enum value
+            trip_type=trip_request.trip_type.value,  # Get enum value
             interests=trip_request.interests or [],
             special_requirements=trip_request.special_requirements or ""
         )

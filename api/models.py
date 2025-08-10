@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
@@ -132,6 +132,18 @@ class TripPlanningRequest(BaseModel):
     budget_range: Optional[BudgetRange] = Field(None, description="Budget preference")
     interests: Optional[List[str]] = Field([], description="Specific interests (food, art, history, etc.)")
     special_requirements: Optional[str] = Field(None, description="Any special requirements")
+    
+    @validator('trip_type', pre=True)
+    def validate_trip_type(cls, v):
+        if isinstance(v, str):
+            return v.lower()
+        return v
+    
+    @validator('budget_range', pre=True)
+    def validate_budget_range(cls, v):
+        if isinstance(v, str):
+            return v.lower()
+        return v
 
 class ConversationState(BaseModel):
     session_id: str

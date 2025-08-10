@@ -296,7 +296,9 @@ class FlightService:
         """
         Categorize flights into fastest, cheapest, and optimal.
         """
+        logger.info(f"Categorizing {len(flights)} flights")
         if not flights:
+            logger.warning("No flights to categorize")
             return {"fastest": [], "cheapest": [], "optimal": []}
         
         # Helper function to convert duration string to minutes
@@ -314,20 +316,28 @@ class FlightService:
                     elif 'm' in part:
                         minutes = int(part.replace('m', ''))
                 return hours * 60 + minutes
-            except:
+            except Exception as e:
+                logger.error(f"Error parsing duration '{duration_str}': {e}")
                 return float('inf')
         
         # Sort by duration for fastest
         fastest = sorted(flights, key=lambda x: duration_to_minutes(x.get('duration', '')))[:5]
+        logger.info(f"Fastest flights: {len(fastest)}")
         
-        # Sort by price for cheapest
-        cheapest = sorted(flights, key=lambda x: x.get('price', {}).get('units', 0))[:5]
+        # Sort by price for cheapest - filter out zero prices first
+        valid_priced_flights = [f for f in flights if f.get('price', {}).get('units', 0) > 0]
+        cheapest = sorted(valid_priced_flights, key=lambda x: x.get('price', {}).get('units', float('inf')))[:5]
+        logger.info(f"Cheapest flights: {len(cheapest)}")
         
         # Sort by combination of price and duration for optimal
-        optimal = sorted(flights, key=lambda x: (x.get('price', {}).get('units', 0) + duration_to_minutes(x.get('duration', '')) / 60))[:5]
+        optimal = sorted(valid_priced_flights, key=lambda x: (x.get('price', {}).get('units', 0) + duration_to_minutes(x.get('duration', '')) / 60))[:5]
+        logger.info(f"Optimal flights: {len(optimal)}")
         
-        return {
+        result = {
             "fastest": fastest,
             "cheapest": cheapest,
             "optimal": optimal
         }
+        
+        logger.info(f"Categorization result: fastest={len(result['fastest'])}, cheapest={len(result['cheapest'])}, optimal={len(result['optimal'])}")
+        return result
