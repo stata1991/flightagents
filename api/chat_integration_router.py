@@ -426,34 +426,42 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
 def _extract_origin(message: str) -> Optional[str]:
     """Extract origin from message"""
     # Look for "from X to Y" pattern - handle multi-word cities
-    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+for|\s+with|\s+in|\s+on|$)"
+    # More flexible pattern that captures origin even with additional text after destination
+    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+\d+|\s+travelers?|\s+starting|\s+from|\s+days?|\s+\$|\s+budget|$)"
     match = re.search(from_to_pattern, message.lower())
     if match:
-        return match.group(1).strip().title()
+        origin = match.group(1).strip().title()
+        logger.info(f"Extracted origin using from_to_pattern: '{origin}'")
+        return origin
     
     # Look for "go from X" pattern
     go_from_pattern = r"go\s+from\s+([a-zA-Z\s]+)"
     match = re.search(go_from_pattern, message.lower())
     if match:
-        return match.group(1).strip().title()
+        origin = match.group(1).strip().title()
+        logger.info(f"Extracted origin using go_from_pattern: '{origin}'")
+        return origin
     
+    logger.info(f"No origin found in message: '{message}'")
     return None
 
 def _extract_destination(message: str) -> Optional[str]:
     """Extract destination from message"""
     # Look for "from X to Y" pattern - handle multi-word cities
-    # Use word boundaries to avoid capturing "for" as part of destination
-    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+for\s+\d+|\s+with|\s+in|\s+on|$)"
+    # More flexible pattern that captures destination even with additional text after
+    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+\d+|\s+travelers?|\s+starting|\s+from|\s+days?|\s+\$|\s+budget|$)"
     match = re.search(from_to_pattern, message.lower())
     if match:
         destination = match.group(2).strip()
         # Clean up destination - remove any trailing words that are not city names
         destination_words = destination.split()
         # Remove common non-city words from the end
-        non_city_words = ['for', 'with', 'in', 'on', 'and', 'or']
+        non_city_words = ['for', 'with', 'in', 'on', 'and', 'or', 'travelers', 'traveler', 'starting', 'from', 'days', 'day', 'budget']
         while destination_words and destination_words[-1].lower() in non_city_words:
             destination_words.pop()
-        return ' '.join(destination_words).title()
+        final_destination = ' '.join(destination_words).title()
+        logger.info(f"Extracted destination using from_to_pattern: '{final_destination}'")
+        return final_destination
     
     # Look for "go to X" pattern - improved to handle more cases
     go_to_patterns = [
