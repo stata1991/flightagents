@@ -1240,7 +1240,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 hotel_obj = {
                     "name": hotel.get('name', 'Hotel'),
                     "location": hotel.get('location', 'Unknown'),
-                    "price_per_night": hotel.get('price_per_night', 0),
+                    "price_per_night": self._format_hotel_price(hotel.get('price_per_night', 0)),
                     "rating": hotel.get('rating', 'N/A'),
                     "amenities": hotel.get('amenities', []),
                     "booking_link": self._generate_hotel_deep_link(hotel, request.destination, request.start_date, checkout_date_str, request.travelers)
@@ -1252,7 +1252,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 hotel_obj = {
                     "name": hotel.get('name', 'Hotel'),
                     "location": hotel.get('location', 'Unknown'),
-                    "price_per_night": hotel.get('price_per_night', 0),
+                    "price_per_night": self._format_hotel_price(hotel.get('price_per_night', 0)),
                     "rating": hotel.get('rating', 'N/A'),
                     "amenities": hotel.get('amenities', []),
                     "booking_link": self._generate_hotel_deep_link(hotel, request.destination, request.start_date, checkout_date_str, request.travelers)
@@ -1264,7 +1264,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 hotel_obj = {
                     "name": hotel.get('name', 'Hotel'),
                     "location": hotel.get('location', 'Unknown'),
-                    "price_per_night": hotel.get('price_per_night', 0),
+                    "price_per_night": self._format_hotel_price(hotel.get('price_per_night', 0)),
                     "rating": hotel.get('rating', 'N/A'),
                     "amenities": hotel.get('amenities', []),
                     "booking_link": self._generate_hotel_deep_link(hotel, request.destination, request.start_date, checkout_date_str, request.travelers)
@@ -1277,8 +1277,38 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
         
         return itinerary
     
+    def _format_hotel_price(self, price: Any) -> str:
+        """Format hotel price to be user-friendly and consistent"""
+        try:
+            if price is None:
+                return "$0"
+            
+            # Convert to float if it's a string or other type
+            if isinstance(price, str):
+                price = float(price)
+            elif isinstance(price, (int, float)):
+                price = float(price)
+            else:
+                return "$0"
+            
+            # Round to 2 decimal places for currency display
+            price = round(price, 2)
+            
+            # Format as currency
+            return f"${price:.2f}"
+            
+        except (ValueError, TypeError):
+            return "$0"
+    
     def _generate_hotel_deep_link(self, hotel: Dict[str, Any], destination: str, checkin_date: str, checkout_date: str, travelers: int) -> str:
-        """Generate a proper deep link for specific hotel booking using Google Hotels"""
+        """Generate a proper deep link for specific hotel booking using Google Hotels
+        
+        Note: Prices shown in our system may differ from Google Hotels due to:
+        - Real-time pricing and availability
+        - Special deals and discounts
+        - Different currency conversions
+        - Taxes and fees inclusion
+        """
         try:
             # Google Hotels uses a complex parameter system that's difficult to replicate
             # Let's use a simpler, more reliable approach that will work consistently
