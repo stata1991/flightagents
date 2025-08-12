@@ -291,6 +291,10 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             required_fields = ['origin', 'destination', 'travelers', 'duration_days', 'start_date', 'budget_range']
             missing_fields = [field for field in required_fields if not trip_data.get(field)]
             
+            # Log current state for debugging
+            logger.info(f"Current trip_data: {trip_data}")
+            logger.info(f"Missing fields: {missing_fields}")
+            
             if not missing_fields:
                 # We have all the information, ready to start planning
                 return {
@@ -302,7 +306,14 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                 }
             else:
                 # Still missing some information, ask for the next missing field
-                return await self._get_follow_up_questions(missing_fields, trip_data)
+                # But first, acknowledge any new information provided
+                acknowledgment = self._acknowledge_new_information(user_input, trip_data)
+                follow_up = await self._get_follow_up_questions(missing_fields, trip_data)
+                
+                if acknowledgment:
+                    follow_up['message'] = acknowledgment + "\n\n" + follow_up['message']
+                
+                return follow_up
         
         elif current_state == 'planning':
             # We have all the information, ready to start planning
@@ -409,10 +420,15 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         """Extract and update trip data from user input."""
         user_input_lower = user_input.lower()
         
+        # Log the input for debugging
+        logger.info(f"Processing user input: '{user_input}'")
+        logger.info(f"Current trip_data before processing: {trip_data}")
+        
         # Extract duration if mentioned
         duration_match = re.search(r'(\d+)\s+days?', user_input_lower)
         if duration_match:
             trip_data['duration_days'] = int(duration_match.group(1))
+            logger.info(f"Extracted duration_days: {trip_data['duration_days']}")
         
         # Extract travelers if mentioned
         # Convert word numbers to digits for easier processing
@@ -444,6 +460,9 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             number_match = re.search(r'(\d+)\s+(people|travelers|guests|adults)', user_input_processed)
             if number_match:
                 trip_data['travelers'] = int(number_match.group(1))
+        
+        if 'travelers' in trip_data:
+            logger.info(f"Extracted travelers: {trip_data['travelers']}")
         
         # Extract dates if mentioned - only match actual month names
         month_names = ['january', 'february', 'march', 'april', 'may', 'june', 
@@ -493,9 +512,11 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                                 date_obj = datetime(current_year + 1, month, day)
                             
                             trip_data['start_date'] = date_obj.strftime('%Y-%m-%d')
+                            logger.info(f"Extracted start_date: {trip_data['start_date']}")
                 except (ValueError, TypeError):
                     # Fallback to original format if parsing fails
                     trip_data['start_date'] = date_str
+                    logger.info(f"Extracted start_date (fallback): {trip_data['start_date']}")
                 break
         
         # Extract budget if mentioned
@@ -508,16 +529,20 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         for budget_range, keywords in budget_keywords.items():
             if any(keyword in user_input_lower for keyword in keywords):
                 trip_data['budget_range'] = budget_range
+                logger.info(f"Extracted budget_range: {trip_data['budget_range']}")
                 break
         
         # Also check for specific budget patterns like "Luxury ($300+/day)"
         # Since the $ and numbers might be processed, just check for the key words
         if "luxury" in user_input_lower and ("300" in user_input or "day" in user_input_lower):
             trip_data['budget_range'] = "luxury"
+            logger.info(f"Extracted budget_range (luxury): {trip_data['budget_range']}")
         elif "moderate" in user_input_lower and ("100" in user_input or "300" in user_input or "day" in user_input_lower):
             trip_data['budget_range'] = "moderate"
+            logger.info(f"Extracted budget_range (moderate): {trip_data['budget_range']}")
         elif "budget-friendly" in user_input_lower or ("budget" in user_input_lower and "50" in user_input):
             trip_data['budget_range'] = "budget"
+            logger.info(f"Extracted budget_range (budget): {trip_data['budget_range']}")
         
         # Extract interests if mentioned
         interest_keywords = {
@@ -537,7 +562,11 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                 interests.append(interest)
         
         if interests:
-            trip_data['interests'] = interests
+            # Merge with existing interests to avoid duplicates
+            existing_interests = trip_data.get('interests', [])
+            all_interests = existing_interests + [interest for interest in interests if interest not in existing_interests]
+            trip_data['interests'] = all_interests
+            logger.info(f"Extracted interests: {trip_data['interests']}")
         
         # Extract origin and destination if mentioned
         origin_dest_patterns = [
@@ -561,7 +590,41 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                 
                 trip_data['origin'] = origin
                 trip_data['destination'] = destination
+                logger.info(f"Extracted origin: {origin}, destination: {destination}")
                 break
+        
+        # Log final trip_data for debugging
+        logger.info(f"Final trip_data after processing: {trip_data}")
+    
+    def _acknowledge_new_information(self, user_input: str, trip_data: Dict) -> str:
+        """Acknowledge new information provided by the user to avoid repetitive questions."""
+        acknowledgments = []
+        user_input_lower = user_input.lower()
+        
+        # Check for interests
+        if any(word in user_input_lower for word in ['nightlife', 'party', 'club', 'bar']):
+            acknowledgments.append("✨ Great! I see you're interested in nightlife experiences.")
+        
+        if any(word in user_input_lower for word in ['beach', 'ocean', 'sea']):
+            acknowledgments.append("🏖️ Perfect! Beach experiences are on your list.")
+        
+        if any(word in user_input_lower for word in ['culture', 'museum', 'history']):
+            acknowledgments.append("🏛️ Excellent! Cultural experiences will be included.")
+        
+        if any(word in user_input_lower for word in ['food', 'cuisine', 'restaurant']):
+            acknowledgments.append("🍽️ Wonderful! Culinary experiences are noted.")
+        
+        if any(word in user_input_lower for word in ['adventure', 'hiking', 'outdoor']):
+            acknowledgments.append("🏔️ Fantastic! Adventure activities are planned.")
+        
+        # Check for other information
+        if any(word in user_input_lower for word in ['romantic', 'couple']):
+            acknowledgments.append("💕 Perfect! I'll make this a romantic getaway.")
+        
+        if any(word in user_input_lower for word in ['family', 'kids']):
+            acknowledgments.append("👨‍👩‍👧‍👦 Great! Family-friendly activities will be included.")
+        
+        return " ".join(acknowledgments) if acknowledgments else ""
     
     def _extract_destination(self, text: str) -> str:
         """Extract destination from user input using dynamic analysis."""

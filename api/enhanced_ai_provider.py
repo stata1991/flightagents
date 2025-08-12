@@ -1048,9 +1048,17 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 
                 # Update fastest flights (limit to 3)
                 for flight in categorized_flights.get("fastest", [])[:3]:
+                    # Extract flight number from carriers or other fields
+                    flight_number = flight.get("flight_number", "")
+                    if not flight_number and flight.get("carriers"):
+                        # Use the first carrier code as flight number if available
+                        carriers = flight.get("carriers", [])
+                        if carriers:
+                            flight_number = carriers[0]
+                    
                     flight_obj = {
                         "airline": flight.get("airline", "Unknown"),
-                        "flight_number": flight.get("flight_number", "Unknown"),
+                        "flight_number": flight_number,
                         "departure_time": flight.get("departure_time", ""),
                         "arrival_time": flight.get("arrival_time", ""),
                         "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m" if isinstance(flight.get('duration'), int) else flight.get('duration', ''),
@@ -1061,9 +1069,17 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 
                 # Update cheapest flights (limit to 3)
                 for flight in categorized_flights.get("cheapest", [])[:3]:
+                    # Extract flight number from carriers or other fields
+                    flight_number = flight.get("flight_number", "")
+                    if not flight_number and flight.get("carriers"):
+                        # Use the first carrier code as flight number if available
+                        carriers = flight.get("carriers", [])
+                        if carriers:
+                            flight_number = carriers[0]
+                    
                     flight_obj = {
                         "airline": flight.get("airline", "Unknown"),
-                        "flight_number": flight.get("flight_number", "Unknown"),
+                        "flight_number": flight_number,
                         "departure_time": flight.get("departure_time", ""),
                         "arrival_time": flight.get("arrival_time", ""),
                         "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m" if isinstance(flight.get('duration'), int) else flight.get('duration', ''),
@@ -1074,9 +1090,17 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 
                 # Update optimal flights (limit to 3)
                 for flight in categorized_flights.get("optimal", [])[:3]:
+                    # Extract flight number from carriers or other fields
+                    flight_number = flight.get("flight_number", "")
+                    if not flight_number and flight.get("carriers"):
+                        # Use the first carrier code as flight number if available
+                        carriers = flight.get("carriers", [])
+                        if carriers:
+                            flight_number = carriers[0]
+                    
                     flight_obj = {
                         "airline": flight.get("airline", "Unknown"),
-                        "flight_number": flight.get("flight_number", "Unknown"),
+                        "flight_number": flight_number,
                         "departure_time": flight.get("departure_time", ""),
                         "arrival_time": flight.get("arrival_time", ""),
                         "duration": f"{flight.get('duration', 0) // 3600}h{(flight.get('duration', 0) % 3600) // 60}m" if isinstance(flight.get('duration'), int) else flight.get('duration', ''),
@@ -1255,54 +1279,66 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
     def _generate_hotel_deep_link(self, hotel: Dict[str, Any], checkin_date: str, checkout_date: str, travelers: int) -> str:
         """Generate a proper deep link for specific hotel booking using Google Hotels"""
         try:
-            # Use the existing booking link if it's already a proper Google Hotels URL
-            existing_link = hotel.get("booking_link", "")
-            if existing_link and existing_link.startswith("https://www.google.com/travel/hotels"):
-                logger.info(f"Using existing Google Hotels link: {existing_link}")
-                return existing_link
+            # Google Hotels uses a complex parameter system that's difficult to replicate
+            # Let's use a simpler, more reliable approach that will work consistently
             
-            # Get specific hotel details
-            hotel_name = hotel.get("name", "")
+            # Get destination from hotel location
             destination = hotel.get("location", "").split(",")[0] if hotel.get("location") else "Unknown"
+            if not destination or destination.strip() == "":
+                destination = "Unknown"
             
-            # Generate specific hotel query
+            # Format dates properly
+            from datetime import datetime
+            try:
+                checkin_parsed = datetime.strptime(checkin_date, "%Y-%m-%d")
+                checkout_parsed = datetime.strptime(checkout_date, "%Y-%m-%d")
+                formatted_checkin = checkin_parsed.strftime("%Y-%m-%d")
+                formatted_checkout = checkout_parsed.strftime("%Y-%m-%d")
+            except:
+                formatted_checkin = checkin_date
+                formatted_checkout = checkout_date
+            
+            # Create a simple, reliable Google Hotels search URL
+            # This will take users to Google Hotels with the destination and dates pre-filled
             from urllib.parse import quote
-            if hotel_name:
-                # Include specific hotel name
-                query = f"{hotel_name} in {destination} from {checkin_date} to {checkout_date}"
-            else:
-                # Fallback to general hotel search
-                query = f"Hotels in {destination} from {checkin_date} to {checkout_date}"
+            destination_encoded = quote(destination)
             
-            encoded_query = quote(query)
-            return f"https://www.google.com/travel/hotels?q={encoded_query}"
+            # Use the most reliable Google Hotels URL structure
+            # This format should work consistently and take users to hotel search results
+            return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination_encoded}%20from%20{formatted_checkin}%20to%20{formatted_checkout}"
             
         except Exception as e:
             logger.error(f"Error generating hotel deep link: {str(e)}")
-            # Fallback to Google Hotels with basic parameters
+            # Fallback to basic Google Hotels search
             destination = hotel.get("location", "").split(",")[0] if hotel.get("location") else "Unknown"
-            return f"https://www.google.com/travel/hotels?q=Hotels%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
+            return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
     
     def _generate_flight_deep_link(self, origin: str, destination: str, date: str, travelers: int, flight: Dict[str, Any]) -> str:
         """Generate a proper deep link for specific flight booking using Google Flights"""
         try:
-            # Get specific flight details
-            airline = flight.get("airline", "")
-            flight_number = flight.get("flight_number", "")
+            # Google Flights has changed their URL structure multiple times
+            # Let's use the most reliable approach - direct search with basic parameters
             
-            # Generate specific flight query
+            # Format the date properly (YYYY-MM-DD)
+            from datetime import datetime
+            try:
+                parsed_date = datetime.strptime(date, "%Y-%m-%d")
+                formatted_date = parsed_date.strftime("%Y-%m-%d")
+            except:
+                formatted_date = date
+            
+            # Create a simple, reliable Google Flights search URL
+            # This will take users to Google Flights with the route pre-filled
             from urllib.parse import quote
-            if airline and flight_number:
-                # Include specific airline and flight number
-                query = f"{airline} {flight_number} from {origin} to {destination} on {date}"
-            else:
-                # Fallback to general flight search
-                query = f"Flights from {origin} to {destination} on {date}"
+            origin_encoded = quote(origin)
+            destination_encoded = quote(destination)
             
-            encoded_query = quote(query)
-            return f"https://www.google.com/travel/flights?q={encoded_query}"
+            # Use the most reliable Google Flights URL structure
+            # This format should work consistently
+            return f"https://www.google.com/travel/flights/search?q=Flights%20from%20{origin_encoded}%20to%20{destination_encoded}%20on%20{formatted_date}"
                 
         except Exception as e:
             logger.error(f"Error generating flight deep link: {str(e)}")
-            # Fallback to Google Flights with basic parameters
-            return f"https://www.google.com/travel/flights?q=Flights%20from%20{origin}%20to%20{destination}%20on%20{date}" 
+            # Fallback to the most basic Google Flights search
+            from urllib.parse import quote
+            return f"https://www.google.com/travel/flights/search?q=Flights%20from%20{quote(origin)}%20to%20{quote(destination)}%20on%20{date}" 

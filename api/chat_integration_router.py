@@ -199,7 +199,7 @@ async def process_chat_message(request: Dict[str, Any]):
             trip_request = await _extract_trip_request(message, conversation_state)
             
             # Check if we have enough info to start planning BEFORE calling conversation service
-            if trip_request and _has_sufficient_info(trip_request):
+            if trip_request is not None and _has_sufficient_info(trip_request):
                 # We have enough info to start planning immediately
                 planning_result = await _start_trip_planning(trip_request)
                 
@@ -211,7 +211,7 @@ async def process_chat_message(request: Dict[str, Any]):
                         "state": "planning"
                     },
                     "can_start_planning": True,
-                    "trip_request": trip_request.dict() if trip_request else None,
+                    "trip_request": trip_request.dict() if trip_request is not None else None,
                     "planning_result": planning_result,
                     "next_step": "show_itinerary",
                     "conversation_state": conversation_state
@@ -224,9 +224,14 @@ async def process_chat_message(request: Dict[str, Any]):
                 # Process the message through conversation service with missing info context
                 response = await conversation_service.process_user_input(message, conversation_state.get("current_state", "greeting"), conversation_state, missing_info)
                 
-                # Update conversation state with the response state
+                # Update conversation state with the response state and trip data
                 conversation_state["current_state"] = response.get("state", "greeting")
-                conversation_state.update(response.get("trip_data", {}))
+                if response.get("trip_data"):
+                    conversation_state.update(response.get("trip_data", {}))
+                
+                # Ensure interests are preserved
+                if "interests" in response.get("trip_data", {}):
+                    conversation_state["interests"] = response["trip_data"]["interests"]
                 
                 return {
                     "session_id": session_id,
@@ -247,7 +252,19 @@ async def start_planning_from_chat(request: Dict[str, Any]):
     Start trip planning with extracted information from chat
     """
     try:
-        trip_request = TripPlanningRequest(**request.get("trip_request", {}))
+        trip_request_data = request.get("trip_request", {})
+        
+        # Validate required fields before creating TripPlanningRequest
+        if not trip_request_data.get("origin"):
+            logger.error("Missing origin in trip request")
+            raise HTTPException(status_code=400, detail="Origin is required")
+        
+        if not trip_request_data.get("destination"):
+            logger.error("Missing destination in trip request")
+            raise HTTPException(status_code=400, detail="Destination is required")
+        
+        # Create TripPlanningRequest with validated data
+        trip_request = TripPlanningRequest(**trip_request_data)
         
         logger.info(f"Starting trip planning for: {trip_request.origin} to {trip_request.destination}")
         logger.info(f"Trip request fields: {trip_request.dict()}")
@@ -262,6 +279,9 @@ async def start_planning_from_chat(request: Dict[str, Any]):
             logger.error(f"Trip planning failed: {error_msg}")
             raise HTTPException(status_code=500, detail=error_msg)
             
+    except HTTPException:
+        # Re-raise HTTPExceptions as-is
+        raise
     except Exception as e:
         logger.error(f"Error starting planning from chat: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -332,7 +352,16 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
             start_date = new_start_date or conversation_state.get("start_date")
             end_date = new_end_date or conversation_state.get("end_date")
             budget_range = new_budget_range or conversation_state.get("budget_range")
-            interests = new_interests or conversation_state.get("interests")
+            
+            # Handle interests properly - merge new interests with existing ones
+            existing_interests = conversation_state.get("interests", [])
+            if new_interests:
+                # Add new interests to existing ones, avoiding duplicates
+                all_interests = existing_interests + [interest for interest in new_interests if interest not in existing_interests]
+                interests = all_interests
+            else:
+                interests = existing_interests
+            
             duration_days = new_duration_days or conversation_state.get("duration_days")
         
         # Debug logging
@@ -341,7 +370,26 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
         logger.info(f"Extracted travelers: {travelers}")
         logger.info(f"Extracted start_date: {start_date}")
         logger.info(f"Extracted budget_range: {budget_range}")
+        logger.info(f"Extracted interests: {interests}")
         logger.info(f"Message being processed: {message}")
+        
+        # Update conversation state with extracted information
+        if origin:
+            conversation_state["origin"] = origin
+        if destination:
+            conversation_state["destination"] = destination
+        if travelers:
+            conversation_state["travelers"] = travelers
+        if start_date:
+            conversation_state["start_date"] = start_date
+        if end_date:
+            conversation_state["end_date"] = end_date
+        if budget_range:
+            conversation_state["budget_range"] = budget_range
+        if interests:
+            conversation_state["interests"] = interests
+        if duration_days:
+            conversation_state["duration_days"] = duration_days
         
         if not origin or not destination:
             logger.info("Missing origin or destination")
