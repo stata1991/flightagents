@@ -1298,19 +1298,29 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                 formatted_checkin = checkin_date
                 formatted_checkout = checkout_date
             
-            # Create a simple, reliable Google Hotels search URL
-            # This will take users to Google Hotels with the destination and dates pre-filled
+            # Create a more specific Google Hotels search URL that includes the hotel name
+            # This will help users find the specific hotel more easily
             from urllib.parse import quote
             destination_encoded = quote(destination)
             
-            # Use the most reliable Google Hotels URL structure
-            # This format should work consistently and take users to hotel search results
-            return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination_encoded}%20from%20{formatted_checkin}%20to%20{formatted_checkout}"
+            # Get hotel name for more specific search
+            hotel_name = hotel.get("name", "").strip()
+            if hotel_name and hotel_name.lower() != "hotel" and hotel_name.lower() != "unknown":
+                # Include hotel name in search for more specific results
+                hotel_name_encoded = quote(hotel_name)
+                return f"https://www.google.com/travel/hotels/search?q={hotel_name_encoded}%20in%20{destination_encoded}%20from%20{formatted_checkin}%20to%20{formatted_checkout}"
+            else:
+                # Fallback to general destination search if no specific hotel name
+                return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination_encoded}%20from%20{formatted_checkin}%20to%20{formatted_checkout}"
             
         except Exception as e:
             logger.error(f"Error generating hotel deep link: {str(e)}")
             # Fallback to basic Google Hotels search
-            return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
+            hotel_name = hotel.get("name", "").strip()
+            if hotel_name and hotel_name.lower() != "hotel" and hotel_name.lower() != "unknown":
+                return f"https://www.google.com/travel/hotels/search?q={hotel_name}%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
+            else:
+                return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
     
     def _generate_flight_deep_link(self, origin: str, destination: str, date: str, travelers: int, flight: Dict[str, Any]) -> str:
         """Generate a proper deep link for specific flight booking using Google Flights"""
