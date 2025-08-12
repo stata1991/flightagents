@@ -1024,6 +1024,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                         # Generate Google Hotels link for this specific hotel
                         hotel["booking_link"] = self._generate_hotel_deep_link(
                             hotel, 
+                            request.destination,
                             request.start_date, 
                             checkout_date_str, 
                             request.travelers
