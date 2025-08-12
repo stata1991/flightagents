@@ -1242,7 +1242,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     "price_per_night": hotel.get('price_per_night', 0),
                     "rating": hotel.get('rating', 'N/A'),
                     "amenities": hotel.get('amenities', []),
-                    "booking_link": self._generate_hotel_deep_link(hotel, request.start_date, checkout_date_str, request.travelers)
+                    "booking_link": self._generate_hotel_deep_link(hotel, request.destination, request.start_date, checkout_date_str, request.travelers)
                 }
                 itinerary["accommodation"]["budget"].append(hotel_obj)
             
@@ -1254,7 +1254,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     "price_per_night": hotel.get('price_per_night', 0),
                     "rating": hotel.get('rating', 'N/A'),
                     "amenities": hotel.get('amenities', []),
-                    "booking_link": self._generate_hotel_deep_link(hotel, request.start_date, checkout_date_str, request.travelers)
+                    "booking_link": self._generate_hotel_deep_link(hotel, request.destination, request.start_date, checkout_date_str, request.travelers)
                 }
                 itinerary["accommodation"]["moderate"].append(hotel_obj)
             
@@ -1266,7 +1266,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
                     "price_per_night": hotel.get('price_per_night', 0),
                     "rating": hotel.get('rating', 'N/A'),
                     "amenities": hotel.get('amenities', []),
-                    "booking_link": self._generate_hotel_deep_link(hotel, request.start_date, checkout_date_str, request.travelers)
+                    "booking_link": self._generate_hotel_deep_link(hotel, request.destination, request.start_date, checkout_date_str, request.travelers)
                 }
                 itinerary["accommodation"]["luxury"].append(hotel_obj)
             
@@ -1276,14 +1276,13 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
         
         return itinerary
     
-    def _generate_hotel_deep_link(self, hotel: Dict[str, Any], checkin_date: str, checkout_date: str, travelers: int) -> str:
+    def _generate_hotel_deep_link(self, hotel: Dict[str, Any], destination: str, checkin_date: str, checkout_date: str, travelers: int) -> str:
         """Generate a proper deep link for specific hotel booking using Google Hotels"""
         try:
             # Google Hotels uses a complex parameter system that's difficult to replicate
             # Let's use a simpler, more reliable approach that will work consistently
             
-            # Get destination from hotel location
-            destination = hotel.get("location", "").split(",")[0] if hotel.get("location") else "Unknown"
+            # Use the destination from the request instead of hotel location
             if not destination or destination.strip() == "":
                 destination = "Unknown"
             
@@ -1310,7 +1309,6 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
         except Exception as e:
             logger.error(f"Error generating hotel deep link: {str(e)}")
             # Fallback to basic Google Hotels search
-            destination = hotel.get("location", "").split(",")[0] if hotel.get("location") else "Unknown"
             return f"https://www.google.com/travel/hotels/search?q=Hotels%20in%20{destination}%20from%20{checkin_date}%20to%20{checkout_date}"
     
     def _generate_flight_deep_link(self, origin: str, destination: str, date: str, travelers: int, flight: Dict[str, Any]) -> str:
