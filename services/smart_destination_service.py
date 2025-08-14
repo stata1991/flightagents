@@ -145,27 +145,95 @@ class SmartDestinationService:
     
     async def get_smart_airport_recommendation(self, destination: str, trip_type: str) -> Optional[Dict[str, Any]]:
         """
-        Get smart airport recommendation using real API data.
+        Get smart airport recommendation prioritizing major airports for better connectivity and cost-effectiveness.
         """
         try:
             if trip_type == "national_park":
                 # Get airports near the national park
                 airport_data = await self.get_airports_near_destination(destination)
                 if airport_data and airport_data["airports"]:
-                    # Sort by distance and connectivity
-                    airports = sorted(airport_data["airports"], key=lambda x: x.get("distance", float('inf')))
+                    airports = airport_data["airports"]
                     
-                    primary_airport = airports[0] if airports else None
-                    alternative_airports = airports[1:3] if len(airports) > 1 else []
+                    # Define major airports with high connectivity (these are typically cheaper and have more flights)
+                    major_airports = {
+                        "SFO": "San Francisco International Airport",
+                        "SJC": "San Jose International Airport", 
+                        "OAK": "Oakland International Airport",
+                        "LAX": "Los Angeles International Airport",
+                        "LAS": "Las Vegas McCarran International Airport",
+                        "PHX": "Phoenix Sky Harbor International Airport",
+                        "DEN": "Denver International Airport",
+                        "SEA": "Seattle-Tacoma International Airport",
+                        "PDX": "Portland International Airport",
+                        "SLC": "Salt Lake City International Airport"
+                    }
+                    
+                    # Categorize airports into major and regional
+                    major_airport_options = []
+                    regional_airport_options = []
+                    
+                    for airport in airports:
+                        airport_code = airport.get("code", "")
+                        if airport_code in major_airports:
+                            # Major airport - prioritize for better connectivity and cheaper flights
+                            major_airport_options.append({
+                                **airport,
+                                "type": "major",
+                                "connectivity": "high",
+                                "cost_advantage": "better_flight_prices"
+                            })
+                        else:
+                            # Regional airport - closer but potentially more expensive
+                            regional_airport_options.append({
+                                **airport,
+                                "type": "regional", 
+                                "connectivity": "limited",
+                                "cost_advantage": "closer_distance"
+                            })
+                    
+                    # Prioritize major airports for cost-effectiveness and connectivity
+                    if major_airport_options:
+                        # Sort major airports by distance (closest major airport first)
+                        major_airport_options.sort(key=lambda x: x.get("distance", float('inf')))
+                        primary_airport = major_airport_options[0]
+                        alternative_majors = major_airport_options[1:3]
+                        
+                        # Add closest regional airport as alternative option
+                        if regional_airport_options:
+                            regional_airport_options.sort(key=lambda x: x.get("distance", float('inf')))
+                            alternative_airports = alternative_majors + regional_airport_options[:1]
+                        else:
+                            alternative_airports = alternative_majors
+                            
+                        recommendation_type = "major_airport"
+                        reasoning = f"Major airport with high connectivity and typically cheaper flights"
+                        
+                    else:
+                        # Fallback to regional airports if no major airports found
+                        regional_airport_options.sort(key=lambda x: x.get("distance", float('inf')))
+                        primary_airport = regional_airport_options[0]
+                        alternative_airports = regional_airport_options[1:3]
+                        recommendation_type = "regional_airport"
+                        reasoning = f"Closest regional airport - check major airports in nearby cities for better prices"
                     
                     return {
-                        "primary_airport": primary_airport["id"] if primary_airport else None,
-                        "airport_name": primary_airport["name"] if primary_airport else None,
+                        "primary_airport": primary_airport["id"],
+                        "airport_name": primary_airport["name"],
+                        "airport_code": primary_airport.get("code", ""),
+                        "airport_type": primary_airport.get("type", "unknown"),
+                        "recommendation_type": recommendation_type,
+                        "reasoning": reasoning,
                         "alternative_airports": [ap["id"] for ap in alternative_airports],
                         "alternative_names": [ap["name"] for ap in alternative_airports],
-                        "distance_to_destination": f"{primary_airport['distance']:.1f} km" if primary_airport else "Unknown",
+                        "alternative_codes": [ap.get("code", "") for ap in alternative_airports],
+                        "distance_to_destination": f"{primary_airport['distance']:.1f} km",
                         "transportation_options": ["Rental car", "Shuttle service", "Private tour"],
-                        "minimum_days": 4
+                        "minimum_days": 4,
+                        "cost_considerations": {
+                            "primary": "Major airports typically offer cheaper flights due to higher competition",
+                            "transportation": "Rental car required for park access",
+                            "time_tradeoff": "Longer drive but significant flight cost savings"
+                        }
                     }
             
             elif trip_type == "multi_city":

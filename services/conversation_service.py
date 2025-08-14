@@ -607,9 +607,16 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             trip_type = smart_trip_data.get("trip_type")
             if trip_type == "national_park":
                 airport = smart_trip_data.get("recommended_airport", "nearest airport")
+                airport_code = smart_trip_data.get("airport_code", "")
+                airport_type = smart_trip_data.get("airport_type", "unknown")
+                reasoning = smart_trip_data.get("reasoning", "")
                 transportation = smart_trip_data.get("transportation_options", [])
                 min_days = smart_trip_data.get("minimum_days", 3)
-                acknowledgments.append(f"🏔️ Smart planning! I've identified this as a national park trip and recommend flying into {airport}. You'll need a rental car to explore the park. I suggest at least {min_days} days for the full experience.")
+                
+                if airport_type == "major":
+                    acknowledgments.append(f"🏔️ Smart planning! I've identified this as a national park trip and recommend flying into {airport} ({airport_code}) - a major airport with better connectivity and typically cheaper flights. You'll need a rental car to drive to the park, but the flight savings usually outweigh the extra driving time. I suggest at least {min_days} days for the full experience.")
+                else:
+                    acknowledgments.append(f"🏔️ Smart planning! I've identified this as a national park trip and recommend flying into {airport} ({airport_code}). You'll need a rental car to explore the park. I suggest at least {min_days} days for the full experience.")
             
             elif trip_type == "multi_city":
                 cities = smart_trip_data.get("cities", [])
