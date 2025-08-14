@@ -410,9 +410,52 @@ class EnhancedAITripProvider(TripPlannerProvider):
                                        hotel_data: Dict[str, Any], 
                                        flight_data: Dict[str, Any],
                                        budget_allocation: Dict[str, Any] = None) -> str:
-        """Create an enhanced prompt with real API data"""
+        """Create an enhanced prompt with real API data and smart trip logic"""
         
         interests_text = ", ".join(request.interests) if request.interests else "general exploration"
+        
+        # 🚀 SMART TRIP LOGIC: Add intelligent planning context
+        smart_trip_context = ""
+        if hasattr(request, 'smart_trip_data') and request.smart_trip_data:
+            smart_data = request.smart_trip_data
+            trip_type = smart_data.get("trip_type")
+            
+            if trip_type == "national_park":
+                airport = smart_data.get("recommended_airport", "nearest airport")
+                transportation = smart_data.get("transportation_options", [])
+                min_days = smart_data.get("minimum_days", 3)
+                smart_trip_context = f"""
+🚀 **SMART TRIP ANALYSIS - NATIONAL PARK ADVENTURE**
+This is a national park trip requiring special planning:
+- **Recommended Airport**: {airport} (closest major airport with best flight availability)
+- **Transportation Required**: Rental car is essential for park exploration
+- **Transportation Options**: {', '.join(transportation)}
+- **Minimum Recommended Days**: {min_days} days for full experience
+- **Special Considerations**: 
+  * Plan for seasonal road conditions and park accessibility
+  * Include driving time from airport to park entrance
+  * Consider park shuttle services and parking
+  * Plan for weather-dependent activities
+"""
+            
+            elif trip_type == "multi_city":
+                cities = smart_data.get("cities", [])
+                route_type = smart_data.get("route_suggestion", {}).get("route_type", "Cultural Journey")
+                transportation = smart_data.get("route_suggestion", {}).get("transportation", {})
+                min_days = smart_data.get("minimum_days", 7)
+                smart_trip_context = f"""
+🚀 **SMART TRIP ANALYSIS - MULTI-CITY ADVENTURE**
+This is a multi-city trip requiring route planning:
+- **Route Type**: {route_type}
+- **Cities**: {', '.join(cities)}
+- **Transportation Between Cities**: High-speed trains and local transit
+- **Minimum Recommended Days**: {min_days} days for full experience
+- **Special Considerations**:
+  * Plan efficient city-to-city travel routes
+  * Consider luggage handling between cities
+  * Include local transportation in each city
+  * Plan for different cultural experiences in each location
+"""
         
         # Format hotel data for the prompt based on budget allocation
         hotel_info = ""
@@ -550,6 +593,8 @@ class EnhancedAITripProvider(TripPlannerProvider):
         
         prompt = f"""
 You are an expert travel planner. Create a comprehensive {request.duration_days}-day trip plan from {request.origin} to {request.destination}.
+
+{smart_trip_context}
 
 **CRITICAL REQUIREMENTS:**
 1. The destination is {request.destination}. Do NOT change this destination or suggest alternatives.

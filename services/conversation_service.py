@@ -601,6 +601,23 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         acknowledgments = []
         user_input_lower = user_input.lower()
         
+        # 🚀 SMART TRIP LOGIC ACKNOWLEDGMENT
+        smart_trip_data = trip_data.get("smart_trip_data", {})
+        if smart_trip_data:
+            trip_type = smart_trip_data.get("trip_type")
+            if trip_type == "national_park":
+                airport = smart_trip_data.get("recommended_airport", "nearest airport")
+                transportation = smart_trip_data.get("transportation_options", [])
+                min_days = smart_trip_data.get("minimum_days", 3)
+                acknowledgments.append(f"🏔️ Smart planning! I've identified this as a national park trip and recommend flying into {airport}. You'll need a rental car to explore the park. I suggest at least {min_days} days for the full experience.")
+            
+            elif trip_type == "multi_city":
+                cities = smart_trip_data.get("cities", [])
+                if cities:
+                    cities_str = ", ".join(cities)
+                    min_days = smart_trip_data.get("minimum_days", 7)
+                    acknowledgments.append(f"🌍 Excellent! I've detected a multi-city adventure. I'll plan a route through {cities_str} with high-speed train connections. This trip needs at least {min_days} days to fully experience each city.")
+        
         # Check for interests
         if any(word in user_input_lower for word in ['nightlife', 'party', 'club', 'bar']):
             acknowledgments.append("✨ Great! I see you're interested in nightlife experiences.")

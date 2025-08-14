@@ -37,6 +37,7 @@ class TripPlanRequest(BaseModel):
     trip_type: str = "leisure"
     special_requirements: Optional[str] = None
     preferred_provider: Optional[ProviderType] = None
+    smart_trip_data: Optional[Dict[str, Any]] = None  # Smart trip logic data
 
 class TripPlanResponse(BaseModel):
     """Standardized response format for all trip planners"""

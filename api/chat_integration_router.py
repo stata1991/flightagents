@@ -394,7 +394,57 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
         if not origin or not destination:
             logger.info("Missing origin or destination")
             return None
+        
+        # 🚀 SMART TRIP LOGIC: Analyze destination and apply intelligent planning
+        logger.info(f"Applying Smart Trip Logic for destination: {destination}")
+        smart_trip_analysis = await smart_destination_service.analyze_trip_type(message)
+        logger.info(f"Smart trip analysis: {smart_trip_analysis}")
+        
+        # Apply smart logic based on trip type
+        if smart_trip_analysis["trip_type"] == "national_park":
+            logger.info("National park trip detected - applying smart airport logic")
+            airport_recommendation = await smart_destination_service.get_smart_airport_recommendation(
+                destination, smart_trip_analysis["trip_type"]
+            )
             
+            if airport_recommendation and airport_recommendation.get("primary_airport"):
+                # Update origin to use the recommended airport
+                recommended_airport = airport_recommendation["airport_name"]
+                logger.info(f"Recommended airport for {destination}: {recommended_airport}")
+                
+                # Store smart trip data in conversation state for later use
+                conversation_state["smart_trip_data"] = {
+                    "trip_type": "national_park",
+                    "original_destination": destination,
+                    "recommended_airport": recommended_airport,
+                    "airport_recommendation": airport_recommendation,
+                    "transportation_options": airport_recommendation.get("transportation_options", []),
+                    "minimum_days": airport_recommendation.get("minimum_days", 3)
+                }
+                
+                # Update destination to include airport info
+                destination = f"{destination} (via {recommended_airport})"
+                conversation_state["destination"] = destination
+                
+        elif smart_trip_analysis["trip_type"] == "multi_city":
+            logger.info("Multi-city trip detected - applying route planning logic")
+            route_suggestion = smart_destination_service.get_multi_city_route_suggestion(destination)
+            
+            if route_suggestion:
+                conversation_state["smart_trip_data"] = {
+                    "trip_type": "multi_city",
+                    "destination": destination,
+                    "route_suggestion": route_suggestion,
+                    "cities": route_suggestion.get("cities", []),
+                    "transportation": route_suggestion.get("transportation", {}),
+                    "minimum_days": route_suggestion.get("minimum_days", 7)
+                }
+                
+                # Update destination to reflect multi-city nature
+                cities_str = ", ".join(route_suggestion.get("cities", []))
+                destination = f"{destination} ({cities_str})"
+                conversation_state["destination"] = destination
+        
         # Calculate end_date from start_date + duration_days if both are available
         calculated_end_date = None
         if start_date and duration_days:
@@ -745,6 +795,11 @@ def _generate_suggestions(trip_request: Optional[TripPlanningRequest]) -> List[s
 async def _start_trip_planning(trip_request: TripPlanningRequest) -> Dict[str, Any]:
     """Start the trip planning process"""
     try:
+        # Get smart trip data from conversation state if available
+        smart_trip_data = None
+        if hasattr(trip_request, 'conversation_state') and trip_request.conversation_state:
+            smart_trip_data = trip_request.conversation_state.get("smart_trip_data")
+        
         # Create enhanced AI trip plan request
         enhanced_request = TripPlanRequest(
             origin=trip_request.origin,
@@ -756,7 +811,8 @@ async def _start_trip_planning(trip_request: TripPlanningRequest) -> Dict[str, A
             budget_range=trip_request.budget_range.value if trip_request.budget_range else "moderate",  # Get enum value
             trip_type=trip_request.trip_type.value,  # Get enum value
             interests=trip_request.interests or [],
-            special_requirements=trip_request.special_requirements or ""
+            special_requirements=trip_request.special_requirements or "",
+            smart_trip_data=smart_trip_data  # Include smart trip logic data
         )
         
         # Generate trip plan using enhanced AI provider
