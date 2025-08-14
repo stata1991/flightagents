@@ -543,6 +543,34 @@ def _extract_destination(message: str) -> Optional[str]:
             if match:
                 return match.group(1).strip().title()
     
+    # Look for "Plan a trip to X" pattern
+    plan_trip_pattern = r"plan\s+(?:a\s+)?trip\s+to\s+([a-zA-Z\s]+?)(?:\s+for|\s+with|\s+visiting|\s+starting|\s+\d+|\s+travelers?|\s+days?|\s+\$|\s+budget|$)"
+    match = re.search(plan_trip_pattern, message.lower())
+    if match:
+        destination = match.group(1).strip()
+        # Clean up destination - remove any trailing words that are not city names
+        destination_words = destination.split()
+        non_city_words = ['for', 'with', 'visiting', 'starting', 'from', 'days', 'day', 'budget', 'travelers', 'traveler']
+        while destination_words and destination_words[-1].lower() in non_city_words:
+            destination_words.pop()
+        final_destination = ' '.join(destination_words).title()
+        logger.info(f"Extracted destination using plan_trip_pattern: '{final_destination}'")
+        return final_destination
+    
+    # Look for "Plan trip to X" pattern (without "a")
+    plan_trip_pattern2 = r"plan\s+trip\s+to\s+([a-zA-Z\s]+?)(?:\s+for|\s+with|\s+visiting|\s+starting|\s+\d+|\s+travelers?|\s+days?|\s+\$|\s+budget|$)"
+    match = re.search(plan_trip_pattern2, message.lower())
+    if match:
+        destination = match.group(1).strip()
+        # Clean up destination - remove any trailing words that are not city names
+        destination_words = destination.split()
+        non_city_words = ['for', 'with', 'visiting', 'starting', 'from', 'days', 'day', 'budget', 'travelers', 'traveler']
+        while destination_words and destination_words[-1].lower() in non_city_words:
+            destination_words.pop()
+        final_destination = ' '.join(destination_words).title()
+        logger.info(f"Extracted destination using plan_trip_pattern2: '{final_destination}'")
+        return final_destination
+    
     return None
 
 def _extract_travelers(message: str) -> Optional[int]:
