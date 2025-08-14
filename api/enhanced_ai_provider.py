@@ -592,9 +592,45 @@ This is a multi-city trip requiring route planning:
                 flight_info += f"   Duration: {duration_str} | Stops: {flight.get('stops', 0)}\n\n"
         
         prompt = f"""
-You are an expert travel planner. Create a comprehensive {request.duration_days}-day trip plan from {request.origin} to {request.destination}.
+You are an expert travel planner combining the expertise of three specialized agents:
+
+1. **Conversation Agent**: Create engaging, personalized responses with personality and warmth
+2. **Itinerary Agent**: Convert trip details into well-structured, themed daily itineraries  
+3. **Destination Specialist**: Provide deep destination knowledge with smart airport logic and cultural insights
+
+Create a comprehensive {request.duration_days}-day trip plan from {request.origin} to {request.destination}.
 
 {smart_trip_context}
+
+**SPECIALIZED AGENT INSTRUCTIONS:**
+
+**🎯 CONVERSATION AGENT ROLE:**
+- Use warm, engaging language with personality and excitement
+- Create a conversational tone that makes users feel like they're talking to a knowledgeable friend
+- Use emojis strategically for visual appeal and emotional connection
+- Show genuine enthusiasm for the destination and trip planning
+- Personalize responses based on traveler type and interests
+
+**📋 ITINERARY AGENT ROLE:**
+- Create well-structured, themed daily itineraries with logical flow
+- Group each day under clear themes (arrival_exploration, deep_exploration, adventure_day, etc.)
+- Use bullet points for time-based activities (morning/afternoon/evening)
+- Ensure days are not overpacked (max 4 major activities per day)
+- Include realistic time allocations and travel time between activities
+- End each day with dinner recommendations
+- Balance must-see attractions with hidden gems
+
+**🌍 DESTINATION SPECIALIST ROLE:**
+- Provide deep destination knowledge with specific attraction names
+- Include cultural highlights, local tips, and seasonal considerations
+- Recommend specific neighborhoods/areas for accommodation
+- Include transportation optimization between locations
+- Provide cultural context and historical significance
+- Suggest local experiences and authentic encounters
+- Include practical logistics and booking tips
+
+**👨‍👩‍👧‍👦 FAMILY TRAVEL CONSIDERATIONS:**
+{self._get_kid_friendly_context(request)}
 
 **CRITICAL REQUIREMENTS:**
 1. The destination is {request.destination}. Do NOT change this destination or suggest alternatives.
@@ -640,13 +676,15 @@ You are an expert travel planner. Create a comprehensive {request.duration_days}
 **Response Format (JSON):**
 {{
     "trip_summary": {{
-        "title": "Trip title",
-        "overview": "Brief trip overview",
-        "highlights": ["key highlights"],
-        "best_time_to_visit": "When to visit",
-        "weather_info": "Weather during trip dates",
+        "title": "Engaging trip title with personality",
+        "overview": "Comprehensive trip overview with excitement and context",
+        "highlights": ["key highlights with cultural significance"],
+        "best_time_to_visit": "When to visit with seasonal insights",
+        "weather_info": "Weather during trip dates with practical tips",
         "start_date": "{request.start_date}",
-        "end_date": "calculated based on start_date and {request.duration_days} days"
+        "end_date": "calculated based on start_date and {request.duration_days} days",
+        "travel_theme": "Overall theme of the trip (e.g., Cultural Renaissance, Adventure & Nature)",
+        "cultural_context": "Brief cultural and historical context for the destination"
     }},
     "transportation": {{
         "fastest": [
@@ -826,35 +864,69 @@ You are an expert travel planner. Create a comprehensive {request.duration_days}
             }}
         ]
     }},
-    "itinerary": {{
+    "detailed_itinerary": {{
+        "overview": "Comprehensive day-by-day itinerary with themes, cultural context, and practical tips",
         "day_1": {{
             "date": "{request.start_date}",
             "theme": "arrival_exploration",
+            "cultural_context": "Brief cultural/historical context for this day's activities",
             "morning": {{
-                "activity": "Activity name",
-                "location": "Location",
-                "duration": "2 hours",
+                "activity": "Specific activity name with cultural significance",
+                "location": "Exact location with neighborhood context",
+                "duration": "Realistic duration (e.g., '2 hours')",
                 "cost": 25,
-                "description": "Detailed description",
-                "tips": ["practical tips"],
-                "booking_link": "https://..."
+                "description": "Detailed description with cultural context and why it's worth visiting",
+                "tips": ["Practical tips", "Cultural insights", "Local advice"],
+                "booking_link": "https://...",
+                "transportation": "How to get there from previous location",
+                "kid_friendly": true/false,
+                "accessibility": "Accessibility information"
             }},
             "lunch": {{
-                "restaurant": "Restaurant name",
-                "cuisine": "Cuisine type",
+                "restaurant": "Specific restaurant name",
+                "cuisine": "Local cuisine type with cultural context",
                 "price_range": "budget/moderate/luxury",
                 "cost": 30,
-                "location": "Location",
-                "description": "Why this restaurant",
-                "reservation_link": "https://..."
+                "location": "Neighborhood and exact location",
+                "description": "Why this restaurant - local specialties, atmosphere, cultural significance",
+                "reservation_link": "https://...",
+                "local_tips": ["Local dining customs", "Must-try dishes", "Best times to visit"]
             }},
-            "afternoon": {{...}},
-            "dinner": {{...}},
-            "evening": {{...}}
+            "afternoon": {{
+                "activity": "Afternoon activity with cultural significance",
+                "location": "Location with neighborhood context",
+                "duration": "Realistic duration",
+                "cost": 20,
+                "description": "Detailed description with cultural context",
+                "tips": ["Practical tips", "Cultural insights"],
+                "booking_link": "https://...",
+                "transportation": "How to get there",
+                "kid_friendly": true/false
+            }},
+            "dinner": {{
+                "restaurant": "Dinner restaurant with cultural context",
+                "cuisine": "Local cuisine",
+                "price_range": "budget/moderate/luxury",
+                "cost": 40,
+                "location": "Location with neighborhood context",
+                "description": "Why this restaurant for dinner",
+                "reservation_link": "https://...",
+                "local_tips": ["Dinner customs", "Local specialties"]
+            }},
+            "evening": {{
+                "activity": "Evening activity (optional)",
+                "location": "Location",
+                "duration": "Duration",
+                "cost": 15,
+                "description": "Evening activity description",
+                "tips": ["Evening tips"],
+                "kid_friendly": true/false
+            }}
         }},
         "day_2": {{
-            "date": "next day after {request.start_date}",
+            "date": "Next day after {request.start_date}",
             "theme": "cultural_exploration",
+            "cultural_context": "Cultural context for day 2",
             "morning": {{...}},
             "lunch": {{...}},
             "afternoon": {{...}},
@@ -904,13 +976,36 @@ You are an expert travel planner. Create a comprehensive {request.duration_days}
         "hotels": "https://...",
         "activities": "https://..."
     }},
+    "cultural_insights": {{
+        "destination_overview": "Comprehensive cultural and historical overview of the destination",
+        "local_customs": ["Important local customs and etiquette"],
+        "cultural_highlights": ["Key cultural experiences and traditions"],
+        "seasonal_considerations": "How the season affects the destination and activities",
+        "local_language_phrases": ["Essential phrases in local language"],
+        "cultural_do_dont": {{
+            "do": ["Cultural do's"],
+            "dont": ["Cultural don'ts"]
+        }}
+    }},
     "practical_info": {{
-        "currency": "Local currency",
-        "language": "Local language",
-        "timezone": "Timezone",
-        "emergency_numbers": ["numbers"],
-        "cultural_tips": ["tips"],
-        "packing_suggestions": ["items"]
+        "currency": "Local currency with exchange rate context",
+        "language": "Local language with communication tips",
+        "timezone": "Timezone with time difference from origin",
+        "emergency_numbers": ["Emergency contact numbers"],
+        "cultural_tips": ["Practical cultural tips for travelers"],
+        "packing_suggestions": ["Seasonal and destination-specific packing items"],
+        "weather_preparation": "Weather-specific preparation tips",
+        "transportation_tips": ["Local transportation tips and tricks"],
+        "safety_considerations": ["Safety tips for the destination"],
+        "accessibility_info": "Accessibility information for travelers with special needs"
+    }},
+    "family_travel_info": {{
+        "kid_friendly_activities": ["Specific kid-friendly activities in the destination"],
+        "family_restaurants": ["Family-friendly restaurant recommendations"],
+        "safety_tips": ["Safety tips for traveling with children"],
+        "packing_for_kids": ["Essential items to pack for children"],
+        "educational_opportunities": ["Educational activities for children"],
+        "entertainment_options": ["Entertainment options for different age groups"]
     }}
 }}
 
@@ -1425,4 +1520,65 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
             logger.error(f"Error generating flight deep link: {str(e)}")
             # Fallback to the most basic Google Flights search
             from urllib.parse import quote
-            return f"https://www.google.com/travel/flights/search?q=Flights%20from%20{quote(origin)}%20to%20{quote(destination)}%20on%20{date}" 
+            return f"https://www.google.com/travel/flights/search?q=Flights%20from%20{quote(origin)}%20to%20{quote(destination)}%20on%20{date}"
+    
+    def _get_kid_friendly_context(self, request: TripPlanRequest) -> str:
+        """Generate kid-friendly context for the AI prompt"""
+        kids_info = getattr(request, 'kids_info', None) or request.smart_trip_data.get('kids_info', {}) if request.smart_trip_data else {}
+        
+        if not kids_info:
+            return "No specific kid information provided - plan for general travelers."
+        
+        count = kids_info.get('count', 0)
+        ages = kids_info.get('ages', [])
+        category = kids_info.get('category', 'children')
+        age_range = kids_info.get('age_range', '')
+        
+        kid_context = f"""
+**FAMILY TRAVEL PLANNING:**
+- **Kids**: {count} {category}
+- **Ages**: {age_range if age_range else 'Not specified'}
+- **Category**: {category.title()}
+
+**KID-FRIENDLY REQUIREMENTS:**
+"""
+        
+        if category == 'toddlers':
+            kid_context += """
+- Include playgrounds, interactive museums, and safe outdoor spaces
+- Plan shorter activity durations (1-2 hours max)
+- Include nap time considerations in itinerary
+- Recommend family-friendly restaurants with high chairs
+- Suggest hotels with cribs/playpens available
+- Include easy walking routes and stroller-friendly paths
+"""
+        elif category == 'children':
+            kid_context += """
+- Include educational attractions, zoos, aquariums, and interactive museums
+- Plan mix of active and quiet activities
+- Include kid-friendly restaurants and food options
+- Suggest hotels with pools and family rooms
+- Include parks and outdoor activities
+- Plan for bathroom breaks and snack times
+"""
+        elif category == 'teens':
+            kid_context += """
+- Include adventure activities, shopping, and social spaces
+- Plan for more independence and longer activity durations
+- Include trendy restaurants and cafes
+- Suggest hotels with good WiFi and social spaces
+- Include photo-worthy locations and social media spots
+- Plan for some adult activities with teen-friendly alternatives
+"""
+        
+        kid_context += f"""
+**SPECIFIC CONSIDERATIONS FOR {request.destination}:**
+- Research kid-friendly attractions in the destination
+- Include family-friendly transportation options
+- Plan for weather-appropriate activities
+- Consider meal times and kid-friendly dining options
+- Include backup indoor activities for bad weather
+- Plan for appropriate rest periods between activities
+"""
+        
+        return kid_context 

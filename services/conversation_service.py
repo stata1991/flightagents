@@ -356,6 +356,12 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             questions.append("**Who's joining** your adventure?")
             quick_replies.extend(['Solo explorer', 'Romantic duo', 'Family trip', 'Friend squad'])
         
+        # After getting travelers, ask about kids if not already specified
+        if 'travelers' in trip_data and 'kids_info' not in trip_data:
+            # Don't add to actual_missing since this is a follow-up question
+            questions.append("**Are there any kids** in your group? This helps me plan kid-friendly activities!")
+            quick_replies.extend(['Yes, with kids', 'No kids', 'Skip this question'])
+        
         if 'duration_days' in missing_info and 'duration_days' not in trip_data:
             actual_missing.append('duration_days')
             questions.append("**How many days** would you like to travel?")
@@ -463,6 +469,53 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         
         if 'travelers' in trip_data:
             logger.info(f"Extracted travelers: {trip_data['travelers']}")
+        
+        # Extract kids information
+        kids_info = {}
+        if any(word in user_input_lower for word in ['kids', 'children', 'child', 'family']):
+            # Look for specific kid information
+            kids_count_match = re.search(r'(\d+)\s+(kids|children|child)', user_input_lower)
+            if kids_count_match:
+                kids_info['count'] = int(kids_count_match.group(1))
+            else:
+                # Default to 2 kids if family mentioned but no specific count
+                kids_info['count'] = 2
+            
+            # Look for age information
+            age_patterns = [
+                r'(\d+)\s+year\s+old',  # "5 year old"
+                r'(\d+)\s+years?\s+old',  # "5 years old"
+                r'age\s+(\d+)',  # "age 5"
+                r'(\d+)\s+and\s+(\d+)',  # "5 and 7"
+            ]
+            
+            ages = []
+            for pattern in age_patterns:
+                age_matches = re.findall(pattern, user_input_lower)
+                for match in age_matches:
+                    if isinstance(match, tuple):
+                        ages.extend([int(age) for age in match])
+                    else:
+                        ages.append(int(match))
+            
+            if ages:
+                kids_info['ages'] = ages
+                kids_info['age_range'] = f"{min(ages)}-{max(ages)} years"
+            
+            # Determine kid-friendly category
+            if kids_info.get('ages'):
+                avg_age = sum(kids_info['ages']) / len(kids_info['ages'])
+                if avg_age < 5:
+                    kids_info['category'] = 'toddlers'
+                elif avg_age < 12:
+                    kids_info['category'] = 'children'
+                else:
+                    kids_info['category'] = 'teens'
+            else:
+                kids_info['category'] = 'children'  # Default
+            
+            trip_data['kids_info'] = kids_info
+            logger.info(f"Extracted kids_info: {kids_info}")
         
         # Extract dates if mentioned - only match actual month names
         month_names = ['january', 'february', 'march', 'april', 'may', 'june', 
@@ -647,6 +700,19 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         
         if any(word in user_input_lower for word in ['family', 'kids']):
             acknowledgments.append("👨‍👩‍👧‍👦 Great! Family-friendly activities will be included.")
+        
+        # Check for kids information
+        kids_info = trip_data.get("kids_info", {})
+        if kids_info:
+            count = kids_info.get("count", 0)
+            ages = kids_info.get("ages", [])
+            category = kids_info.get("category", "children")
+            
+            if ages:
+                age_range = kids_info.get("age_range", f"{min(ages)}-{max(ages)} years")
+                acknowledgments.append(f"👶 Perfect! I'll include kid-friendly activities for your {count} {category} (ages {age_range}).")
+            else:
+                acknowledgments.append(f"👶 Excellent! I'll plan kid-friendly activities for your {count} {category}.")
         
         return " ".join(acknowledgments) if acknowledgments else ""
     
