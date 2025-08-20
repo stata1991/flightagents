@@ -253,172 +253,44 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         # Extract information from user input and update trip_data
         self._update_trip_data_from_input(user_input, trip_data)
         
-        # If we have missing info, ask specific follow-up questions
-        if missing_info:
-            return await self._get_follow_up_questions(missing_info, trip_data)
-        elif current_state == 'greeting':
-            if any(word in user_input.lower() for word in ['itinerary', 'plan', 'trip']):
-                return self.get_structured_questions()
-            else:
-                return self.get_structured_questions()
-        
-        elif current_state == 'destination':
-            # Extract destination from user input
-            destination = self._extract_destination(user_input)
-            trip_data['destination'] = destination
-            return self.get_destination_response(destination, user_input)
-        
-        elif current_state == 'travelers':
-            travelers = self._extract_travelers(user_input)
-            trip_data['travelers'] = travelers
-            return self.get_travelers_response(travelers, trip_data.get('destination'))
-        
-        elif current_state == 'dates':
-            dates = self._extract_dates(user_input)
-            trip_data['dates'] = dates
-            return self.get_dates_response(dates, trip_data)
-        
-        elif current_state == 'vibe':
-            vibe = self._extract_vibe(user_input)
-            trip_data['vibe'] = vibe
-            return self.get_vibe_response(vibe, trip_data)
-        
-        elif current_state == 'summary':
-            return self.get_modification_options()
-        
-        elif current_state == 'gathering_info':
-            # Handle gathering_info state - check if we have all required info
-            required_fields = ['origin', 'destination', 'travelers', 'duration_days', 'start_date', 'budget_range']
-            missing_fields = [field for field in required_fields if not trip_data.get(field)]
-            
-            # Log current state for debugging
-            logger.info(f"Current trip_data: {trip_data}")
-            logger.info(f"Missing fields: {missing_fields}")
-            
-            if not missing_fields:
-                # We have all the information, ready to start planning
-                return {
-                    'message': "🎯 Perfect! I have all the information I need to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...",
-                    'quick_replies': ['Show me the plan', 'Modify details', 'Start over'],
-                    'state': 'planning',
-                    'missing_info': [],
-                    'trip_data': trip_data
-                }
-            else:
-                # Still missing some information, ask for the next missing field
-                # But first, acknowledge any new information provided
-                acknowledgment = self._acknowledge_new_information(user_input, trip_data)
-                follow_up = await self._get_follow_up_questions(missing_fields, trip_data)
-                
-                if acknowledgment:
-                    follow_up['message'] = acknowledgment + "\n\n" + follow_up['message']
-                
-                return follow_up
-        
-        elif current_state == 'planning':
-            # We have all the information, ready to start planning
+        # Check if all required info is present
+        mandatory_fields = ['origin', 'destination', 'start_date', 'travelers', 'kids_info', 'duration_days', 'budget_range']
+        missing_required = [field for field in mandatory_fields if not trip_data.get(field)]
+        if not missing_required:
             return {
                 'message': "🎯 Perfect! I have all the information I need to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...",
-                'quick_replies': ['Show me the plan', 'Modify details', 'Start over'],
                 'state': 'planning',
                 'missing_info': [],
                 'trip_data': trip_data
             }
-        
-        else:
-            return {
-                'message': "I'm not sure what you mean. Could you tell me more about your travel plans?",
-                'quick_replies': ['Start over', 'Help me plan', 'Show options'],
-                'state': 'greeting'
-            }
+        # Otherwise, ask for the next missing mandatory field
+        return await self._get_follow_up_questions(missing_required, trip_data)
     
     async def _get_follow_up_questions(self, missing_info: List[str], trip_data: Dict) -> Dict[str, Any]:
         """Generate conversational follow-up questions based on missing information."""
-        questions = []
-        quick_replies = []
-        
-        # Check what's actually missing based on what's already in trip_data
-        actual_missing = []
-        
-        # Mandatory fields only
-        if 'origin' in missing_info and 'origin' not in trip_data:
-            actual_missing.append('origin')
-            questions.append("**Where are you traveling from**?")
-            quick_replies.extend(['I have a destination in mind', 'Show me options'])
-        
-        if 'destination' in missing_info and 'destination' not in trip_data:
-            actual_missing.append('destination')
-            questions.append("**Where would you like to go**?")
-            quick_replies.extend(['Beach paradise', 'Urban exploration', 'Mountain adventure', 'Cultural journey'])
-        
-        if 'number of travelers' in missing_info and 'travelers' not in trip_data:
-            actual_missing.append('travelers')
-            questions.append("**Who's joining** your adventure?")
-            quick_replies.extend(['Solo explorer', 'Romantic duo', 'Family trip', 'Friend squad'])
-        
-        # After getting travelers, ask about kids if not already specified
-        if 'travelers' in trip_data and 'kids_info' not in trip_data:
-            # Don't add to actual_missing since this is a follow-up question
-            questions.append("**Are there any kids** in your group? This helps me plan kid-friendly activities!")
-            quick_replies.extend(['Yes, with kids', 'No kids', 'Skip this question'])
-        
-        if 'duration_days' in missing_info and 'duration_days' not in trip_data:
-            actual_missing.append('duration_days')
-            questions.append("**How many days** would you like to travel?")
-            quick_replies.extend(['3 days', '5 days', '1 week', '2 weeks'])
-        
-        if 'start date' in missing_info and 'start_date' not in trip_data:
-            actual_missing.append('start_date')
-            questions.append("**When** would you like to travel?")
-            quick_replies.extend(['Next month', 'Summer vacation', 'Holiday season', 'Flexible dates'])
-        
-        if 'budget preference' in missing_info and 'budget_range' not in trip_data:
-            actual_missing.append('budget_range')
-            questions.append("**What's your budget preference** for this trip?")
-            quick_replies.extend(['Budget-friendly ($50-100/day)', 'Moderate ($100-300/day)', 'Luxury ($300+/day)'])
-        
-        # Interests are optional, but if mentioned in missing_info, ask for them
-        if 'interests' in missing_info and 'interests' not in trip_data:
-            # Don't add to actual_missing since interests are optional
-            questions.append("**What type of experiences** are you looking for?")
-            quick_replies.extend(['Adventure & Nature', 'Culture & History', 'Food & Dining', 'Relaxation', 'Nightlife'])
-        
-        # If we have all the information, start planning
-        if not actual_missing:
-            return {
-                'message': "🎯 Perfect! I have all the information I need to start planning your trip. Let me craft your perfect itinerary with real flights and hotels...",
-                'quick_replies': ['Show me the plan', 'Modify details', 'Start over'],
-                'state': 'planning',
-                'missing_info': [],
-                'trip_data': trip_data
-            }
-        
-        # Generate contextual follow-up if available
-        if contextual_followup_service.is_available():
-            try:
-                contextual_response = await contextual_followup_service.generate_contextual_followup(actual_missing, trip_data)
+        # Only ask about the first missing mandatory field
+        field_questions = {
+            'origin': "Where are you traveling from?",
+            'destination': "Where would you like to go?",
+            'start_date': "When would you like to start your trip? (e.g., 2025-09-20)",
+            'travelers': "How many people are traveling? (e.g., 2 adults, 1 child)",
+            'kids_info': "Are there any kids in your group? If yes, how many and what ages? (e.g., 2 kids, ages 5 and 8)",
+            'duration_days': "How many days would you like to travel? (e.g., 5 days)",
+            'budget_range': "What's your budget for this trip? (e.g., budget, moderate, luxury, or a dollar amount)"
+        }
+        for field in field_questions:
+            if field in missing_info:
                 return {
-                    'message': contextual_response.get('question', ' '.join(questions)),
-                    'quick_replies': contextual_response.get('quick_replies', quick_replies),
+                    'message': field_questions[field],
                     'state': 'gathering_info',
-                    'missing_info': actual_missing,
+                    'missing_info': [field],
                     'trip_data': trip_data
                 }
-            except Exception as e:
-                logger.error(f"Contextual followup failed: {e}")
-                # Fallback to rule-based questions
-        
-        # Fallback to rule-based questions
-        if len(questions) == 1:
-            message = f"Great! I can see you want to plan a trip. {questions[0]}"
-        else:
-            message = f"Perfect! I can see you want to plan a trip. Let me ask a few quick questions:\n\n" + "\n".join(questions)
-        
+        # Fallback (should not be reached)
         return {
-            'message': message,
-            'quick_replies': quick_replies[:6],  # Limit to 6 quick replies
+            'message': "Please provide any additional preferences or interests (optional).",
             'state': 'gathering_info',
-            'missing_info': actual_missing,
+            'missing_info': [],
             'trip_data': trip_data
         }
     
@@ -578,24 +450,42 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable"],
             "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe"]
         }
-        
+        found_budget = False
         for budget_range, keywords in budget_keywords.items():
             if any(keyword in user_input_lower for keyword in keywords):
                 trip_data['budget_range'] = budget_range
                 logger.info(f"Extracted budget_range: {trip_data['budget_range']}")
+                found_budget = True
                 break
-        
-        # Also check for specific budget patterns like "Luxury ($300+/day)"
-        # Since the $ and numbers might be processed, just check for the key words
-        if "luxury" in user_input_lower and ("300" in user_input or "day" in user_input_lower):
-            trip_data['budget_range'] = "luxury"
-            logger.info(f"Extracted budget_range (luxury): {trip_data['budget_range']}")
-        elif "moderate" in user_input_lower and ("100" in user_input or "300" in user_input or "day" in user_input_lower):
-            trip_data['budget_range'] = "moderate"
-            logger.info(f"Extracted budget_range (moderate): {trip_data['budget_range']}")
-        elif "budget-friendly" in user_input_lower or ("budget" in user_input_lower and "50" in user_input):
-            trip_data['budget_range'] = "budget"
-            logger.info(f"Extracted budget_range (budget): {trip_data['budget_range']}")
+        # Also check for dollar amounts and price ranges
+        dollar_patterns = [
+            r"\$(\d+)(?:-\d+)?\s*(?:per\s+day|daily|budget)",
+            r"(\d+)(?:-\d+)?\s*dollars?\s*(?:per\s+day|daily|budget)",
+            r"budget\s*of\s*\$?(\d+)",
+            r"spend\s*\$?(\d+)",
+            r"^\$(\d+)$",  # Just "$2000" 
+            r"^(\d+)\$$",  # Just "2000$"
+            r"^(\d+)$",    # Just "2000"
+            r"luxury\s*\(\$(\d+)\+/day\)",  # "Luxury ($300+/day)"
+            r"moderate\s*\(\$(\d+)-(\d+)/day\)",  # "Moderate ($100-300/day)"
+            r"budget-friendly\s*\(\$(\d+)-(\d+)/day\)"  # "Budget-friendly ($50-100/day)"
+        ]
+        for pattern in dollar_patterns:
+            match = re.search(pattern, user_input_lower)
+            if match:
+                amounts = [int(match.group(i)) for i in range(1, len(match.groups()) + 1)]
+                avg_amount = sum(amounts) / len(amounts)
+                trip_data['total_budget'] = avg_amount
+                logger.info(f"Extracted total_budget: {trip_data['total_budget']}")
+                if not found_budget:
+                    if avg_amount < 100:
+                        trip_data['budget_range'] = "budget"
+                    elif avg_amount < 300:
+                        trip_data['budget_range'] = "moderate"
+                    else:
+                        trip_data['budget_range'] = "luxury"
+                    logger.info(f"Extracted budget_range (from amount): {trip_data['budget_range']}")
+                break
         
         # Extract interests if mentioned
         interest_keywords = {

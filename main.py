@@ -54,6 +54,10 @@ async def hybrid_planner_page(request: Request):
 async def enhanced_chat_page(request: Request):
     return templates.TemplateResponse("enhanced_chat_interface.html", {"request": request})
 
+@app.get("/enhanced-travel", response_class=HTMLResponse)
+async def enhanced_travel_page(request: Request):
+    return templates.TemplateResponse("enhanced_travel_interface.html", {"request": request})
+
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting FlightTickets.ai API server...")

@@ -12,7 +12,7 @@ RAPIDAPI_KEY = os.getenv('RAPID_API_KEY')
 
 # Claude API configuration
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
-CLAUDE_MODEL = "claude-3-5-sonnet-20241022"
+CLAUDE_MODEL = "claude-opus-4-1-20250805"
 
 # Initialize Claude client
 claude_client = AsyncAnthropic(api_key=CLAUDE_API_KEY)

@@ -98,7 +98,7 @@ Be precise and only extract what's actually mentioned."""
 
             # Call Claude with function-calling
             response = await self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-opus-4-1-20250805",
                 max_tokens=1000,
                 messages=[{"role": "user", "content": prompt}],
                 tools=functions,

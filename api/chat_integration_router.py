@@ -50,12 +50,14 @@ async def process_chat_message(request: Dict[str, Any]):
         # If we have existing trip_data, always use conversation service to allow updates
         if existing_trip_data:
             # Extract any new information from the message
-            new_budget = _extract_budget(message)
+            new_budget, new_total_budget = _extract_budget(message)
             new_interests = _extract_interests(message)
             
             # Update existing trip_data with new information
             if new_budget:
                 existing_trip_data["budget_range"] = new_budget
+            if new_total_budget:
+                existing_trip_data["total_budget"] = new_total_budget
             if new_interests:
                 existing_trip_data["interests"] = new_interests
             
@@ -70,7 +72,8 @@ async def process_chat_message(request: Dict[str, Any]):
                 budget_range=existing_trip_data.get("budget_range"),
                 interests=existing_trip_data.get("interests", []),
                 trip_type=TripType.LEISURE,
-                special_requirements=""
+                special_requirements="",
+                total_budget=existing_trip_data.get("total_budget")
             )
         else:
             # No existing trip_data, try to extract complete trip request
@@ -106,7 +109,27 @@ async def process_chat_message(request: Dict[str, Any]):
                 conversation_state["current_state"] = response.get("state", "greeting")
                 # Merge trip_data properly to preserve existing fields
                 if response.get("trip_data"):
-                    conversation_state.update(response.get("trip_data"))
+                    conversation_state.update(response.get("trip_data", {}))
+                    # Promote all trip_data keys to top-level conversation_state for flat access
+                    for k, v in response.get("trip_data", {}).items():
+                        conversation_state[k] = v
+                    # Always use conversation_state directly for latest trip data (flat structure)
+                    latest_trip_data = conversation_state
+                    trip_request = TripPlanningRequest(
+                        origin=latest_trip_data.get("origin"),
+                        destination=latest_trip_data.get("destination"),
+                        travelers=latest_trip_data.get("travelers"),
+                        start_date=latest_trip_data.get("start_date"),
+                        end_date=latest_trip_data.get("end_date"),
+                        duration_days=latest_trip_data.get("duration_days"),
+                        budget_range=latest_trip_data.get("budget_range"),
+                        interests=latest_trip_data.get("interests", []),
+                        trip_type=TripType.LEISURE,
+                        special_requirements="",
+                        total_budget=latest_trip_data.get("total_budget")
+                    )
+                    logger.info(f"[DEBUG] (after trip_data update) TripPlanningRequest: {trip_request.dict()} (duration_days type: {type(trip_request.duration_days)})")
+                    logger.info(f"[DEBUG] (after trip_data update) Missing info: {_get_missing_info(trip_request)}")
                 
                 # Check if we now have sufficient info after the update
                 if _has_sufficient_info(trip_request):
@@ -116,47 +139,72 @@ async def process_chat_message(request: Dict[str, Any]):
                     # Ensure conversation_state includes all trip_request fields
                     conversation_state.update(trip_request.dict())
                     
-                    return {
-                        "session_id": session_id,
-                        "response": {
+                    # Strictly robust: Only send planning state and message if truly ready
+                    if trip_request and _has_sufficient_info(trip_request):
+                        planning_result = await _start_trip_planning(trip_request)
+                        # Ensure conversation_state is fully up to date
+                        conversation_state.update(trip_request.dict())
+                        logger.info(f"[DEBUG] Returning conversation_state: {conversation_state}")
+                        response_dict = {
+                            "session_id": session_id,
                             "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
-                            "quick_replies": ["Show me the plan", "Modify details", "Start over"],
-                            "state": "planning"
-                        },
-                        "can_start_planning": True,
-                        "trip_request": trip_request.dict() if trip_request else None,
-                        "planning_result": planning_result,
-                        "next_step": "show_itinerary",
-                        "conversation_state": conversation_state
-                    }
+                            "state": "planning",
+                            "can_start_planning": True,
+                            "trip_request": trip_request.dict() if trip_request else None,
+                            "planning_result": planning_result,
+                            "conversation_state": conversation_state
+                        }
+                        logger.info(f"[DEBUG] Returning FULL RESPONSE (planning): {response_dict}")
+                        return response_dict
+                    else:
+                        # If more info is needed, get the follow-up message and missing info
+                        response = await conversation_service.process_user_input(message, conversation_state.get("current_state", "greeting"), conversation_state, missing_info)
+                        conversation_state["current_state"] = response.get("state", "gathering_info")
+                        if response.get("trip_data"):
+                            conversation_state.update(response.get("trip_data", {}))
+                        response_dict = {
+                            "session_id": session_id,
+                            "message": response.get("message"),
+                            "state": response.get("state", "gathering_info"),
+                            "can_start_planning": False,
+                            "missing_info": missing_info,
+                            "conversation_state": conversation_state
+                        }
+                        logger.info(f"[DEBUG] Returning FULL RESPONSE (gathering_info): {response_dict}")
+                        return response_dict
                 else:
-                    return {
+                    # If more info is needed, get the follow-up message and missing info
+                    response = await conversation_service.process_user_input(message, conversation_state.get("current_state", "greeting"), conversation_state, missing_info)
+                    conversation_state["current_state"] = response.get("state", "gathering_info")
+                    if response.get("trip_data"):
+                        conversation_state.update(response.get("trip_data", {}))
+                    response_dict = {
                         "session_id": session_id,
-                        "response": response,
+                        "message": response.get("message"),
+                        "state": response.get("state", "gathering_info"),
                         "can_start_planning": False,
                         "missing_info": missing_info,
-                        "next_step": "continue_conversation",
                         "conversation_state": conversation_state
                     }
+                    logger.info(f"[DEBUG] Returning FULL RESPONSE (gathering_info): {response_dict}")
+                    return response_dict
             else:
                 # No existing trip_data, check if we have enough info to start planning
                 if _has_sufficient_info(trip_request):
                     # We have enough info to start planning immediately
                     planning_result = await _start_trip_planning(trip_request)
                     
-                    return {
+                    response_dict = {
                         "session_id": session_id,
-                        "response": {
-                            "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
-                            "quick_replies": ["Show me the plan", "Modify details", "Start over"],
-                            "state": "planning"
-                        },
+                        "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
+                        "state": "planning",
                         "can_start_planning": True,
                         "trip_request": trip_request.dict() if trip_request else None,
                         "planning_result": planning_result,
-                        "next_step": "show_itinerary",
                         "conversation_state": conversation_state
                     }
+                    logger.info(f"[DEBUG] Returning FULL RESPONSE (planning): {response_dict}")
+                    return response_dict
                 else:
                     # Need more information - call conversation service
                     response = await conversation_service.process_user_input(message, conversation_state.get("current_state", "greeting"), conversation_state, missing_info)
@@ -165,16 +213,18 @@ async def process_chat_message(request: Dict[str, Any]):
                     conversation_state["current_state"] = response.get("state", "greeting")
                     # Merge trip_data properly to preserve existing fields
                     if response.get("trip_data"):
-                        conversation_state.update(response.get("trip_data"))
+                        conversation_state.update(response.get("trip_data", {}))
                     
-                    return {
+                    response_dict = {
                         "session_id": session_id,
-                        "response": response,
+                        "message": response.get("message"),
+                        "state": response.get("state", "gathering_info"),
                         "can_start_planning": False,
                         "missing_info": missing_info,
-                        "next_step": "continue_conversation",
                         "conversation_state": conversation_state
                     }
+                    logger.info(f"[DEBUG] Returning FULL RESPONSE (gathering_info): {response_dict}")
+                    return response_dict
         else:
             # If trip_request is None, we need to extract basic info to determine what's missing
             origin = _extract_origin(message)
@@ -203,19 +253,17 @@ async def process_chat_message(request: Dict[str, Any]):
                 # We have enough info to start planning immediately
                 planning_result = await _start_trip_planning(trip_request)
                 
-                return {
+                response_dict = {
                     "session_id": session_id,
-                    "response": {
-                        "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
-                        "quick_replies": ["Show me the plan", "Modify details", "Start over"],
-                        "state": "planning"
-                    },
+                    "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
+                    "state": "planning",
                     "can_start_planning": True,
                     "trip_request": trip_request.dict() if trip_request is not None else None,
                     "planning_result": planning_result,
-                    "next_step": "show_itinerary",
                     "conversation_state": conversation_state
                 }
+                logger.info(f"[DEBUG] Returning FULL RESPONSE (planning): {response_dict}")
+                return response_dict
             else:
                 # Need more information - call conversation service
                 if not missing_info:  # If we have basic info but validation failed
@@ -233,14 +281,16 @@ async def process_chat_message(request: Dict[str, Any]):
                 if "interests" in response.get("trip_data", {}):
                     conversation_state["interests"] = response["trip_data"]["interests"]
                 
-                return {
+                response_dict = {
                     "session_id": session_id,
-                    "response": response,
+                    "message": response.get("message"),
+                    "state": response.get("state", "gathering_info"),
                     "can_start_planning": False,
                     "missing_info": missing_info,
-                    "next_step": "continue_conversation",
                     "conversation_state": conversation_state
                 }
+                logger.info(f"[DEBUG] Returning FULL RESPONSE (gathering_info): {response_dict}")
+                return response_dict
             
     except Exception as e:
         logger.error(f"Error processing chat message: {e}")
@@ -253,32 +303,28 @@ async def start_planning_from_chat(request: Dict[str, Any]):
     """
     try:
         trip_request_data = request.get("trip_request", {})
-        
+        logger.info(f"[DEBUG] Received trip_request_data: {trip_request_data}")
         # Validate required fields before creating TripPlanningRequest
         if not trip_request_data.get("origin"):
             logger.error("Missing origin in trip request")
             raise HTTPException(status_code=400, detail="Origin is required")
-        
         if not trip_request_data.get("destination"):
             logger.error("Missing destination in trip request")
             raise HTTPException(status_code=400, detail="Destination is required")
-        
         # Create TripPlanningRequest with validated data
         trip_request = TripPlanningRequest(**trip_request_data)
-        
-        logger.info(f"Starting trip planning for: {trip_request.origin} to {trip_request.destination}")
-        logger.info(f"Trip request fields: {trip_request.dict()}")
-        
+        logger.info(f"[DEBUG] Starting trip planning for: {trip_request.origin} to {trip_request.destination}")
+        logger.info(f"[DEBUG] Trip request fields: {trip_request.dict()}")
         # Use the _start_trip_planning function which has proper error handling
+        logger.info("[DEBUG] Calling _start_trip_planning...")
         result = await _start_trip_planning(trip_request)
-        
+        logger.info(f"[DEBUG] _start_trip_planning result: {result}")
         if result.get("success"):
             return result
         else:
             error_msg = result.get("error", "Failed to generate trip plan")
             logger.error(f"Trip planning failed: {error_msg}")
             raise HTTPException(status_code=500, detail=error_msg)
-            
     except HTTPException:
         # Re-raise HTTPExceptions as-is
         raise
@@ -341,7 +387,7 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
             new_travelers = _extract_travelers(message)
             new_start_date = _extract_start_date(message)
             new_end_date = _extract_end_date(message)
-            new_budget_range = _extract_budget(message)
+            new_budget_range, new_total_budget = _extract_budget(message)
             new_interests = _extract_interests(message)
             new_duration_days = _extract_duration_days(message)
             
@@ -466,7 +512,8 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
             budget_range=budget_range,  # Don't default, let it be None if not provided
             trip_type=TripType.LEISURE,  # Use model default
             interests=interests or [],
-            special_requirements=""
+            special_requirements="",
+            total_budget=None # This will be populated from conversation_state later
         )
         
     except Exception as e:
@@ -650,19 +697,17 @@ def _extract_end_date(message: str) -> Optional[str]:
     # This can be enhanced with more sophisticated date extraction
     return None
 
-def _extract_budget(message: str) -> Optional[str]:
-    """Extract budget range from message"""
+def _extract_budget(message: str):
+    """Extract budget range and numeric value from message"""
     budget_keywords = {
         "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty", "backpacker"],
         "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable", "balanced"],
         "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe", "premium"]
     }
-    
     message_lower = message.lower()
     for budget_range, keywords in budget_keywords.items():
         if any(keyword in message_lower for keyword in keywords):
-            return budget_range
-    
+            return budget_range, None
     # Also check for dollar amounts and price ranges
     dollar_patterns = [
         r"\$(\d+)(?:-\d+)?\s*(?:per\s+day|daily|budget)",
@@ -676,28 +721,18 @@ def _extract_budget(message: str) -> Optional[str]:
         r"moderate\s*\(\$(\d+)-(\d+)/day\)",  # "Moderate ($100-300/day)"
         r"budget-friendly\s*\(\$(\d+)-(\d+)/day\)"  # "Budget-friendly ($50-100/day)"
     ]
-    
     for pattern in dollar_patterns:
         match = re.search(pattern, message_lower)
         if match:
-            if "luxury" in pattern:
-                return "luxury"
-            elif "moderate" in pattern:
-                return "moderate"
-            elif "budget-friendly" in pattern:
-                return "budget"
+            amounts = [int(match.group(i)) for i in range(1, len(match.groups()) + 1)]
+            avg_amount = sum(amounts) / len(amounts)
+            if avg_amount < 100:
+                return "budget", avg_amount
+            elif avg_amount < 300:
+                return "moderate", avg_amount
             else:
-                # Check amount ranges
-                amounts = [int(match.group(i)) for i in range(1, len(match.groups()) + 1)]
-                avg_amount = sum(amounts) / len(amounts)
-                if avg_amount < 100:
-                    return "budget"
-                elif avg_amount < 300:
-                    return "moderate"
-                else:
-                    return "luxury"
-    
-    return None
+                return "luxury", avg_amount
+    return None, None
 
 def _extract_duration_days(message: str) -> Optional[int]:
     """Extract duration in days from message"""
@@ -742,6 +777,8 @@ def _extract_interests(message: str) -> Optional[List[str]]:
 
 def _has_sufficient_info(trip_request: TripPlanningRequest) -> bool:
     """Check if we have sufficient information to start planning"""
+    logger.info(f"[DEBUG] (before sufficiency check) TripPlanningRequest: {trip_request.dict()} (duration_days type: {type(trip_request.duration_days)})")
+    logger.info(f"[DEBUG] (before sufficiency check) Missing info: {_get_missing_info(trip_request)}")
     return (
         trip_request.origin and 
         trip_request.destination and 

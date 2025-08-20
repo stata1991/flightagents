@@ -437,56 +437,40 @@
             border: 2px solid #E2E8F0;
             transition: all 0.3s ease;
             cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
         }
-
-        .travel-option-card:hover {
-            border-color: #3B82F6;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
-        }
-
         .travel-option-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+            align-items: flex-start;
+            width: 100%;
+            margin-bottom: 8px;
         }
-
-        .travel-option-name {
-            font-weight: 700;
-            color: #1F2937;
-        }
-
         .travel-option-price {
             font-weight: 700;
-            color: #059669;
-            font-size: 18px;
+            color: #1F2937;
+            text-align: right;
+            min-width: 80px;
         }
-
-        .travel-option-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            font-size: 14px;
-            color: #64748B;
-        }
-
         .travel-book-btn {
-            background: linear-gradient(135deg, #059669, #047857);
+            display: inline-block;
+            margin-left: auto;
+            margin-top: 8px;
+            background: #10B981;
             color: white;
+            font-weight: 600;
             border: none;
             border-radius: 8px;
-            padding: 8px 16px;
-            font-weight: 600;
+            padding: 10px 24px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 12px;
-            width: 100%;
+            text-decoration: none;
+            transition: background 0.2s;
         }
-
         .travel-book-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+            background: #059669;
         }
 
         /* Enhanced Loading Animation */
@@ -575,6 +559,31 @@
                 border-left-width: 6px;
             }
         }
+        /* Force chat area and itinerary to always be visible and scrollable */
+        #travelChatArea {
+            min-height: 400px;
+            max-height: calc(100vh - 250px);
+            height: auto;
+            overflow-y: auto !important;
+            display: flex;
+            flex-direction: column;
+        }
+        .travel-itinerary {
+            min-height: 300px !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .travel-itinerary * {
+            color: inherit !important;
+        }
+        .travel-quick-replies {
+            position: static;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -658,6 +667,8 @@
                 // Add user message
                 this.addUserMessage(message);
                 this.input.value = '';
+                // Hide quick replies after first user input
+                this.hideQuickReplies();
 
                 // Show loading
                 this.showLoading();
@@ -725,7 +736,12 @@
             }
 
             handleResponse(response) {
-                // Add AI response
+                // Update conversation state
+                if (response.conversation_state) {
+                    this.conversationState = response.conversation_state;
+                }
+
+                // Show AI message
                 if (response.message) {
                     const aiMessage = `
                         <div class="travel-message ai">
@@ -735,21 +751,19 @@
                     this.addMessage(aiMessage);
                 }
 
-                // Update conversation state
-                if (response.conversation_state) {
-                    this.conversationState = response.conversation_state;
-                }
+                // Always hide quick replies after any AI response
+                this.hideQuickReplies();
 
-                // Show quick replies
-                if (response.quick_replies && response.quick_replies.length > 0) {
-                    this.showQuickReplies(response.quick_replies);
-                } else {
-                    this.hideQuickReplies();
+                // Robust missing info/state handling
+                const missing = response.missing_info || [];
+                if (response.state === 'planning' && response.can_start_planning && response.trip_request) {
+                    this.startTripPlanning(response.trip_request);
+                    return;
                 }
-
-                // Handle trip planning
-                if (response.state === 'planning' && response.trip_data) {
-                    this.startTripPlanning(response.trip_data);
+                // If missing required info, wait for user input (do nothing else)
+                if (missing.length > 0) {
+                    // The AI message already prompts for the next missing field
+                    return;
                 }
             }
 
@@ -777,41 +791,68 @@
                 this.sendMessage();
             }
 
-            async startTripPlanning(tripData) {
+            async startTripPlanning(tripRequest) {
                 this.showLoading();
-                
                 try {
                     const response = await fetch('/chat-integration/start-planning', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            trip_data: tripData,
-                            session_id: this.sessionId
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ trip_request: tripRequest, session_id: this.sessionId })
                     });
-
                     if (!response.ok) {
                         throw new Error('Failed to start trip planning');
                     }
-
                     const result = await response.json();
                     this.hideLoading();
                     this.displayItinerary(result);
                 } catch (error) {
                     this.hideLoading();
                     this.showErrorMessage();
+                    console.error("Error in startTripPlanning:", error);
                 }
             }
 
             displayItinerary(result) {
-                if (result.success && result.itinerary) {
-                    const itineraryHtml = this.createItineraryHTML(result.itinerary);
-                    this.addMessage(itineraryHtml);
-                } else {
-                    this.showErrorMessage();
+                try {
+                    // Remove any previous itinerary from the chat area
+                    const oldItineraries = this.chatArea.querySelectorAll('.travel-itinerary');
+                    oldItineraries.forEach(el => el.remove());
+
+                    if (result.success && result.itinerary) {
+                        const itineraryHtml = this.createItineraryHTML(result.itinerary);
+                        this.addMessage(itineraryHtml);
+                        this.scrollToBottom();
+                        // Attach tab switching using event delegation
+                        this.attachTabDelegation();
+                    } else {
+                        this.showErrorMessage();
+                    }
+                } catch (e) {
+                    console.error('Error rendering itinerary:', e);
                 }
+            }
+
+            attachTabDelegation() {
+                const itineraryElem = this.chatArea.querySelector('.travel-itinerary');
+                if (!itineraryElem) return;
+                const tabsContainer = itineraryElem.querySelector('.travel-itinerary-tabs');
+                if (!tabsContainer) return;
+                tabsContainer.onclick = (event) => {
+                    const btn = event.target.closest('.travel-tab-btn');
+                    if (!btn) return;
+                    // Hide all tabs
+                    itineraryElem.querySelectorAll('.travel-tab-content').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    itineraryElem.querySelectorAll('.travel-tab-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    // Show selected tab
+                    const tabName = btn.getAttribute('data-tab');
+                    const tabContent = itineraryElem.querySelector(`#${tabName}-tab`);
+                    if (tabContent) tabContent.classList.add('active');
+                    btn.classList.add('active');
+                };
             }
 
             createItineraryHTML(itinerary) {
@@ -821,31 +862,25 @@
                             <div class="travel-itinerary-title">${itinerary.trip_summary?.title || 'Your Perfect Trip'}</div>
                             <div class="travel-itinerary-subtitle">Crafted with love by your travel expert</div>
                         </div>
-                        
                         <div class="travel-itinerary-tabs">
-                            <button class="travel-tab-btn active" onclick="travelInterface.showTab('summary')">📋 Summary</button>
-                            <button class="travel-tab-btn" onclick="travelInterface.showTab('itinerary')">🗓️ Itinerary</button>
-                            <button class="travel-tab-btn" onclick="travelInterface.showTab('flights')">✈️ Flights</button>
-                            <button class="travel-tab-btn" onclick="travelInterface.showTab('hotels')">🏨 Hotels</button>
-                            <button class="travel-tab-btn" onclick="travelInterface.showTab('practical')">ℹ️ Practical Info</button>
+                            <button class="travel-tab-btn active" data-tab="summary">📋 Summary</button>
+                            <button class="travel-tab-btn" data-tab="itinerary">🗓️ Itinerary</button>
+                            <button class="travel-tab-btn" data-tab="flights">✈️ Flights</button>
+                            <button class="travel-tab-btn" data-tab="hotels">🏨 Hotels</button>
+                            <button class="travel-tab-btn" data-tab="practical">ℹ️ Practical Info</button>
                         </div>
-                        
                         <div class="travel-tab-content active" id="summary-tab">
                             ${this.createSummaryTab(itinerary)}
                         </div>
-                        
                         <div class="travel-tab-content" id="itinerary-tab">
                             ${this.createItineraryTab(itinerary)}
                         </div>
-                        
                         <div class="travel-tab-content" id="flights-tab">
                             ${this.createFlightsTab(itinerary)}
                         </div>
-                        
                         <div class="travel-tab-content" id="hotels-tab">
                             ${this.createHotelsTab(itinerary)}
                         </div>
-                        
                         <div class="travel-tab-content" id="practical-tab">
                             ${this.createPracticalTab(itinerary)}
                         </div>
@@ -891,30 +926,53 @@
             }
 
             createItineraryTab(itinerary) {
-                const detailedItinerary = itinerary.detailed_itinerary;
-                if (!detailedItinerary) return '<div style="padding: 24px; color: #64748B;">Itinerary details coming soon...</div>';
-
+                const detailed = itinerary.detailed_itinerary || itinerary.itinerary || {};
+                if (!detailed || Object.keys(detailed).length === 0) return '<div style="padding: 24px; color: #64748B;">Itinerary coming soon...</div>';
                 let html = '<div style="padding: 24px;">';
-                
-                Object.keys(detailedItinerary).forEach(dayKey => {
-                    if (dayKey === 'overview') return;
-                    
-                    const day = detailedItinerary[dayKey];
-                    html += `
-                        <div class="travel-day-card">
-                            <div class="travel-day-header">
-                                <div class="travel-day-icon">${this.getDayIcon(dayKey)}</div>
-                                <div>
-                                    <div class="travel-day-title">${dayKey.replace('_', ' ').toUpperCase()}</div>
-                                    <div class="travel-day-theme">${day.theme || 'Adventure Day'}</div>
-                                </div>
+                let dayNum = 1;
+                for (const [key, day] of Object.entries(detailed)) {
+                    if (!key.startsWith('day_')) continue;
+                    html += `<div class="travel-day-card">
+                        <div class="travel-day-header">
+                            <div class="travel-day-icon">${dayNum}</div>
+                            <div>
+                                <div class="travel-day-title">Day ${dayNum}${day.theme ? ' – ' + day.theme.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''}${day.date ? ' (' + day.date + ')' : ''}</div>
+                                ${day.cultural_context ? `<div class="travel-day-theme">${day.cultural_context}</div>` : ''}
                             </div>
-                            
-                            ${this.createDayActivities(day)}
-                        </div>
-                    `;
-                });
-                
+                        </div>`;
+                    // Time blocks
+                    const blocks = [
+                        {k: 'morning', icon: '☀️', label: 'Morning'},
+                        {k: 'lunch', icon: '🍽️', label: 'Lunch'},
+                        {k: 'afternoon', icon: '🕑', label: 'Afternoon'},
+                        {k: 'dinner', icon: '🍲', label: 'Dinner'},
+                        {k: 'evening', icon: '🌙', label: 'Evening'}
+                    ];
+                    for (const {k, icon, label} of blocks) {
+                        const block = day[k];
+                        if (!block) continue;
+                        html += `<div class="travel-activity">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">${icon}</span>
+                                <span class="travel-activity-title">${block.activity || block.restaurant || label}</span>
+                                ${block.duration ? `<span style="margin-left: 10px; color: #64748B; font-size: 13px;">⏱️ ${block.duration}</span>` : ''}
+                                ${block.cost ? `<span style="margin-left: 10px; color: #059669; font-size: 13px;">💲${block.cost}</span>` : ''}
+                            </div>
+                            ${block.location ? `<div class="travel-activity-location" style="color: #64748B; font-size: 13px; margin-top: 2px;">📍 ${block.location}</div>` : ''}
+                            ${block.description ? `<div class="travel-activity-description">${block.description}</div>` : ''}
+                            ${block.booking_link ? `<a href="${block.booking_link}" target="_blank" class="travel-book-btn" style="margin-top: 8px;">Book/Reserve</a>` : ''}
+                            ${block.tips && block.tips.length ? `<div class="travel-activity-tips">${block.tips.map(t => `• ${t}`).join('<br>')}</div>` : ''}
+                            ${block.local_tips && block.local_tips.length ? `<div class="travel-activity-tips">${block.local_tips.map(t => `• ${t}`).join('<br>')}</div>` : ''}
+                            ${block.accessibility ? `<div class="travel-activity-tips">♿ Accessibility: ${block.accessibility}</div>` : ''}
+                        </div>`;
+                    }
+                    // Local insights/cultural context at end of day
+                    if (day.local_insights) {
+                        html += `<div class="travel-activity-tips" style="background: #DBEAFE; color: #1E3A8A; margin-top: 12px;">🌍 Local Insights: ${day.local_insights}</div>`;
+                    }
+                    html += '</div>';
+                    dayNum++;
+                }
                 html += '</div>';
                 return html;
             }

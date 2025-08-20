@@ -47,7 +47,7 @@ Examples:
 Focus on the most critical missing information first. If all required information is provided, acknowledge completion and move to planning."""
 
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-opus-4-1-20250805",
                 max_tokens=500,
                 messages=[{"role": "user", "content": prompt}]
             )

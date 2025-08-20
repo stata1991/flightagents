@@ -55,7 +55,7 @@ class FlightService:
             logger.info(f"Origin airport ID: {origin_id}")
             
             logger.info(f"Getting airport ID for destination: {destination}")
-            destination_id = await FlightService._get_airport_id(destination)
+            destination_id = await FlightService._get_airport_id(destination, context={"destination": destination})
             logger.info(f"Destination airport ID: {destination_id}")
             
             # Debug: Check if we have valid airport IDs
@@ -79,59 +79,83 @@ class FlightService:
             return {"success": False, "flights": [], "error": str(e)}
 
     @staticmethod
-    async def _get_airport_id(location: str) -> Optional[str]:
+    async def _get_airport_id(location: str, context: dict = None) -> Optional[str]:
         """
-        Get airport ID using Booking.com searchDestination API.
+        Get airport ID using Booking.com searchDestination API, robustly selecting the correct airport.
+        - If user specifies country, use it for filtering (highest precedence).
+        - Otherwise, use geocoding to infer country.
+        - Filter by country, then by city/region, then prefer major airports.
         """
         try:
+            import logging
+            logger = logging.getLogger(__name__)
+            from services.location_detection_service import location_detection_service
+            import os
+            import aiohttp
             rapid_api_key = os.getenv("RAPID_API_KEY")
             if not rapid_api_key:
                 logger.error("RAPID_API_KEY not found")
                 return None
-            
             url = "https://booking-com15.p.rapidapi.com/api/v1/flights/searchDestination"
-            
             headers = {
                 "X-RapidAPI-Key": rapid_api_key,
                 "X-RapidAPI-Host": "booking-com15.p.rapidapi.com"
             }
-            
             params = {"query": location}
-            
+            logger.info(f"[AIRPORT] Searching for airports for '{location}' with params: {params}")
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers, params=params) as response:
                     if response.status == 200:
                         result = await response.json()
-                        logger.info(f"Search destination result for {location}: {result}")
-                        
-                        if result.get("status") and result.get("data"):
-                            logger.info(f"Found {len(result['data'])} results for {location}")
-                            for i, item in enumerate(result["data"]):
-                                logger.info(f"Result {i+1}: {item.get('type')} - {item.get('name')} (ID: {item.get('id')})")
-                            
-                            # Get the first airport result
-                            for item in result["data"]:
-                                if item.get("type") == "AIRPORT":
-                                    logger.info(f"Found airport: {item.get('name')} (ID: {item.get('id')})")
-                                    return item.get("id")
-                            
-                            # If no airport found, get the first city result
-                            for item in result["data"]:
-                                if item.get("type") == "CITY":
-                                    logger.info(f"Found city: {item.get('name')} (ID: {item.get('id')})")
-                                    return item.get("id")
-                            
-                            # If no airport or city found, get the first result (for Indian cities)
-                            if result["data"]:
-                                first_item = result["data"][0]
-                                logger.info(f"Using first result: {first_item.get('name')} (ID: {first_item.get('id')})")
-                                return first_item.get("id")
-                    
-                    logger.error(f"Search destination failed for {location}: {response.status}")
-                    return None
-                    
+                        logger.info(f"[AIRPORT] Raw search result: {result}")
+                        airports = result.get("data", [])
+                        if not airports:
+                            logger.warning(f"[AIRPORT] No airports found for {location}")
+                            return None
+                        # Step 1: Determine country to use for filtering
+                        user_country = None
+                        if context and context.get("country"):
+                            user_country = context["country"].strip().lower()
+                            logger.info(f"[AIRPORT] Using user-specified country: {user_country}")
+                        else:
+                            # Use geocoding
+                            user_country = await location_detection_service.get_country_from_city(location)
+                            if user_country:
+                                user_country = user_country.strip().lower()
+                                logger.info(f"[AIRPORT] Geocoded country: {user_country}")
+                        # Step 2: Filter by country
+                        filtered = []
+                        for a in airports:
+                            cands = [a.get("country", ""), a.get("countryName", ""), a.get("countryNameShort", "")]
+                            if any(user_country and user_country in (c or c.lower()) for c in cands):
+                                filtered.append(a)
+                        logger.info(f"[AIRPORT] {len(filtered)} airports after country filter ({user_country})")
+                        if not filtered:
+                            logger.warning(f"[AIRPORT] No airports matched country '{user_country}', using all results")
+                            filtered = airports
+                        # Step 3: Further filter by city/region
+                        city_match = location.strip().lower()
+                        city_filtered = [a for a in filtered if any(city_match in (a.get(k, "").lower()) for k in ["regionName", "cityName", "name"])]
+                        logger.info(f"[AIRPORT] {len(city_filtered)} airports after city/region filter ('{city_match}')")
+                        if city_filtered:
+                            filtered = city_filtered
+                        # Step 4: Prefer type=='AIRPORT', then shortest distanceToCity
+                        airport_only = [a for a in filtered if a.get("type") == "AIRPORT"]
+                        if airport_only:
+                            filtered = airport_only
+                        # Step 5: Pick closest by distanceToCity if available
+                        def get_distance(a):
+                            d = a.get("distanceToCity", {}).get("value")
+                            return float(d) if d is not None else float('inf')
+                        filtered = sorted(filtered, key=get_distance)
+                        selected = filtered[0]
+                        logger.info(f"[AIRPORT] Selected airport: {selected.get('name')} (ID: {selected.get('id')}) [country={selected.get('country')}, city={selected.get('cityName')}, region={selected.get('regionName')}, distance={get_distance(selected)}]")
+                        return selected.get("id")
+                    else:
+                        logger.error(f"[AIRPORT] Search destination failed for {location}: {response.status}")
+                        return None
         except Exception as e:
-            logger.error(f"Error getting airport ID for {location}: {e}")
+            logger.error(f"[AIRPORT] Error getting airport ID for {location}: {e}")
             return None
 
     @staticmethod

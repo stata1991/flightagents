@@ -249,7 +249,7 @@ Make the plan realistic, detailed, and personalized to the traveler's interests 
         
         try:
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-opus-4-1-20250805",
                 max_tokens=4000,
                 temperature=0.7,
                 messages=[

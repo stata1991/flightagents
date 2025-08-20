@@ -132,18 +132,32 @@ class TripPlanningRequest(BaseModel):
     budget_range: Optional[BudgetRange] = Field(None, description="Budget preference")
     interests: Optional[List[str]] = Field([], description="Specific interests (food, art, history, etc.)")
     special_requirements: Optional[str] = Field(None, description="Any special requirements")
-    
+    total_budget: Optional[float] = Field(None, description="User's total numeric budget, if provided")
+
     @validator('trip_type', pre=True)
     def validate_trip_type(cls, v):
         if isinstance(v, str):
             return v.lower()
         return v
-    
+
     @validator('budget_range', pre=True)
     def validate_budget_range(cls, v):
         if isinstance(v, str):
             return v.lower()
         return v
+
+    @validator('duration_days', pre=True)
+    def validate_duration_days(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, int):
+            return v
+        if isinstance(v, str):
+            try:
+                return int(v)
+            except Exception:
+                return None
+        return None
 
 class ConversationState(BaseModel):
     session_id: str
