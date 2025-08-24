@@ -1,0 +1,1798 @@
+INFO:     Will watch for changes in these directories: ['/Users/supreethtata/Documents/cursor-flightagents/flightagents']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [15756] using StatReload
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [15825]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56279 - "GET /enhanced-travel HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15825]
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [15994]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56327 - "GET /enhanced-travel HTTP/1.1" 200 OK
+INFO:api.chat_integration_router:Using fallback regex extraction
+INFO:api.chat_integration_router:Extracted origin using from_to_pattern: 'Dallas'
+INFO:api.chat_integration_router:Extracted destination using from_to_pattern: 'Amsterdam'
+INFO:api.chat_integration_router:Extracted origin: Dallas
+INFO:api.chat_integration_router:Extracted destination: Amsterdam
+INFO:api.chat_integration_router:Extracted travelers: None
+INFO:api.chat_integration_router:Extracted start_date: None
+INFO:api.chat_integration_router:Extracted budget_range: None
+INFO:api.chat_integration_router:Extracted interests: []
+INFO:api.chat_integration_router:Message being processed: plan a trip from dallas to amsterdam
+INFO:api.chat_integration_router:Applying Smart Trip Logic for destination: Amsterdam
+INFO:api.chat_integration_router:Smart trip analysis: {'trip_type': 'single_destination', 'destination': None, 'requires_basic_planning': True}
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) TripPlanningRequest: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': None, 'start_date': None, 'end_date': None, 'travelers': None, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': None, 'interests': [], 'special_requirements': '', 'total_budget': None} (duration_days type: <class 'NoneType'>)
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) Missing info: ['number of travelers', 'duration_days', 'start date', 'budget preference']
+INFO:services.conversation_service:Processing user input: 'plan a trip from dallas to amsterdam'
+INFO:services.conversation_service:Current trip_data before processing: {'origin': 'Dallas', 'destination': 'Amsterdam'}
+INFO:services.conversation_service:Extracted origin: Dallas, destination: Amsterdam
+INFO:services.conversation_service:Final trip_data after processing: {'origin': 'Dallas', 'destination': 'Amsterdam'}
+INFO:api.chat_integration_router:[DEBUG] Returning FULL RESPONSE (gathering_info): {'session_id': 'session_1755904602530_8bfls9q4u', 'message': 'When would you like to start your trip? (e.g., 2025-09-20)', 'state': 'gathering_info', 'can_start_planning': False, 'missing_info': ['number of travelers', 'duration_days', 'start date', 'budget preference'], 'conversation_state': {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info'}}
+INFO:     127.0.0.1:56327 - "POST /chat-integration/process-message HTTP/1.1" 200 OK
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) TripPlanningRequest: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': None, 'start_date': None, 'end_date': None, 'travelers': None, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': None, 'interests': [], 'special_requirements': '', 'total_budget': None} (duration_days type: <class 'NoneType'>)
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) Missing info: ['number of travelers', 'duration_days', 'start date', 'budget preference']
+INFO:services.conversation_service:Processing user input: '15th october 2025'
+INFO:services.conversation_service:Current trip_data before processing: {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info'}
+INFO:services.conversation_service:Extracted start_date (fallback): october 2025
+INFO:services.conversation_service:Final trip_data after processing: {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025'}
+INFO:api.chat_integration_router:[DEBUG] Returning FULL RESPONSE (gathering_info): {'session_id': 'session_1755904602530_8bfls9q4u', 'message': 'How many people are traveling? (e.g., 2 adults, 1 child)', 'state': 'gathering_info', 'can_start_planning': False, 'missing_info': ['number of travelers', 'duration_days', 'start date', 'budget preference'], 'conversation_state': {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025'}}
+INFO:     127.0.0.1:56329 - "POST /chat-integration/process-message HTTP/1.1" 200 OK
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) TripPlanningRequest: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': None, 'start_date': 'october 2025', 'end_date': None, 'travelers': None, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': None, 'interests': [], 'special_requirements': '', 'total_budget': None} (duration_days type: <class 'NoneType'>)
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) Missing info: ['number of travelers', 'duration_days', 'budget preference']
+INFO:services.conversation_service:Processing user input: '2 adults, no kids'
+INFO:services.conversation_service:Current trip_data before processing: {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025'}
+INFO:services.conversation_service:Extracted travelers: 4
+INFO:services.conversation_service:Extracted kids_info: {'count': 2, 'category': 'children'}
+INFO:services.conversation_service:Final trip_data after processing: {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025', 'travelers': 4, 'kids_info': {'count': 2, 'category': 'children'}}
+INFO:api.chat_integration_router:[DEBUG] Returning FULL RESPONSE (gathering_info): {'session_id': 'session_1755904602530_8bfls9q4u', 'message': 'How many days would you like to travel? (e.g., 5 days)', 'state': 'gathering_info', 'can_start_planning': False, 'missing_info': ['number of travelers', 'duration_days', 'budget preference'], 'conversation_state': {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025', 'travelers': 4, 'kids_info': {'count': 2, 'category': 'children'}}}
+INFO:     127.0.0.1:56332 - "POST /chat-integration/process-message HTTP/1.1" 200 OK
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) TripPlanningRequest: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': None, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': None, 'interests': [], 'special_requirements': '', 'total_budget': None} (duration_days type: <class 'NoneType'>)
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) Missing info: ['duration_days', 'budget preference']
+INFO:services.conversation_service:Processing user input: '5 days'
+INFO:services.conversation_service:Current trip_data before processing: {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025', 'travelers': 4, 'kids_info': {'count': 2, 'category': 'children'}}
+INFO:services.conversation_service:Extracted duration_days: 5
+INFO:services.conversation_service:Extracted travelers: 4
+INFO:services.conversation_service:Final trip_data after processing: {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025', 'travelers': 4, 'kids_info': {'count': 2, 'category': 'children'}, 'duration_days': 5}
+INFO:api.chat_integration_router:[DEBUG] Returning FULL RESPONSE (gathering_info): {'session_id': 'session_1755904602530_8bfls9q4u', 'message': "What's your budget for this trip? (e.g., budget, moderate, luxury, or a dollar amount)", 'state': 'gathering_info', 'can_start_planning': False, 'missing_info': ['duration_days', 'budget preference'], 'conversation_state': {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025', 'travelers': 4, 'kids_info': {'count': 2, 'category': 'children'}, 'duration_days': 5}}
+INFO:     127.0.0.1:56334 - "POST /chat-integration/process-message HTTP/1.1" 200 OK
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) TripPlanningRequest: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': 5, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': <BudgetRange.LUXURY: 'luxury'>, 'interests': [], 'special_requirements': '', 'total_budget': 3000.0} (duration_days type: <class 'int'>)
+INFO:api.chat_integration_router:[DEBUG] (before sufficiency check) Missing info: []
+INFO:api.enhanced_ai_provider:[DEBUG] plan_trip called with request: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': 5, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'budget_range': 'luxury', 'interests': [], 'trip_type': 'leisure', 'special_requirements': '', 'preferred_provider': None, 'smart_trip_data': None}
+ERROR:api.enhanced_ai_provider:Error calculating budget allocation: 'TripPlanRequest' object has no attribute 'total_budget'
+INFO:api.hotel_client:Starting smart hotel search for: Amsterdam
+INFO:api.hotel_client:Destination search requested for: Amsterdam
+INFO:api.hotel_client:Making hotel API request to: https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination
+INFO:api.hotel_client:Parameters: {'query': 'Amsterdam'}
+INFO:api.hotel_client:Response status: 200
+INFO:api.hotel_client:Response content (first 500 chars): {"status":true,"message":"Success","timestamp":1755904645509,"data":[{"dest_id":"-2140479","search_type":"city","city_ufi":null,"longitude":4.893,"region":"Noord-Holland","name":"Amsterdam","country":"Netherlands","lc":"en","nr_hotels":4071,"city_name":"Amsterdam","image_url":"https://cf.bstatic.com/xdata/images/city/150x150/976538.jpg?k=19a2487e30f31349e54aaf32d509121d81e2e31eee5b820c7c98576a4426d997&o=","roundtrip":"GhBmZWY2YTNjMmM2N2QwMTNlIAAoATICZW46CUFtc3RlcmRhbUAASgBQAA==","hotels":4071,"t
+INFO:api.hotel_client:Successfully parsed JSON response
+INFO:api.hotel_client:Found 5 destination options
+INFO:api.hotel_client:Prioritized destinations: ['Amsterdam, Noord-Holland, Netherlands', 'Amsterdam City Centre, Amsterdam, Noord-Holland, Netherlands', 'Schiphol Airport, Amsterdam, Noord-Holland, Netherlands', 'Amsterdam Central Station, Amsterdam, Noord-Holland, Netherlands', 'Amsterdam RAI, Amsterdam, Noord-Holland, Netherlands']
+INFO:api.hotel_client:Trying destination: Amsterdam, Noord-Holland, Netherlands (ID: -2140479)
+INFO:api.hotel_client:Getting filters for dest_id: -2140479
+INFO:api.hotel_client:Making hotel API request to: https://booking-com15.p.rapidapi.com/api/v1/hotels/getFilter
+INFO:api.hotel_client:Parameters: {'dest_id': '-2140479', 'search_type': 'CITY', 'arrival_date': '2025-10-01', 'departure_date': '2025-10-06', 'adults': 4, 'children_age': '0,17', 'room_qty': 1}
+INFO:api.hotel_client:Response status: 200
+INFO:api.hotel_client:Response content (first 500 chars): {"status":true,"message":"Success","timestamp":1755904646368,"data":{"pagination":{"nbResultsTotal":884},"availabilityInfo":{"totalAvailableNotAutoextended":485},"filters":[{"title":"Your budget (for 5 nights)","field":"price","filterStyle":"SLIDER","options":[],"min":"400","max":"4000","minPriceStep":"100","minSelected":"0","histogram":[3,3,16,32,33,41,64,91,67,78,58,80,100,69,69,62,44,28,42,64,37,39,25,26,19,17,12,25,35,21,19,21,21,10,7,17,7,19,12,12,8,5,5,7,0,5,5,5,3,1],"currency":"EUR"},{"ti
+INFO:api.hotel_client:Successfully parsed JSON response
+INFO:api.hotel_client:Price range for Amsterdam, Noord-Holland, Netherlands: $400.0 - $4000.0
+INFO:api.hotel_client:Trying budget level: $400.0
+INFO:api.hotel_client:Searching hotels for dest_id: -2140479 with filters: {'price': '0-400'}
+INFO:api.hotel_client:Making hotel API request to: https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotels
+INFO:api.hotel_client:Parameters: {'dest_id': '-2140479', 'search_type': 'CITY', 'arrival_date': '2025-10-01', 'departure_date': '2025-10-06', 'adults': 4, 'children_age': '0,17', 'room_qty': 1, 'page_number': 1, 'units': 'metric', 'temperature_unit': 'c', 'languagecode': 'en-us', 'currency_code': 'USD', 'location': 'US', 'price': '0-400'}
+INFO:api.hotel_client:Response status: 200
+INFO:api.hotel_client:Response content (first 500 chars): {"status":true,"message":"Success","timestamp":1755904647774,"data":{"hotels":[{"hotel_id":2593669,"accessibilityLabel":"Via Amsterdam.\n3 out of 5 stars.\nThis is a Preferred Plus property.\n8.0 Very Good 16206 reviews.\n‎Bijlmermeer‬ • ‎6.6 km from downtown‬.\nMobile-only price.\n Shared dorm room : 6 beds.\nOriginal price 1128 USD. Current price 927 USD..\n+207 USD taxes and charges.","property":{"id":2593669,"mainPhotoId":113582055,"isFirstPage":true,"optOutFromGalleryChanges":0,"rankingPosi
+INFO:api.hotel_client:Successfully parsed JSON response
+INFO:api.hotel_client:Found 20 hotels in Amsterdam, Noord-Holland, Netherlands with budget $400.0
+INFO:api.hotel_client:Smart search completed. Found 10 hotels from 1 attempts
+INFO:services.location_detection_service:Detected location: United States (US), Currency: USD
+INFO:services.location_detection_service:Geocoded Dallas -> US
+INFO:services.location_detection_service:Geocoded Amsterdam -> NL
+INFO:api.enhanced_ai_provider:Trip currency strategy: {'primary_currency': 'USD', 'secondary_currency': 'USD', 'strategy': 'origin_based', 'origin_currency': 'USD', 'destination_currency': 'USD'}
+INFO:api.enhanced_ai_provider:Calling flight API with params: {'origin': 'Dallas', 'destination': 'Amsterdam', 'date': '2025-10-01', 'return_date': '2025-10-06'}
+INFO:api.search_router:Using RapidAPI key: 3b43872968...
+INFO:api.search_router:Searching for flights with context: {'origin': 'Dallas', 'destination': 'Amsterdam', 'start_date': '2025-10-01', 'return_date': '2025-10-06', 'travelers': 1}
+INFO:services.flight_service:Flight search called with context: {'origin': 'Dallas', 'destination': 'Amsterdam', 'start_date': '2025-10-01', 'return_date': '2025-10-06', 'travelers': 1}
+INFO:services.flight_service:Extracted parameters: origin=Dallas, destination=Amsterdam, start_date=2025-10-01, return_date=2025-10-06, travelers=1
+INFO:services.flight_service:RAPID_API_KEY found: 3b43872968...
+INFO:services.flight_service:Getting airport ID for origin: Dallas
+INFO:services.flight_service:[AIRPORT] Searching for airports for 'Dallas' with params: {'query': 'Dallas'}
+INFO:services.flight_service:[AIRPORT] Raw search result: {'status': True, 'message': 'Success', 'timestamp': 1755904652313, 'data': [{'id': 'DFW.CITY', 'type': 'CITY', 'name': 'Dallas', 'code': 'DFW', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976890.jpg?k=2ef1427cb3b629db8ecae1b402047e45a49805627b68876e48eefc4b6379643a&o='}, {'id': 'DFW.AIRPORT', 'type': 'AIRPORT', 'name': 'Dallas-Fort Worth International Airport', 'code': 'DFW', 'city': 'DFW', 'cityName': 'Dallas', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'countryNameShort': 'US', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976890.jpg?k=2ef1427cb3b629db8ecae1b402047e45a49805627b68876e48eefc4b6379643a&o=', 'distanceToCity': {'value': 25.903681159530844, 'unit': 'km'}, 'parent': 'DFW'}, {'id': 'DAL.AIRPORT', 'type': 'AIRPORT', 'name': 'Dallas Love Field Airport', 'code': 'DAL', 'city': 'DFW', 'cityName': 'Dallas', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'countryNameShort': 'US', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976890.jpg?k=2ef1427cb3b629db8ecae1b402047e45a49805627b68876e48eefc4b6379643a&o=', 'distanceToCity': {'value': 8.186506942172121, 'unit': 'km'}, 'parent': 'DFW'}, {'id': 'ROA.AIRPORT', 'type': 'AIRPORT', 'name': 'Roanoke Airport', 'code': 'ROA', 'city': 'ROA', 'cityName': 'Roanoke', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'countryNameShort': 'US', 'photoUri': 'https://q-xx.bstatic.com/static/img/plane-100.jpg', 'distanceToCity': {'value': 1637.2735868843076, 'unit': 'km'}, 'parent': 'ROA'}]}
+INFO:services.location_detection_service:Geocoded Dallas -> US
+INFO:services.flight_service:[AIRPORT] Geocoded country: us
+INFO:services.flight_service:[AIRPORT] 0 airports after country filter (us)
+WARNING:services.flight_service:[AIRPORT] No airports matched country 'us', using all results
+INFO:services.flight_service:[AIRPORT] 3 airports after city/region filter ('dallas')
+INFO:services.flight_service:[AIRPORT] Selected airport: Dallas Love Field Airport (ID: DAL.AIRPORT) [country=US, city=Dallas, region=Texas, distance=8.186506942172121]
+INFO:services.flight_service:Origin airport ID: DAL.AIRPORT
+INFO:services.flight_service:Getting airport ID for destination: Amsterdam
+INFO:services.flight_service:[AIRPORT] Searching for airports for 'Amsterdam' with params: {'query': 'Amsterdam'}
+INFO:services.flight_service:[AIRPORT] Raw search result: {'status': True, 'message': 'Success', 'timestamp': 1755904653263, 'data': [{'id': 'AMS.AIRPORT', 'type': 'AIRPORT', 'name': 'Schiphol Airport', 'code': 'AMS', 'city': 'AMS', 'cityName': 'Amsterdam', 'regionName': 'Noord-Holland', 'country': 'NL', 'countryName': 'Netherlands', 'countryNameShort': 'Netherlands', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976538.jpg?k=19a2487e30f31349e54aaf32d509121d81e2e31eee5b820c7c98576a4426d997&o=', 'distanceToCity': {'value': 11.396990072691436, 'unit': 'km'}, 'parent': 'AMS'}]}
+INFO:services.location_detection_service:Geocoded Amsterdam -> NL
+INFO:services.flight_service:[AIRPORT] Geocoded country: nl
+INFO:services.flight_service:[AIRPORT] 0 airports after country filter (nl)
+WARNING:services.flight_service:[AIRPORT] No airports matched country 'nl', using all results
+INFO:services.flight_service:[AIRPORT] 1 airports after city/region filter ('amsterdam')
+INFO:services.flight_service:[AIRPORT] Selected airport: Schiphol Airport (ID: AMS.AIRPORT) [country=NL, city=Amsterdam, region=Noord-Holland, distance=11.396990072691436]
+INFO:services.flight_service:Destination airport ID: AMS.AIRPORT
+INFO:services.flight_service:Searching flights with params: {'fromId': 'DAL.AIRPORT', 'toId': 'AMS.AIRPORT', 'departDate': '2025-10-01', 'returnDate': '2025-10-06', 'stops': 'none', 'pageNo': '1', 'adults': '1', 'children': '0', 'sort': 'CHEAPEST', 'cabinClass': 'ECONOMY', 'currency_code': 'USD'}
+INFO:services.flight_service:Flight search result: {'status': True, 'message': 'Success', 'timestamp': 1755904656833, 'data': {'error': {'code': 'SEARCH_SEARCHFLIGHTS_NO_FLIGHTS_FOUND', 'requestId': '2f3b0700-7fae-11f0-9ee3-53f0054d379d'}}}
+INFO:services.flight_service:API Response status: True
+INFO:services.flight_service:API Response data keys: dict_keys(['error'])
+INFO:services.flight_service:Flight offers count: 0
+ERROR:services.flight_service:No flightOffers found in response. Response keys: dict_keys(['error'])
+ERROR:services.flight_service:Full response structure: {'status': True, 'message': 'Success', 'timestamp': 1755904656833, 'data': {'error': {'code': 'SEARCH_SEARCHFLIGHTS_NO_FLIGHTS_FOUND', 'requestId': '2f3b0700-7fae-11f0-9ee3-53f0054d379d'}}}
+INFO:services.flight_service:Flight search result: {'success': False, 'flights': []}
+ERROR:api.search_router:Flight search failed: None
+INFO:     127.0.0.1:56346 - "POST /api/search HTTP/1.1" 500 Internal Server Error
+INFO:api.enhanced_ai_provider:Flight API response status: 500
+ERROR:api.enhanced_ai_provider:Flight API error: {"detail":"Flight search failed"}
+INFO:api.enhanced_ai_provider:[DEBUG] Claude prompt being sent:
+You are an expert travel planner. Create a comprehensive trip itinerary.
+
+TRIP: Dallas → Amsterdam, 5 days, $None budget, general exploration
+
+RULES:
+1. Use real airline/hotel names for Amsterdam
+2. Generate 5 days of activities
+3. Provide REAL destination-specific content (not placeholders)
+4. Include emergency numbers, packing tips, cultural insights for Amsterdam
+5. Generate EXACTLY 9 flight options (3 budget, 3 standard, 3 premium) for both outbound and return
+6. Generate EXACTLY 9 hotel options (3 budget, 3 moderate, 3 luxury)
+
+Generate this JSON structure:
+
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Must-see attractions", "Local experiences", "Cultural immersion"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"}
+  ],
+  "return": [
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"}
+  ],
+  
+  "hotels": [
+    {"category": "budget", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 80-120, "total_cost": 400-600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 80-120, "total_cost": 400-600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 80-120, "total_cost": 400-600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 150-250, "total_cost": 750-1250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 150-250, "total_cost": 750-1250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 150-250, "total_cost": 750-1250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 300-500, "total_cost": 1500-2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 300-500, "total_cost": 1500-2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 300-500, "total_cost": 1500-2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"}
+  ],
+  
+  "itinerary": {
+    "day_1": {
+      "theme": "Arrival & Orientation",
+      "morning": {"activity": "Airport arrival", "location": "Airport", "cost": 0},
+      "afternoon": {"activity": "Hotel check-in", "location": "Hotel area", "cost": 0},
+      "evening": {"activity": "Welcome dinner", "location": "Local restaurant", "cost": 50}
+    }
+  },
+  
+  "budget_breakdown": {
+    "flights": number,
+    "accommodation": number,
+    "food": number,
+    "activities": number,
+    "transportation": number,
+    "total": number,
+    "remaining": number
+  },
+  
+  "restaurants": [
+    {
+      "name": "Restaurant name",
+      "cuisine": "Type",
+      "area": "Neighborhood",
+      "price_range": "$-$$$$",
+      "must_try": "Signature dish",
+      "reservation": "required|recommended|walk-in"
+    }
+  ],
+  
+  "key_attractions": [
+    {
+      "name": "Attraction name",
+      "category": "museum|landmark|experience|park",
+      "time_needed": "X hours",
+      "cost": number,
+      "best_time": "morning|afternoon|evening",
+      "book_ahead": boolean
+    }
+  ],
+  
+  "practical_info": {
+    "currency": "Local currency (EUR/USD/etc)",
+    "language": "Local language",
+    "emergency_numbers": ["112", "Local emergency"],
+    "packing_suggestions": ["Weather-appropriate clothing", "Comfortable shoes", "Travel adapter"]
+  },
+  
+  "cultural_insights": {
+    "local_customs": ["Respect local customs", "Learn basic greetings"],
+    "etiquette": ["Tipping culture", "Dress appropriately"],
+    "dress_code": "Smart casual"
+  },
+  
+  "insider_tips": [
+    "Visit popular sites early morning",
+    "Try local street food",
+    "Use public transportation"
+  ]
+}
+
+Focus on creating a practical itinerary for Amsterdam. Ensure all costs stay within $None.
+
+Return ONLY valid JSON. No text before or after.
+INFO:httpx:HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Full raw Claude response before parsing (plan_trip):
+```json
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Canal cruises and historic waterways", "World-class museums and Dutch Masters", "Vibrant neighborhoods and local markets"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Spirit Airlines", "price": 485, "departure": "06:15", "arrival": "08:45", "duration": "11h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Frontier Airlines", "price": 520, "departure": "13:30", "arrival": "16:15", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 575, "departure": "19:00", "arrival": "23:30", "duration": "13h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "United Airlines", "price": 680, "departure": "09:45", "arrival": "11:30", "duration": "10h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Lufthansa", "price": 725, "departure": "14:20", "arrival": "15:45", "duration": "10h 25m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Air France", "price": 765, "departure": "16:50", "arrival": "18:20", "duration": "10h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 985, "departure": "10:30", "arrival": "07:15", "duration": "9h 45m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Delta Airlines", "price": 1045, "departure": "15:40", "arrival": "12:30", "duration": "9h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "American Airlines", "price": 1125, "departure": "18:25", "arrival": "15:10", "duration": "9h 45m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"}
+  ],
+  
+  "return": [
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 495, "departure": "06:00", "arrival": "14:30", "duration": "14h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Spirit Airlines", "price": 510, "departure": "11:15", "arrival": "20:45", "duration": "15h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Icelandair", "price": 565, "departure": "14:30", "arrival": "23:15", "duration": "14h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "United Airlines", "price": 695, "departure": "08:45", "arrival": "15:30", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Lufthansa", "price": 735, "departure": "10:20", "arrival": "17:15", "duration": "12h 55m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "British Airways", "price": 780, "departure": "13:50", "arrival": "21:30", "duration": "13h 40m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 995, "departure": "09:30", "arrival": "14:20", "duration": "10h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Delta Airlines", "price": 1065, "departure": "12:15", "arrival": "17:10", "duration": "10h 55m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "American Airlines", "price": 1145, "departure": "16:40", "arrival": "21:35", "duration": "10h 55m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"}
+  ],
+  
+  "hotels": [
+    {"category": "budget", "name": "ClinkNOORD Hostel", "area": "Amsterdam Noord", "price_per_night": 85, "total_cost": 425, "booking_link": "https://www.google.com/travel/hotels/search?q=ClinkNOORD%20Hostel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Hotel V Nesplein", "area": "Oud-West", "price_per_night": 95, "total_cost": 475, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20V%20Nesplein%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "SWEETS hotel", "area": "Various Bridges", "price_per_night": 110, "total_cost": 550, "booking_link": "https://www.google.com/travel/hotels/search?q=SWEETS%20hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "The Hoxton Amsterdam", "area": "Herengracht", "price_per_night": 175, "total_cost": 875, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Hoxton%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Lloyd Hotel", "area": "Eastern Docklands", "price_per_night": 195, "total_cost": 975, "booking_link": "https://www.google.com/travel/hotels/search?q=Lloyd%20Hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Pulitzer Amsterdam", "area": "Prinsengracht", "price_per_night": 225, "total_cost": 1125, "booking_link": "https://www.google.com/travel/hotels/search?q=Pulitzer%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Waldorf Astoria Amsterdam", "area": "Herengracht", "price_per_night": 425, "total_cost": 2125, "booking_link": "https://www.google.com/travel/hotels/search?q=Waldorf%20Astoria%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "The Dylan Amsterdam", "area": "Keizersgracht", "price_per_night": 385, "total_cost": 1925, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Dylan%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "InterContinental Amstel", "area": "Amstel River", "price_per_night": 475, "total_cost": 2375, "booking_link": "https://www.google.com/travel/hotels/search?q=InterContinental%20Amstel%20Amsterdam%20from%202025-10-01%20to%202025-10-05"}
+  ],
+  
+  "itinerary": {
+    "day_1": {
+      "theme": "Arrival & Canal District",
+      "morning": {"activity": "Arrive at Schiphol Airport, train to city center", "location": "Schiphol Airport", "cost": 5},
+      "afternoon": {"activity": "Check-in and explore Jordaan neighborhood", "location": "Jordaan", "cost": 0},
+      "evening": {"activity": "Canal cruise with dinner", "location": "Canal Ring", "cost": 65}
+    },
+    "day_2": {
+      "theme": "Museums & Culture",
+      "morning": {"activity": "Rijksmuseum visit", "location": "Museumplein", "cost": 22},
+      "afternoon": {"activity": "Van Gogh Museum", "location": "Museumplein", "cost": 20},
+      "evening": {"activity": "Dinner in Leidseplein", "location": "Leidseplein", "cost": 45}
+    },
+    "day_3": {
+      "theme": "Historic Amsterdam",
+      "morning": {"activity": "Anne Frank House", "location": "Prinsengracht", "cost": 14},
+      "afternoon": {"activity": "Walking tour of Red Light District & Dam Square", "location": "City Center", "cost": 0},
+      "evening": {"activity": "Brown café experience and local dinner", "location": "De Pijp", "cost": 40}
+    },
+    "day_4": {
+      "theme": "Markets & Local Life",
+      "morning": {"activity": "Albert Cuyp Market", "location": "De Pijp", "cost": 15},
+      "afternoon": {"activity": "Vondelpark and bike rental", "location": "Vondelpark", "cost": 15},
+      "evening": {"activity": "Foodhallen dinner experience", "location": "Oud-West", "cost": 35}
+    },
+    "day_5": {
+      "theme": "Departure Day",
+      "morning": {"activity": "Bloemenmarkt (Flower Market)", "location": "Singel", "cost": 10},
+      "afternoon": {"activity": "Last-minute shopping at Nine Streets", "location": "Nine Streets", "cost": 30},
+      "evening": {"activity": "Airport transfer", "location": "Schiphol Airport", "cost": 5}
+    }
+  },
+  
+  "budget_breakdown": {
+    "flights": 1500,
+    "accommodation": 875,
+    "food": 350,
+    "activities": 156,
+    "transportation": 50,
+    "total": 2931,
+    "remaining": 0
+  },
+  
+  "restaurants": [
+    {
+      "name": "Café de Reiger",
+      "cuisine": "Traditional Dutch",
+      "area": "Jordaan",
+      "price_range": "$$",
+      "must_try": "Stamppot",
+      "reservation": "recommended"
+    },
+    {
+      "name": "Restaurant Greetje",
+      "cuisine": "Modern Dutch",
+      "area": "Centrum",
+      "price_range": "$$$",
+      "must_try": "Dutch cheese platter",
+      "reservation": "required"
+    },
+    {
+      "name": "Café de Prins",
+      "cuisine": "Brown Café",
+      "area": "Prinsengracht",
+      "price_range": "$",
+      "must_try": "Bitterballen",
+      "reservation": "walk-in"
+    },
+    {
+      "name": "De Kas",
+      "cuisine": "Farm-to-table",
+      "area": "Oost",
+      "price_range": "$$$$",
+      "must_try": "Seasonal menu",
+      "reservation": "required"
+    },
+    {
+      "name": "Winkel 43",
+      "cuisine": "Café",
+      "area": "Noordermarkt",
+      "price_range": "$",
+      "must_try": "Apple pie",
+      "reservation": "walk-in"
+    }
+  ],
+  
+  "key_attractions": [
+    {
+      "name": "Anne Frank House",
+      "category": "museum",
+      "time_needed": "2 hours",
+      "cost": 14,
+      "best_time": "morning",
+      "book_ahead": true
+    },
+    {
+      "name": "Rijksmuseum",
+      "category": "museum",
+      "time_needed": "3 hours",
+      "cost": 22,
+      "best_time": "morning",
+      "book_ahead": true
+    },
+    {
+      "name": "Canal
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Full raw Claude response before parsing (_parse_ai_response):
+```json
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Canal cruises and historic waterways", "World-class museums and Dutch Masters", "Vibrant neighborhoods and local markets"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Spirit Airlines", "price": 485, "departure": "06:15", "arrival": "08:45", "duration": "11h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Frontier Airlines", "price": 520, "departure": "13:30", "arrival": "16:15", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 575, "departure": "19:00", "arrival": "23:30", "duration": "13h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "United Airlines", "price": 680, "departure": "09:45", "arrival": "11:30", "duration": "10h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Lufthansa", "price": 725, "departure": "14:20", "arrival": "15:45", "duration": "10h 25m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Air France", "price": 765, "departure": "16:50", "arrival": "18:20", "duration": "10h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 985, "departure": "10:30", "arrival": "07:15", "duration": "9h 45m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Delta Airlines", "price": 1045, "departure": "15:40", "arrival": "12:30", "duration": "9h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "American Airlines", "price": 1125, "departure": "18:25", "arrival": "15:10", "duration": "9h 45m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"}
+  ],
+  
+  "return": [
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 495, "departure": "06:00", "arrival": "14:30", "duration": "14h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Spirit Airlines", "price": 510, "departure": "11:15", "arrival": "20:45", "duration": "15h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Icelandair", "price": 565, "departure": "14:30", "arrival": "23:15", "duration": "14h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "United Airlines", "price": 695, "departure": "08:45", "arrival": "15:30", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Lufthansa", "price": 735, "departure": "10:20", "arrival": "17:15", "duration": "12h 55m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "British Airways", "price": 780, "departure": "13:50", "arrival": "21:30", "duration": "13h 40m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 995, "departure": "09:30", "arrival": "14:20", "duration": "10h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Delta Airlines", "price": 1065, "departure": "12:15", "arrival": "17:10", "duration": "10h 55m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "American Airlines", "price": 1145, "departure": "16:40", "arrival": "21:35", "duration": "10h 55m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"}
+  ],
+  
+  "hotels": [
+    {"category": "budget", "name": "ClinkNOORD Hostel", "area": "Amsterdam Noord", "price_per_night": 85, "total_cost": 425, "booking_link": "https://www.google.com/travel/hotels/search?q=ClinkNOORD%20Hostel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Hotel V Nesplein", "area": "Oud-West", "price_per_night": 95, "total_cost": 475, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20V%20Nesplein%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "SWEETS hotel", "area": "Various Bridges", "price_per_night": 110, "total_cost": 550, "booking_link": "https://www.google.com/travel/hotels/search?q=SWEETS%20hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "The Hoxton Amsterdam", "area": "Herengracht", "price_per_night": 175, "total_cost": 875, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Hoxton%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Lloyd Hotel", "area": "Eastern Docklands", "price_per_night": 195, "total_cost": 975, "booking_link": "https://www.google.com/travel/hotels/search?q=Lloyd%20Hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Pulitzer Amsterdam", "area": "Prinsengracht", "price_per_night": 225, "total_cost": 1125, "booking_link": "https://www.google.com/travel/hotels/search?q=Pulitzer%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Waldorf Astoria Amsterdam", "area": "Herengracht", "price_per_night": 425, "total_cost": 2125, "booking_link": "https://www.google.com/travel/hotels/search?q=Waldorf%20Astoria%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "The Dylan Amsterdam", "area": "Keizersgracht", "price_per_night": 385, "total_cost": 1925, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Dylan%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "InterContinental Amstel", "area": "Amstel River", "price_per_night": 475, "total_cost": 2375, "booking_link": "https://www.google.com/travel/hotels/search?q=InterContinental%20Amstel%20Amsterdam%20from%202025-10-01%20to%202025-10-05"}
+  ],
+  
+  "itinerary": {
+    "day_1": {
+      "theme": "Arrival & Canal District",
+      "morning": {"activity": "Arrive at Schiphol Airport, train to city center", "location": "Schiphol Airport", "cost": 5},
+      "afternoon": {"activity": "Check-in and explore Jordaan neighborhood", "location": "Jordaan", "cost": 0},
+      "evening": {"activity": "Canal cruise with dinner", "location": "Canal Ring", "cost": 65}
+    },
+    "day_2": {
+      "theme": "Museums & Culture",
+      "morning": {"activity": "Rijksmuseum visit", "location": "Museumplein", "cost": 22},
+      "afternoon": {"activity": "Van Gogh Museum", "location": "Museumplein", "cost": 20},
+      "evening": {"activity": "Dinner in Leidseplein", "location": "Leidseplein", "cost": 45}
+    },
+    "day_3": {
+      "theme": "Historic Amsterdam",
+      "morning": {"activity": "Anne Frank House", "location": "Prinsengracht", "cost": 14},
+      "afternoon": {"activity": "Walking tour of Red Light District & Dam Square", "location": "City Center", "cost": 0},
+      "evening": {"activity": "Brown café experience and local dinner", "location": "De Pijp", "cost": 40}
+    },
+    "day_4": {
+      "theme": "Markets & Local Life",
+      "morning": {"activity": "Albert Cuyp Market", "location": "De Pijp", "cost": 15},
+      "afternoon": {"activity": "Vondelpark and bike rental", "location": "Vondelpark", "cost": 15},
+      "evening": {"activity": "Foodhallen dinner experience", "location": "Oud-West", "cost": 35}
+    },
+    "day_5": {
+      "theme": "Departure Day",
+      "morning": {"activity": "Bloemenmarkt (Flower Market)", "location": "Singel", "cost": 10},
+      "afternoon": {"activity": "Last-minute shopping at Nine Streets", "location": "Nine Streets", "cost": 30},
+      "evening": {"activity": "Airport transfer", "location": "Schiphol Airport", "cost": 5}
+    }
+  },
+  
+  "budget_breakdown": {
+    "flights": 1500,
+    "accommodation": 875,
+    "food": 350,
+    "activities": 156,
+    "transportation": 50,
+    "total": 2931,
+    "remaining": 0
+  },
+  
+  "restaurants": [
+    {
+      "name": "Café de Reiger",
+      "cuisine": "Traditional Dutch",
+      "area": "Jordaan",
+      "price_range": "$$",
+      "must_try": "Stamppot",
+      "reservation": "recommended"
+    },
+    {
+      "name": "Restaurant Greetje",
+      "cuisine": "Modern Dutch",
+      "area": "Centrum",
+      "price_range": "$$$",
+      "must_try": "Dutch cheese platter",
+      "reservation": "required"
+    },
+    {
+      "name": "Café de Prins",
+      "cuisine": "Brown Café",
+      "area": "Prinsengracht",
+      "price_range": "$",
+      "must_try": "Bitterballen",
+      "reservation": "walk-in"
+    },
+    {
+      "name": "De Kas",
+      "cuisine": "Farm-to-table",
+      "area": "Oost",
+      "price_range": "$$$$",
+      "must_try": "Seasonal menu",
+      "reservation": "required"
+    },
+    {
+      "name": "Winkel 43",
+      "cuisine": "Café",
+      "area": "Noordermarkt",
+      "price_range": "$",
+      "must_try": "Apple pie",
+      "reservation": "walk-in"
+    }
+  ],
+  
+  "key_attractions": [
+    {
+      "name": "Anne Frank House",
+      "category": "museum",
+      "time_needed": "2 hours",
+      "cost": 14,
+      "best_time": "morning",
+      "book_ahead": true
+    },
+    {
+      "name": "Rijksmuseum",
+      "category": "museum",
+      "time_needed": "3 hours",
+      "cost": 22,
+      "best_time": "morning",
+      "book_ahead": true
+    },
+    {
+      "name": "Canal
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Attempting to parse response as JSON directly.
+WARNING:api.enhanced_ai_provider:[DEFENSIVE] Failed to parse response as JSON: Expecting value: line 1 column 1 (char 0)
+WARNING:api.enhanced_ai_provider:[DEFENSIVE] Response that failed to parse (first 500 chars): ```json
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Canal cruises and historic waterways", "World-class museums and Dutch Masters", "Vibrant neighborhoods and local markets"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Spirit Airlines", "price": 485, "departure": "06:15", "arrival": "08:45", "duration": "11h 30m", "stops": 1, "booking_link": "https://www.google.co...
+ERROR:api.enhanced_ai_provider:[DEFENSIVE] rapidjson not installed. Install python-rapidjson for permissive parsing.
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Attempting to parse cleaned response (removed text before first {).
+WARNING:api.enhanced_ai_provider:[DEFENSIVE] Failed to parse cleaned response: Unterminated string starting at: line 148 column 15 (char 11059)
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Found JSON with fallback regex (len=384):
+{
+      "theme": "Arrival & Canal District",
+      "morning": {"activity": "Arrive at Schiphol Airport, train to city center", "location": "Schiphol Airport", "cost": 5},
+      "afternoon": {"activity": "Check-in and explore Jordaan neighborhood", "location": "Jordaan", "cost": 0},
+      "evening": {"activity": "Canal cruise with dinner", "location": "Canal Ring", "cost": 65}
+    }... (truncated)
+INFO:api.enhanced_ai_provider:[VALIDATION] AI content appears to be real (no placeholders detected)
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Normalized AI response keys: ['theme', 'morning', 'afternoon', 'evening', 'trip_summary', 'itinerary', 'transportation', 'accommodation', 'estimated_costs', 'practical_info', 'notes', 'restaurants', 'key_attractions', 'booking_priorities', 'insider_tips', 'cultural_insights']
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'itinerary' after normalization: {}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'transportation' after normalization: {'fastest': [], 'cheapest': [], 'optimal': []}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Number of flights in transportation: 0
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'accommodation' after normalization: {'budget': [], 'moderate': [], 'luxury': []}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'trip_summary' after normalization: {'title': '', 'overview': '', 'highlights': []}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'practical_info' after normalization: {'currency': '', 'language': ''}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Output of _parse_ai_response before normalization: {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 5}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Final itinerary keys: ['theme', 'morning', 'afternoon', 'evening', 'trip_summary', 'itinerary', 'transportation', 'accommodation', 'estimated_costs', 'practical_info', 'notes', 'restaurants', 'key_attractions', 'booking_priorities', 'insider_tips', 'cultural_insights']
+INFO:api.enhanced_ai_provider:[DEBUG] plan_trip returning success with itinerary and estimated_costs.
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Raw AI itinerary before merging: {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 5}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Final itinerary keys: ['theme', 'morning', 'afternoon', 'evening', 'trip_summary', 'itinerary', 'transportation', 'accommodation', 'estimated_costs', 'practical_info', 'notes', 'restaurants', 'key_attractions', 'booking_priorities', 'insider_tips', 'cultural_insights']
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Merged itinerary to be returned: {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 5}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}
+INFO:api.chat_integration_router:[DEBUG] Returning FULL RESPONSE (planning): {'session_id': 'session_1755904602530_8bfls9q4u', 'message': 'Perfect! I have all the information I need. Let me craft your perfect itinerary!', 'state': 'planning', 'can_start_planning': True, 'trip_request': {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': 5, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': <BudgetRange.LUXURY: 'luxury'>, 'interests': [], 'special_requirements': '', 'total_budget': 3000.0}, 'planning_result': {'success': True, 'itinerary': {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 5}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}, 'booking_links': {}, 'estimated_costs': {'total': ''}, 'metadata': {'provider': <ProviderType.AI: 'ai'>, 'quality': <TripPlanQuality.EXCELLENT: 'excellent'>, 'confidence_score': 0.95, 'data_freshness': 'real_time', 'last_updated': '2025-08-22T18:19:10.586898', 'source_notes': ['Generated by Claude AI with real API integration', 'Includes real hotel availability and pricing', 'Flight recommendations based on actual search results', 'Booking links are personalized and functional'], 'fallback_used': False}}, 'conversation_state': {'origin': 'Dallas', 'destination': 'Amsterdam', 'current_state': 'gathering_info', 'start_date': 'october 2025', 'travelers': 4, 'kids_info': {'count': 2, 'category': 'children'}, 'duration_days': 5}}
+INFO:     127.0.0.1:56336 - "POST /chat-integration/process-message HTTP/1.1" 200 OK
+INFO:api.chat_integration_router:[DEBUG] Received trip_request_data: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': 5, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'trip_type': 'leisure', 'budget_range': 'luxury', 'interests': [], 'special_requirements': '', 'total_budget': 3000}
+INFO:api.chat_integration_router:[DEBUG] Starting trip planning for: Dallas to Amsterdam
+INFO:api.chat_integration_router:[DEBUG] Trip request fields: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': 5, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'trip_type': <TripType.LEISURE: 'leisure'>, 'budget_range': <BudgetRange.LUXURY: 'luxury'>, 'interests': [], 'special_requirements': '', 'total_budget': 3000.0}
+INFO:api.chat_integration_router:[DEBUG] Calling _start_trip_planning...
+INFO:api.enhanced_ai_provider:[DEBUG] plan_trip called with request: {'origin': 'Dallas', 'destination': 'Amsterdam', 'duration_days': 5, 'start_date': 'october 2025', 'end_date': None, 'travelers': 4, 'budget_range': 'luxury', 'interests': [], 'trip_type': 'leisure', 'special_requirements': '', 'preferred_provider': None, 'smart_trip_data': None}
+ERROR:api.enhanced_ai_provider:Error calculating budget allocation: 'TripPlanRequest' object has no attribute 'total_budget'
+INFO:api.hotel_client:Starting smart hotel search for: Amsterdam
+INFO:api.hotel_client:Destination search requested for: Amsterdam
+INFO:api.hotel_client:Making hotel API request to: https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination
+INFO:api.hotel_client:Parameters: {'query': 'Amsterdam'}
+INFO:api.hotel_client:Response status: 200
+INFO:api.hotel_client:Response content (first 500 chars): {"status":true,"message":"Success","timestamp":1755904751190,"data":[{"dest_id":"-2140479","search_type":"city","lc":"en","hotels":4071,"nr_hotels":4071,"longitude":4.893,"roundtrip":"GhAxNmVjYTNmN2Y2MTMwMjVjIAAoATICZW46CUFtc3RlcmRhbUAASgBQAA==","city_name":"Amsterdam","name":"Amsterdam","latitude":52.3729,"country":"Netherlands","region":"Noord-Holland","dest_type":"city","image_url":"https://cf.bstatic.com/xdata/images/city/150x150/976538.jpg?k=19a2487e30f31349e54aaf32d509121d81e2e31eee5b820c7
+INFO:api.hotel_client:Successfully parsed JSON response
+INFO:api.hotel_client:Found 5 destination options
+INFO:api.hotel_client:Prioritized destinations: ['Amsterdam, Noord-Holland, Netherlands', 'Amsterdam City Centre, Amsterdam, Noord-Holland, Netherlands', 'Schiphol Airport, Amsterdam, Noord-Holland, Netherlands', 'Amsterdam Central Station, Amsterdam, Noord-Holland, Netherlands', 'Amsterdam RAI, Amsterdam, Noord-Holland, Netherlands']
+INFO:api.hotel_client:Trying destination: Amsterdam, Noord-Holland, Netherlands (ID: -2140479)
+INFO:api.hotel_client:Getting filters for dest_id: -2140479
+INFO:api.hotel_client:Making hotel API request to: https://booking-com15.p.rapidapi.com/api/v1/hotels/getFilter
+INFO:api.hotel_client:Parameters: {'dest_id': '-2140479', 'search_type': 'CITY', 'arrival_date': '2025-10-01', 'departure_date': '2025-10-06', 'adults': 4, 'children_age': '0,17', 'room_qty': 1}
+INFO:api.hotel_client:Response status: 200
+INFO:api.hotel_client:Response content (first 500 chars): {"status":true,"message":"Success","timestamp":1755904752501,"data":{"pagination":{"nbResultsTotal":884},"availabilityInfo":{"totalAvailableNotAutoextended":485},"filters":[{"title":"Your budget (for 5 nights)","field":"price","filterStyle":"SLIDER","options":[],"min":"400","max":"4000","minPriceStep":"100","minSelected":"0","histogram":[3,3,16,32,33,41,64,91,67,78,58,80,100,69,69,62,44,28,42,64,37,39,25,26,19,17,12,25,35,21,19,21,21,10,7,17,7,19,12,12,8,5,5,7,0,5,5,5,3,1],"currency":"EUR"},{"ti
+INFO:api.hotel_client:Successfully parsed JSON response
+INFO:api.hotel_client:Price range for Amsterdam, Noord-Holland, Netherlands: $400.0 - $4000.0
+INFO:api.hotel_client:Trying budget level: $400.0
+INFO:api.hotel_client:Searching hotels for dest_id: -2140479 with filters: {'price': '0-400'}
+INFO:api.hotel_client:Making hotel API request to: https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotels
+INFO:api.hotel_client:Parameters: {'dest_id': '-2140479', 'search_type': 'CITY', 'arrival_date': '2025-10-01', 'departure_date': '2025-10-06', 'adults': 4, 'children_age': '0,17', 'room_qty': 1, 'page_number': 1, 'units': 'metric', 'temperature_unit': 'c', 'languagecode': 'en-us', 'currency_code': 'USD', 'location': 'US', 'price': '0-400'}
+INFO:api.hotel_client:Response status: 200
+INFO:api.hotel_client:Response content (first 500 chars): {"status":true,"message":"Success","timestamp":1755904753694,"data":{"hotels":[{"hotel_id":2593669,"accessibilityLabel":"Via Amsterdam.\n3 out of 5 stars.\nThis is a Preferred Plus property.\n8.0 Very Good 16206 reviews.\n‎Bijlmermeer‬ • ‎6.6 km from downtown‬.\nMobile-only price.\n Shared dorm room : 6 beds.\nOriginal price 1229 USD. Current price 1018 USD..\n+116 USD taxes and charges.","property":{"isPreferred":true,"checkin":{"fromTime":"15:00","untilTime":"00:00"},"optOutFromGalleryChanges"
+INFO:api.hotel_client:Successfully parsed JSON response
+INFO:api.hotel_client:Found 20 hotels in Amsterdam, Noord-Holland, Netherlands with budget $400.0
+INFO:api.hotel_client:Smart search completed. Found 10 hotels from 1 attempts
+INFO:services.location_detection_service:Detected location: United States (US), Currency: USD
+INFO:services.location_detection_service:Geocoded Dallas -> US
+INFO:services.location_detection_service:Geocoded Amsterdam -> NL
+INFO:api.enhanced_ai_provider:Trip currency strategy: {'primary_currency': 'USD', 'secondary_currency': 'USD', 'strategy': 'origin_based', 'origin_currency': 'USD', 'destination_currency': 'USD'}
+INFO:api.enhanced_ai_provider:Calling flight API with params: {'origin': 'Dallas', 'destination': 'Amsterdam', 'date': '2025-10-01', 'return_date': '2025-10-06'}
+INFO:api.search_router:Using RapidAPI key: 3b43872968...
+INFO:api.search_router:Searching for flights with context: {'origin': 'Dallas', 'destination': 'Amsterdam', 'start_date': '2025-10-01', 'return_date': '2025-10-06', 'travelers': 1}
+INFO:services.flight_service:Flight search called with context: {'origin': 'Dallas', 'destination': 'Amsterdam', 'start_date': '2025-10-01', 'return_date': '2025-10-06', 'travelers': 1}
+INFO:services.flight_service:Extracted parameters: origin=Dallas, destination=Amsterdam, start_date=2025-10-01, return_date=2025-10-06, travelers=1
+INFO:services.flight_service:RAPID_API_KEY found: 3b43872968...
+INFO:services.flight_service:Getting airport ID for origin: Dallas
+INFO:services.flight_service:[AIRPORT] Searching for airports for 'Dallas' with params: {'query': 'Dallas'}
+INFO:services.flight_service:[AIRPORT] Raw search result: {'status': True, 'message': 'Success', 'timestamp': 1755904756084, 'data': [{'id': 'DFW.CITY', 'type': 'CITY', 'name': 'Dallas', 'code': 'DFW', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976890.jpg?k=2ef1427cb3b629db8ecae1b402047e45a49805627b68876e48eefc4b6379643a&o='}, {'id': 'DFW.AIRPORT', 'type': 'AIRPORT', 'name': 'Dallas-Fort Worth International Airport', 'code': 'DFW', 'city': 'DFW', 'cityName': 'Dallas', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'countryNameShort': 'US', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976890.jpg?k=2ef1427cb3b629db8ecae1b402047e45a49805627b68876e48eefc4b6379643a&o=', 'distanceToCity': {'value': 25.903681159530844, 'unit': 'km'}, 'parent': 'DFW'}, {'id': 'DAL.AIRPORT', 'type': 'AIRPORT', 'name': 'Dallas Love Field Airport', 'code': 'DAL', 'city': 'DFW', 'cityName': 'Dallas', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'countryNameShort': 'US', 'photoUri': 'https://q-xx.bstatic.com/xdata/images/city/square150/976890.jpg?k=2ef1427cb3b629db8ecae1b402047e45a49805627b68876e48eefc4b6379643a&o=', 'distanceToCity': {'value': 8.186506942172121, 'unit': 'km'}, 'parent': 'DFW'}, {'id': 'ROA.AIRPORT', 'type': 'AIRPORT', 'name': 'Roanoke Airport', 'code': 'ROA', 'city': 'ROA', 'cityName': 'Roanoke', 'regionName': 'Texas', 'country': 'US', 'countryName': 'United States', 'countryNameShort': 'US', 'photoUri': 'https://q-xx.bstatic.com/static/img/plane-100.jpg', 'distanceToCity': {'value': 1637.2735868843076, 'unit': 'km'}, 'parent': 'ROA'}]}
+INFO:services.location_detection_service:Geocoded Dallas -> US
+INFO:services.flight_service:[AIRPORT] Geocoded country: us
+INFO:services.flight_service:[AIRPORT] 0 airports after country filter (us)
+WARNING:services.flight_service:[AIRPORT] No airports matched country 'us', using all results
+INFO:services.flight_service:[AIRPORT] 3 airports after city/region filter ('dallas')
+INFO:services.flight_service:[AIRPORT] Selected airport: Dallas Love Field Airport (ID: DAL.AIRPORT) [country=US, city=Dallas, region=Texas, distance=8.186506942172121]
+INFO:services.flight_service:Origin airport ID: DAL.AIRPORT
+INFO:services.flight_service:Getting airport ID for destination: Amsterdam
+INFO:services.flight_service:[AIRPORT] Searching for airports for 'Amsterdam' with params: {'query': 'Amsterdam'}
+INFO:services.flight_service:[AIRPORT] Raw search result: {'status': False, 'timestamp': 1755904757208, 'message': 'Something went wrong. We have logged the error and will get the resolution.'}
+WARNING:services.flight_service:[AIRPORT] No airports found for Amsterdam
+INFO:services.flight_service:Destination airport ID: None
+ERROR:services.flight_service:Could not find airport ID for destination: Amsterdam
+INFO:services.flight_service:Flight search result: {'success': False, 'flights': [], 'error': 'Airport not found for destination: Amsterdam'}
+ERROR:api.search_router:Flight search failed: Airport not found for destination: Amsterdam
+INFO:     127.0.0.1:56375 - "POST /api/search HTTP/1.1" 500 Internal Server Error
+INFO:api.enhanced_ai_provider:Flight API response status: 500
+ERROR:api.enhanced_ai_provider:Flight API error: {"detail":"Airport not found for destination: Amsterdam"}
+INFO:api.enhanced_ai_provider:[DEBUG] Claude prompt being sent:
+You are an expert travel planner. Create a comprehensive trip itinerary.
+
+TRIP: Dallas → Amsterdam, 5 days, $None budget, general exploration
+
+RULES:
+1. Use real airline/hotel names for Amsterdam
+2. Generate 5 days of activities
+3. Provide REAL destination-specific content (not placeholders)
+4. Include emergency numbers, packing tips, cultural insights for Amsterdam
+5. Generate EXACTLY 9 flight options (3 budget, 3 standard, 3 premium) for both outbound and return
+6. Generate EXACTLY 9 hotel options (3 budget, 3 moderate, 3 luxury)
+
+Generate this JSON structure:
+
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Must-see attractions", "Local experiences", "Cultural immersion"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"}
+  ],
+  "return": [
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Real airline", "price": 400-600, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Real airline", "price": 600-800, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "Real airline", "price": 800-1200, "departure": "HH:MM", "arrival": "HH:MM", "duration": "Xh Ym", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"}
+  ],
+  
+  "hotels": [
+    {"category": "budget", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 80-120, "total_cost": 400-600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 80-120, "total_cost": 400-600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 80-120, "total_cost": 400-600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 150-250, "total_cost": 750-1250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 150-250, "total_cost": 750-1250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 150-250, "total_cost": 750-1250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 300-500, "total_cost": 1500-2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 300-500, "total_cost": 1500-2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Real hotel", "area": "Neighborhood", "price_per_night": 300-500, "total_cost": 1500-2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"}
+  ],
+  
+  "itinerary": {
+    "day_1": {
+      "theme": "Arrival & Orientation",
+      "morning": {"activity": "Airport arrival", "location": "Airport", "cost": 0},
+      "afternoon": {"activity": "Hotel check-in", "location": "Hotel area", "cost": 0},
+      "evening": {"activity": "Welcome dinner", "location": "Local restaurant", "cost": 50}
+    }
+  },
+  
+  "budget_breakdown": {
+    "flights": number,
+    "accommodation": number,
+    "food": number,
+    "activities": number,
+    "transportation": number,
+    "total": number,
+    "remaining": number
+  },
+  
+  "restaurants": [
+    {
+      "name": "Restaurant name",
+      "cuisine": "Type",
+      "area": "Neighborhood",
+      "price_range": "$-$$$$",
+      "must_try": "Signature dish",
+      "reservation": "required|recommended|walk-in"
+    }
+  ],
+  
+  "key_attractions": [
+    {
+      "name": "Attraction name",
+      "category": "museum|landmark|experience|park",
+      "time_needed": "X hours",
+      "cost": number,
+      "best_time": "morning|afternoon|evening",
+      "book_ahead": boolean
+    }
+  ],
+  
+  "practical_info": {
+    "currency": "Local currency (EUR/USD/etc)",
+    "language": "Local language",
+    "emergency_numbers": ["112", "Local emergency"],
+    "packing_suggestions": ["Weather-appropriate clothing", "Comfortable shoes", "Travel adapter"]
+  },
+  
+  "cultural_insights": {
+    "local_customs": ["Respect local customs", "Learn basic greetings"],
+    "etiquette": ["Tipping culture", "Dress appropriately"],
+    "dress_code": "Smart casual"
+  },
+  
+  "insider_tips": [
+    "Visit popular sites early morning",
+    "Try local street food",
+    "Use public transportation"
+  ]
+}
+
+Focus on creating a practical itinerary for Amsterdam. Ensure all costs stay within $None.
+
+Return ONLY valid JSON. No text before or after.
+INFO:httpx:HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Full raw Claude response before parsing (plan_trip):
+```json
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Canal cruises and historic waterways", "World-class museums and art galleries", "Vibrant neighborhoods and local markets"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Spirit Airlines", "price": 485, "departure": "06:15", "arrival": "08:45+1", "duration": "11h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Frontier Airlines", "price": 520, "departure": "14:30", "arrival": "16:15+1", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 595, "departure": "19:20", "arrival": "18:30+1", "duration": "14h 10m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "United Airlines", "price": 685, "departure": "10:45", "arrival": "07:20+1", "duration": "10h 35m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Delta Air Lines", "price": 720, "departure": "15:55", "arrival": "11:45+1", "duration": "10h 50m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Lufthansa", "price": 795, "departure": "16:30", "arrival": "12:15+1", "duration": "10h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 985, "departure": "17:40", "arrival": "10:50+1", "duration": "9h 10m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "American Airlines", "price": 1120, "departure": "19:15", "arrival": "12:25+1", "duration": "9h 10m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "British Airways", "price": 1185, "departure": "20:30", "arrival": "13:45+1", "duration": "9h 15m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"}
+  ],
+  
+  "return": [
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 475, "departure": "06:00", "arrival": "14:30", "duration": "14h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Spirit Airlines", "price": 510, "departure": "10:15", "arrival": "19:45", "duration": "15h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Icelandair", "price": 585, "departure": "13:30", "arrival": "22:15", "duration": "14h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "United Airlines", "price": 695, "departure": "09:45", "arrival": "16:30", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Delta Air Lines", "price": 730, "departure": "11:20", "arrival": "18:10", "duration": "12h 50m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Air France", "price": 785, "departure": "14:35", "arrival": "21:45", "duration": "13h 10m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 995, "departure": "10:35", "arrival": "15:20", "duration": "10h 45m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "American Airlines", "price": 1095, "departure": "12:50", "arrival": "17:40", "duration": "10h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "British Airways", "price": 1175, "departure": "15:25", "arrival": "20:15", "duration": "10h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"}
+  ],
+  
+  "hotels": [
+    {"category": "budget", "name": "SWEETS hotel", "area": "Various Bridge Houses", "price_per_night": 95, "total_cost": 475, "booking_link": "https://www.google.com/travel/hotels/search?q=SWEETS%20hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "ClinkNOORD Hostel", "area": "Amsterdam Noord", "price_per_night": 85, "total_cost": 425, "booking_link": "https://www.google.com/travel/hotels/search?q=ClinkNOORD%20Hostel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Hotel V Nesplein", "area": "Oud-West", "price_per_night": 110, "total_cost": 550, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20V%20Nesplein%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "The Hoxton Amsterdam", "area": "Herengracht Canal", "price_per_night": 185, "total_cost": 925, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Hoxton%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Lloyd Hotel", "area": "Eastern Docklands", "price_per_night": 165, "total_cost": 825, "booking_link": "https://www.google.com/travel/hotels/search?q=Lloyd%20Hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Pulitzer Amsterdam", "area": "Jordaan", "price_per_night": 225, "total_cost": 1125, "booking_link": "https://www.google.com/travel/hotels/search?q=Pulitzer%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Waldorf Astoria Amsterdam", "area": "Herengracht", "price_per_night": 450, "total_cost": 2250, "booking_link": "https://www.google.com/travel/hotels/search?q=Waldorf%20Astoria%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "InterContinental Amstel", "area": "Amstel River", "price_per_night": 385, "total_cost": 1925, "booking_link": "https://www.google.com/travel/hotels/search?q=InterContinental%20Amstel%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "The Dylan Amsterdam", "area": "Keizersgracht", "price_per_night": 420, "total_cost": 2100, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Dylan%20Amsterdam%20from%202025-10-01%20to%202025-10-05"}
+  ],
+  
+  "itinerary": {
+    "day_1": {
+      "theme": "Arrival & Canal District",
+      "morning": {"activity": "Arrive at Schiphol Airport, train to city center", "location": "Schiphol Airport", "cost": 6},
+      "afternoon": {"activity": "Check-in and explore Jordaan neighborhood", "location": "Jordaan", "cost": 0},
+      "evening": {"activity": "Canal cruise with dinner", "location": "Canal Ring", "cost": 65}
+    },
+    "day_2": {
+      "theme": "Museums & Culture",
+      "morning": {"activity": "Visit Rijksmuseum", "location": "Museumplein", "cost": 22},
+      "afternoon": {"activity": "Van Gogh Museum", "location": "Museumplein", "cost": 20},
+      "evening": {"activity": "Dinner in Leidseplein", "location": "Leidseplein", "cost": 40}
+    },
+    "day_3": {
+      "theme": "Historic Amsterdam",
+      "morning": {"activity": "Anne Frank House (book ahead!)", "location": "Prinsengracht", "cost": 14},
+      "afternoon": {"activity": "Walking tour of Red Light District & Dam Square", "location": "City Center", "cost": 0},
+      "evening": {"activity": "Traditional Dutch dinner at Greetje", "location": "Centrum", "cost": 55}
+    },
+    "day_4": {
+      "theme": "Markets & Local Life",
+      "morning": {"activity": "Albert Cuyp Market", "location": "De Pijp", "cost": 20},
+      "afternoon": {"activity": "Bike tour through Vondelpark", "location": "Vondelpark", "cost": 15},
+      "evening": {"activity": "Foodhallen food market dinner", "location": "Oud-West", "cost": 30}
+    },
+    "day_5": {
+      "theme": "Departure Day",
+      "morning": {"activity": "Bloemenmarkt (Flower Market)", "location": "Singel Canal", "cost": 15},
+      "afternoon": {"activity": "Last-minute shopping at Nine Streets", "location": "Nine Streets", "cost": 50},
+      "evening": {"activity": "Airport departure", "location": "Schiphol Airport", "cost": 6}
+    }
+  },
+  
+  "budget_breakdown": {
+    "flights": 1400,
+    "accommodation": 925,
+    "food": 350,
+    "activities": 218,
+    "transportation": 60,
+    "total": 2953,
+    "remaining": 0
+  },
+  
+  "restaurants": [
+    {
+      "name": "Greetje",
+      "cuisine": "Modern Dutch",
+      "area": "Centrum",
+      "price_range": "$$$",
+      "must_try": "Dutch cheese platter and seasonal game",
+      "reservation": "required"
+    },
+    {
+      "name": "Café de Reiger",
+      "cuisine": "Traditional Dutch",
+      "area": "Jordaan",
+      "price_range": "$$",
+      "must_try": "Stamppot and Dutch meatballs",
+      "reservation": "recommended"
+    },
+    {
+      "name": "Restaurant De Kas",
+      "cuisine": "Farm-to-table",
+      "area": "Oost",
+      "price_range": "$$$$",
+      "must_try": "Seasonal tasting menu",
+      "reservation": "required"
+    },
+    {
+      "name": "Foodhallen",
+      "cuisine": "International Food Hall",
+      "area": "Oud-West",
+      "price_range": "$-$$",
+      "must_try": "Bitterballen and local craft beer",
+      "reservation": "walk-in"
+    },
+    {
+      "name": "Café de Prins",
+      "cuisine": "Dutch Bistro",
+      "area": "Prinsengracht",
+      "price_range": "$$",
+      "must_try": "Apple pie with coffee",
+      "reservation": "walk-in"
+    }
+  ],
+  
+  "key_attractions": [
+    {
+      "name": "Rijksmuseum",
+      "category": "museum",
+      "time_needed": "3 hours",
+      "cost": 22,
+      "best_time": "morning",
+      "book_ahead": true
+    },
+    {
+      "name": "Anne Frank House",
+      "category": "museum",
+      "time_needed":
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Full raw Claude response before parsing (_parse_ai_response):
+```json
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Canal cruises and historic waterways", "World-class museums and art galleries", "Vibrant neighborhoods and local markets"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Spirit Airlines", "price": 485, "departure": "06:15", "arrival": "08:45+1", "duration": "11h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "Frontier Airlines", "price": 520, "departure": "14:30", "arrival": "16:15+1", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 595, "departure": "19:20", "arrival": "18:30+1", "duration": "14h 10m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "United Airlines", "price": 685, "departure": "10:45", "arrival": "07:20+1", "duration": "10h 35m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Delta Air Lines", "price": 720, "departure": "15:55", "arrival": "11:45+1", "duration": "10h 50m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "standard", "airline": "Lufthansa", "price": 795, "departure": "16:30", "arrival": "12:15+1", "duration": "10h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 985, "departure": "17:40", "arrival": "10:50+1", "duration": "9h 10m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "American Airlines", "price": 1120, "departure": "19:15", "arrival": "12:25+1", "duration": "9h 10m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"},
+    {"category": "premium", "airline": "British Airways", "price": 1185, "departure": "20:30", "arrival": "13:45+1", "duration": "9h 15m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Dallas%20to%20Amsterdam%20on%202025-10-01"}
+  ],
+  
+  "return": [
+    {"category": "budget", "airline": "TAP Air Portugal", "price": 475, "departure": "06:00", "arrival": "14:30", "duration": "14h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Spirit Airlines", "price": 510, "departure": "10:15", "arrival": "19:45", "duration": "15h 30m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "budget", "airline": "Icelandair", "price": 585, "departure": "13:30", "arrival": "22:15", "duration": "14h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "United Airlines", "price": 695, "departure": "09:45", "arrival": "16:30", "duration": "12h 45m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Delta Air Lines", "price": 730, "departure": "11:20", "arrival": "18:10", "duration": "12h 50m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "standard", "airline": "Air France", "price": 785, "departure": "14:35", "arrival": "21:45", "duration": "13h 10m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "KLM Royal Dutch", "price": 995, "departure": "10:35", "arrival": "15:20", "duration": "10h 45m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "American Airlines", "price": 1095, "departure": "12:50", "arrival": "17:40", "duration": "10h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"},
+    {"category": "premium", "airline": "British Airways", "price": 1175, "departure": "15:25", "arrival": "20:15", "duration": "10h 50m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20Amsterdam%20to%20Dallas%20on%202025-10-05"}
+  ],
+  
+  "hotels": [
+    {"category": "budget", "name": "SWEETS hotel", "area": "Various Bridge Houses", "price_per_night": 95, "total_cost": 475, "booking_link": "https://www.google.com/travel/hotels/search?q=SWEETS%20hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "ClinkNOORD Hostel", "area": "Amsterdam Noord", "price_per_night": 85, "total_cost": 425, "booking_link": "https://www.google.com/travel/hotels/search?q=ClinkNOORD%20Hostel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "budget", "name": "Hotel V Nesplein", "area": "Oud-West", "price_per_night": 110, "total_cost": 550, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20V%20Nesplein%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "The Hoxton Amsterdam", "area": "Herengracht Canal", "price_per_night": 185, "total_cost": 925, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Hoxton%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Lloyd Hotel", "area": "Eastern Docklands", "price_per_night": 165, "total_cost": 825, "booking_link": "https://www.google.com/travel/hotels/search?q=Lloyd%20Hotel%20in%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "moderate", "name": "Pulitzer Amsterdam", "area": "Jordaan", "price_per_night": 225, "total_cost": 1125, "booking_link": "https://www.google.com/travel/hotels/search?q=Pulitzer%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "Waldorf Astoria Amsterdam", "area": "Herengracht", "price_per_night": 450, "total_cost": 2250, "booking_link": "https://www.google.com/travel/hotels/search?q=Waldorf%20Astoria%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "InterContinental Amstel", "area": "Amstel River", "price_per_night": 385, "total_cost": 1925, "booking_link": "https://www.google.com/travel/hotels/search?q=InterContinental%20Amstel%20Amsterdam%20from%202025-10-01%20to%202025-10-05"},
+    {"category": "luxury", "name": "The Dylan Amsterdam", "area": "Keizersgracht", "price_per_night": 420, "total_cost": 2100, "booking_link": "https://www.google.com/travel/hotels/search?q=The%20Dylan%20Amsterdam%20from%202025-10-01%20to%202025-10-05"}
+  ],
+  
+  "itinerary": {
+    "day_1": {
+      "theme": "Arrival & Canal District",
+      "morning": {"activity": "Arrive at Schiphol Airport, train to city center", "location": "Schiphol Airport", "cost": 6},
+      "afternoon": {"activity": "Check-in and explore Jordaan neighborhood", "location": "Jordaan", "cost": 0},
+      "evening": {"activity": "Canal cruise with dinner", "location": "Canal Ring", "cost": 65}
+    },
+    "day_2": {
+      "theme": "Museums & Culture",
+      "morning": {"activity": "Visit Rijksmuseum", "location": "Museumplein", "cost": 22},
+      "afternoon": {"activity": "Van Gogh Museum", "location": "Museumplein", "cost": 20},
+      "evening": {"activity": "Dinner in Leidseplein", "location": "Leidseplein", "cost": 40}
+    },
+    "day_3": {
+      "theme": "Historic Amsterdam",
+      "morning": {"activity": "Anne Frank House (book ahead!)", "location": "Prinsengracht", "cost": 14},
+      "afternoon": {"activity": "Walking tour of Red Light District & Dam Square", "location": "City Center", "cost": 0},
+      "evening": {"activity": "Traditional Dutch dinner at Greetje", "location": "Centrum", "cost": 55}
+    },
+    "day_4": {
+      "theme": "Markets & Local Life",
+      "morning": {"activity": "Albert Cuyp Market", "location": "De Pijp", "cost": 20},
+      "afternoon": {"activity": "Bike tour through Vondelpark", "location": "Vondelpark", "cost": 15},
+      "evening": {"activity": "Foodhallen food market dinner", "location": "Oud-West", "cost": 30}
+    },
+    "day_5": {
+      "theme": "Departure Day",
+      "morning": {"activity": "Bloemenmarkt (Flower Market)", "location": "Singel Canal", "cost": 15},
+      "afternoon": {"activity": "Last-minute shopping at Nine Streets", "location": "Nine Streets", "cost": 50},
+      "evening": {"activity": "Airport departure", "location": "Schiphol Airport", "cost": 6}
+    }
+  },
+  
+  "budget_breakdown": {
+    "flights": 1400,
+    "accommodation": 925,
+    "food": 350,
+    "activities": 218,
+    "transportation": 60,
+    "total": 2953,
+    "remaining": 0
+  },
+  
+  "restaurants": [
+    {
+      "name": "Greetje",
+      "cuisine": "Modern Dutch",
+      "area": "Centrum",
+      "price_range": "$$$",
+      "must_try": "Dutch cheese platter and seasonal game",
+      "reservation": "required"
+    },
+    {
+      "name": "Café de Reiger",
+      "cuisine": "Traditional Dutch",
+      "area": "Jordaan",
+      "price_range": "$$",
+      "must_try": "Stamppot and Dutch meatballs",
+      "reservation": "recommended"
+    },
+    {
+      "name": "Restaurant De Kas",
+      "cuisine": "Farm-to-table",
+      "area": "Oost",
+      "price_range": "$$$$",
+      "must_try": "Seasonal tasting menu",
+      "reservation": "required"
+    },
+    {
+      "name": "Foodhallen",
+      "cuisine": "International Food Hall",
+      "area": "Oud-West",
+      "price_range": "$-$$",
+      "must_try": "Bitterballen and local craft beer",
+      "reservation": "walk-in"
+    },
+    {
+      "name": "Café de Prins",
+      "cuisine": "Dutch Bistro",
+      "area": "Prinsengracht",
+      "price_range": "$$",
+      "must_try": "Apple pie with coffee",
+      "reservation": "walk-in"
+    }
+  ],
+  
+  "key_attractions": [
+    {
+      "name": "Rijksmuseum",
+      "category": "museum",
+      "time_needed": "3 hours",
+      "cost": 22,
+      "best_time": "morning",
+      "book_ahead": true
+    },
+    {
+      "name": "Anne Frank House",
+      "category": "museum",
+      "time_needed":
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Attempting to parse response as JSON directly.
+WARNING:api.enhanced_ai_provider:[DEFENSIVE] Failed to parse response as JSON: Expecting value: line 1 column 1 (char 0)
+WARNING:api.enhanced_ai_provider:[DEFENSIVE] Response that failed to parse (first 500 chars): ```json
+{
+  "trip_summary": {
+    "title": "Amazing Amsterdam Adventure",
+    "overview": "A 5-day journey to Amsterdam with general exploration",
+    "highlights": ["Canal cruises and historic waterways", "World-class museums and art galleries", "Vibrant neighborhoods and local markets"]
+  },
+  
+  "outbound": [
+    {"category": "budget", "airline": "Spirit Airlines", "price": 485, "departure": "06:15", "arrival": "08:45+1", "duration": "11h 30m", "stops": 1, "booking_link": "https://www.google....
+ERROR:api.enhanced_ai_provider:[DEFENSIVE] rapidjson not installed. Install python-rapidjson for permissive parsing.
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Attempting to parse cleaned response (removed text before first {).
+WARNING:api.enhanced_ai_provider:[DEFENSIVE] Failed to parse cleaned response: Expecting value: line 142 column 21 (char 11101)
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Found JSON with fallback regex (len=384):
+{
+      "theme": "Arrival & Canal District",
+      "morning": {"activity": "Arrive at Schiphol Airport, train to city center", "location": "Schiphol Airport", "cost": 6},
+      "afternoon": {"activity": "Check-in and explore Jordaan neighborhood", "location": "Jordaan", "cost": 0},
+      "evening": {"activity": "Canal cruise with dinner", "location": "Canal Ring", "cost": 65}
+    }... (truncated)
+INFO:api.enhanced_ai_provider:[VALIDATION] AI content appears to be real (no placeholders detected)
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Normalized AI response keys: ['theme', 'morning', 'afternoon', 'evening', 'trip_summary', 'itinerary', 'transportation', 'accommodation', 'estimated_costs', 'practical_info', 'notes', 'restaurants', 'key_attractions', 'booking_priorities', 'insider_tips', 'cultural_insights']
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'itinerary' after normalization: {}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'transportation' after normalization: {'fastest': [], 'cheapest': [], 'optimal': []}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Number of flights in transportation: 0
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'accommodation' after normalization: {'budget': [], 'moderate': [], 'luxury': []}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'trip_summary' after normalization: {'title': '', 'overview': '', 'highlights': []}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Contents of 'practical_info' after normalization: {'currency': '', 'language': ''}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Output of _parse_ai_response before normalization: {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 6}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Final itinerary keys: ['theme', 'morning', 'afternoon', 'evening', 'trip_summary', 'itinerary', 'transportation', 'accommodation', 'estimated_costs', 'practical_info', 'notes', 'restaurants', 'key_attractions', 'booking_priorities', 'insider_tips', 'cultural_insights']
+INFO:api.enhanced_ai_provider:[DEBUG] plan_trip returning success with itinerary and estimated_costs.
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Raw AI itinerary before merging: {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 6}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Final itinerary keys: ['theme', 'morning', 'afternoon', 'evening', 'trip_summary', 'itinerary', 'transportation', 'accommodation', 'estimated_costs', 'practical_info', 'notes', 'restaurants', 'key_attractions', 'booking_priorities', 'insider_tips', 'cultural_insights']
+INFO:api.enhanced_ai_provider:[DEFENSIVE] Merged itinerary to be returned: {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 6}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}
+INFO:api.chat_integration_router:[DEBUG] _start_trip_planning result: {'success': True, 'itinerary': {'theme': 'Arrival & Canal District', 'morning': {'activity': 'Arrive at Schiphol Airport, train to city center', 'location': 'Schiphol Airport', 'cost': 6}, 'afternoon': {'activity': 'Check-in and explore Jordaan neighborhood', 'location': 'Jordaan', 'cost': 0}, 'evening': {'activity': 'Canal cruise with dinner', 'location': 'Canal Ring', 'cost': 65}, 'trip_summary': {'title': '', 'overview': '', 'highlights': []}, 'itinerary': {}, 'transportation': {'fastest': [], 'cheapest': [], 'optimal': []}, 'accommodation': {'budget': [], 'moderate': [], 'luxury': []}, 'estimated_costs': {'total': ''}, 'practical_info': {'currency': '', 'language': ''}, 'notes': '', 'restaurants': [], 'key_attractions': [], 'booking_priorities': [], 'insider_tips': [], 'cultural_insights': {}}, 'booking_links': {}, 'estimated_costs': {'total': ''}, 'metadata': {'provider': <ProviderType.AI: 'ai'>, 'quality': <TripPlanQuality.EXCELLENT: 'excellent'>, 'confidence_score': 0.95, 'data_freshness': 'real_time', 'last_updated': '2025-08-22T18:20:54.541063', 'source_notes': ['Generated by Claude AI with real API integration', 'Includes real hotel availability and pricing', 'Flight recommendations based on actual search results', 'Booking links are personalized and functional'], 'fallback_used': False}}
+INFO:     127.0.0.1:56336 - "POST /chat-integration/start-planning HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15994]
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Process SpawnProcess-3:
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/base_events.py", line 642, in run_until_complete
+    return future.result()
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/main.py", line 10, in <module>
+    from api.trip_planner_router import router as trip_planner_router
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/trip_planner_router.py", line 11, in <module>
+    from api.ai_trip_planner import ai_planner
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/ai_trip_planner.py", line 19, in <module>
+    from api.ai_agents import ai_agent, AgentType, AgentTask
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/ai_agents.py", line 13, in <module>
+    from services.hotel_service import HotelService
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/services/hotel_service.py", line 2, in <module>
+    from api.enhanced_ai_provider import EnhancedAITripProvider
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/enhanced_ai_provider.py", line 686
+    Focus on creating a practical itinerary for {request.destination}. Ensure all costs stay within ${total_budget}.
+          ^
+SyntaxError: invalid syntax
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/base_events.py", line 642, in run_until_complete
+    return future.result()
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/main.py", line 10, in <module>
+    from api.trip_planner_router import router as trip_planner_router
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/trip_planner_router.py", line 11, in <module>
+    from api.ai_trip_planner import ai_planner
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/ai_trip_planner.py", line 19, in <module>
+    from api.ai_agents import ai_agent, AgentType, AgentTask
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/ai_agents.py", line 13, in <module>
+    from services.hotel_service import HotelService
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/services/hotel_service.py", line 2, in <module>
+    from api.enhanced_ai_provider import EnhancedAITripProvider
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/enhanced_ai_provider.py", line 585
+    ]
+     ^
+IndentationError: unindent does not match any outer indentation level
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Process SpawnProcess-5:
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 315, in _bootstrap
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/runners.py", line 44, in run
+    return loop.run_until_complete(main)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/asyncio/base_events.py", line 642, in run_until_complete
+    return future.result()
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+  File "/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/main.py", line 10, in <module>
+    from api.trip_planner_router import router as trip_planner_router
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/trip_planner_router.py", line 11, in <module>
+    from api.ai_trip_planner import ai_planner
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/ai_trip_planner.py", line 19, in <module>
+    from api.ai_agents import ai_agent, AgentType, AgentTask
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/ai_agents.py", line 13, in <module>
+    from services.hotel_service import HotelService
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/services/hotel_service.py", line 2, in <module>
+    from api.enhanced_ai_provider import EnhancedAITripProvider
+  File "/Users/supreethtata/Documents/cursor-flightagents/flightagents/api/enhanced_ai_provider.py", line 585
+    ]
+     ^
+IndentationError: unindent does not match any outer indentation level
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [16941]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16941]
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [16981]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16981]
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [17021]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [17021]
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [17028]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'api/enhanced_ai_provider.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [17028]
+/Users/supreethtata/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:api.enhanced_parser:Airport data structure analysis:
+INFO:api.enhanced_parser:Total airports: 9187
+INFO:api.enhanced_parser:Sample airport fields:
+INFO:api.enhanced_parser:- column_1: CRS
+INFO:api.enhanced_parser:- airport_name: Corsicana
+INFO:api.enhanced_parser:- city_name: Corsicana
+INFO:api.enhanced_parser:- country_name: United States
+INFO:api.enhanced_parser:- country_code: US
+INFO:api.enhanced_parser:- latitude: 32.1
+INFO:api.enhanced_parser:- longitude: -96.466667
+INFO:api.enhanced_parser:- world_area_code: 67
+INFO:api.enhanced_parser:- city_name_geo_name_id: 4683462
+INFO:api.enhanced_parser:- country_name_geo_name_id: 6252001
+INFO:api.enhanced_parser:- coordinates: {'lon': -96.466667, 'lat': 32.1}
+INFO:api.enhanced_parser:
+Airport characteristics:
+INFO:api.enhanced_parser:- International airports: 342
+INFO:api.enhanced_parser:- Hub airports: 4
+INFO:api.enhanced_parser:- Airports with terminals: 6
+INFO:api.enhanced_parser:Loaded 505 major airports
+INFO:api.enhanced_parser:Initialized parser with Anthropic API key
+INFO:api.enhanced_parser:Loaded 9187 airports from full database
+INFO:api.enhanced_parser:Loaded 505 airports from major airports database
+INFO:api.enhanced_parser:Calculated importance scores for 9187 airports.
+INFO:     Started server process [17043]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

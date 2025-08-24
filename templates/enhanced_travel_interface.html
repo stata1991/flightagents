@@ -1086,21 +1086,21 @@
                             <div style="background: #F0FDF4; padding: 16px; border-radius: 12px;">
                                 <div style="font-weight: 700; color: #047857; margin-bottom: 12px;">🌍 Cultural Tips</div>
                                 <ul style="color: #4B5563; padding-left: 20px; font-size: 14px;">
-                                    ${(cultural?.local_customs || []).slice(0, 3).map(tip => `<li>${tip}</li>`).join('')}
+                                    ${(cultural?.local_customs || []).slice(0, 3).map(tip => `<li>${tip}</li>`).join('') || '<li>Cultural information coming soon...</li>'}
                                 </ul>
                             </div>
                             
                             <div style="background: #FEF3C7; padding: 16px; border-radius: 12px;">
                                 <div style="font-weight: 700; color: #92400E; margin-bottom: 12px;">🎒 Packing Tips</div>
                                 <ul style="color: #4B5563; padding-left: 20px; font-size: 14px;">
-                                    ${(practical?.packing_suggestions || []).slice(0, 3).map(item => `<li>${item}</li>`).join('')}
+                                    ${(practical?.packing_suggestions || []).slice(0, 3).map(item => `<li>${item}</li>`).join('') || '<li>Packing information coming soon...</li>'}
                                 </ul>
                             </div>
                             
                             <div style="background: #FEF2F2; padding: 16px; border-radius: 12px;">
                                 <div style="font-weight: 700; color: #DC2626; margin-bottom: 12px;">🚨 Emergency</div>
                                 <div style="color: #4B5563; font-size: 14px;">
-                                    ${(practical?.emergency_numbers || []).join(', ')}
+                                    ${(practical?.emergency_numbers || []).join(', ') || 'Emergency information coming soon...'}
                                 </div>
                             </div>
                         </div>

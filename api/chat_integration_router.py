@@ -524,7 +524,7 @@ def _extract_origin(message: str) -> Optional[str]:
     """Extract origin from message"""
     # Look for "from X to Y" pattern - handle multi-word cities
     # More flexible pattern that captures origin even with additional text after destination
-    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+\d+|\s+travelers?|\s+starting|\s+from|\s+days?|\s+\$|\s+budget|$)"
+    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s*[,]?\s*(?:\d+|\s+travelers?|\s+starting|\s+from|\s+days?|\s+\$|\s+budget|$))"
     match = re.search(from_to_pattern, message.lower())
     if match:
         origin = match.group(1).strip().title()
@@ -546,7 +546,7 @@ def _extract_destination(message: str) -> Optional[str]:
     """Extract destination from message"""
     # Look for "from X to Y" pattern - handle multi-word cities
     # More flexible pattern that captures destination even with additional text after
-    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s+\d+|\s+travelers?|\s+starting|\s+from|\s+days?|\s+\$|\s+budget|$)"
+    from_to_pattern = r"from\s+([a-zA-Z\s]+?)\s+to\s+([a-zA-Z\s]+?)(?:\s*[,]?\s*(?:\d+|\s+travelers?|\s+starting|\s+from|\s+days?|\s+\$|\s+budget|$))"
     match = re.search(from_to_pattern, message.lower())
     if match:
         destination = match.group(2).strip()
