@@ -14,8 +14,9 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1E3A8A 0%, #7C3AED 100%);
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
             /* Enhanced travel feel with subtle animation */
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
@@ -31,16 +32,19 @@
         .travel-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: visible;
+            max-width: 100%;
+            width: 100%;
         }
 
         .travel-container::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -102,12 +106,17 @@
         /* Enhanced Chat Area */
         .travel-chat-area {
             flex: 1;
-            overflow-y: auto;
+            overflow-y: visible;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 16px;
             scroll-behavior: smooth;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            min-height: auto;
         }
 
         /* Enhanced Message Styling */
@@ -180,6 +189,10 @@
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .travel-quick-replies::-webkit-scrollbar {
@@ -208,12 +221,211 @@
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
         }
 
+        /* Interest-Based Planning Section */
+        .interest-planning-section {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            margin: 20px 0;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .interest-planning-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .interest-planning-header h3 {
+            color: #1E3A8A;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .interest-planning-header p {
+            color: #64748B;
+            font-size: 1.1rem;
+        }
+
+        .interest-planning-step {
+            margin-bottom: 40px;
+        }
+
+        .interest-planning-step:last-child {
+            margin-bottom: 20px;
+        }
+
+        .planning-step h4 {
+            color: #1E3A8A;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .interest-options, .season-options, .celebration-options, 
+        .business-options, .leisure-options, .hotel-preferences {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .interest-option, .season-option, .celebration-option, 
+        .business-option, .leisure-option, .hotel-preference {
+            background: white;
+            border: 2px solid #E2E8F0;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .interest-option:hover, .season-option:hover, .celebration-option:hover,
+        .business-option:hover, .leisure-option:hover, .hotel-preference:hover {
+            border-color: #3B82F6;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .interest-option.selected, .season-option.selected, .celebration-option.selected,
+        .business-option.selected, .leisure-option.selected, .hotel-preference.selected {
+            border-color: #3B82F6;
+            background: linear-gradient(135deg, #3B82F6, #1E3A8A);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .interest-option i, .season-option i, .celebration-option i,
+        .business-option i, .leisure-option i, .hotel-preference i {
+            font-size: 2rem;
+            color: #3B82F6;
+        }
+
+        .interest-option.selected i, .season-option.selected i, .celebration-option.selected i,
+        .business-option.selected i, .leisure-option.selected i, .hotel-preference.selected i {
+            color: white;
+        }
+
+        .interest-option span, .season-option span, .celebration-option span,
+        .business-option span, .leisure-option span, .hotel-preference span {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .interest-option small, .season-option small, .celebration-option small,
+        .business-option small, .leisure-option small, .hotel-preference small {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .interest-planning-progress {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .interest-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #E2E8F0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .interest-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3B82F6, #1E3A8A);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 20%;
+        }
+
+        .interest-progress-text {
+            color: #64748B;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .interest-planning-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .interest-planning-nav-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .interest-planning-nav-btn.primary {
+            background: linear-gradient(135deg, #3B82F6, #1E3A8A);
+            color: white;
+        }
+
+        .interest-planning-nav-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .interest-planning-nav-btn.secondary {
+            background: transparent;
+            color: #64748B;
+            border: 2px solid #E2E8F0;
+        }
+
+        .interest-planning-nav-btn.secondary:hover {
+            border-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+        /* Content Container for better organization */
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+            height: auto;
+            overflow: visible;
+        }
+
+        /* Content Container for better organization */
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+
         /* Enhanced Input Area */
         .travel-input-area {
             padding: 20px;
             background: white;
             border-top: 1px solid #E2E8F0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .travel-input-container {
@@ -562,9 +774,9 @@
         /* Force chat area and itinerary to always be visible and scrollable */
         #travelChatArea {
             min-height: 400px;
-            max-height: calc(100vh - 250px);
+            max-height: none;
             height: auto;
-            overflow-y: auto !important;
+            overflow-y: visible !important;
             display: flex;
             flex-direction: column;
         }
@@ -583,6 +795,335 @@
         .travel-quick-replies {
             position: static;
             margin-bottom: 0;
+        }
+
+        /* Location Discovery Styles */
+        .location-discovery-section {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            overflow: visible;
+            margin: 20px 0;
+            display: block;
+            animation: slideInUp 0.5s ease-out;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .location-discovery-header {
+            background: linear-gradient(135deg, #1E3A8A, #3B82F6);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .location-discovery-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .location-discovery-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .location-consent-section {
+            padding: 32px;
+            background: #F8FAFC;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: visible;
+            margin-bottom: 20px;
+        }
+
+        .location-consent-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .location-consent-header h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+
+        .location-consent-header p {
+            font-size: 16px;
+            color: #6B7280;
+            margin: 0;
+        }
+
+        .location-consent-options {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+            gap: 24px !important;
+            margin-bottom: 24px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        @media (max-width: 768px) {
+            .location-consent-options {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+        }
+
+        .location-option {
+            background: white !important;
+            border-radius: 16px !important;
+            padding: 24px !important;
+            border: 2px solid #E2E8F0 !important;
+            transition: all 0.3s ease !important;
+            text-align: left !important;
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            min-height: 200px !important;
+            position: relative !important;
+        }
+
+        .location-option:hover {
+            border-color: #3B82F6;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .location-option-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .location-option-content h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+
+        .location-option-content p {
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .location-consent-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .location-btn {
+            padding: 12px 24px !important;
+            border: none !important;
+            border-radius: 25px !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            display: inline-block !important;
+            text-decoration: none !important;
+            text-align: center !important;
+            min-width: 120px !important;
+        }
+
+        .location-btn-primary {
+            background: linear-gradient(45deg, #3B82F6, #1E3A8A);
+            color: white;
+        }
+
+        .location-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .location-btn-secondary {
+            background: #F1F5F9;
+            color: #1F2937;
+            border: 2px solid #E2E8F0;
+        }
+
+        .location-btn-secondary:hover {
+            background: #E2E8F0;
+            transform: translateY(-2px);
+        }
+
+        .location-info {
+            background: #E3F2FD;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            display: none;
+        }
+
+        .location-info.show {
+            display: block;
+        }
+
+        .destination-filters {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 8px 16px;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #3B82F6;
+        }
+
+        .destination-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            padding: 24px;
+            background: #F8FAFC;
+        }
+
+        .destination-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 2px solid #E2E8F0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .destination-card:hover {
+            border-color: #3B82F6;
+            box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .destination-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3B82F6, #1E3A8A);
+        }
+
+        .destination-card h3 {
+            color: #1F2937;
+            margin-bottom: 8px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .destination-card .type {
+            color: #3B82F6;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            font-size: 12px;
+            background: #E3F2FD;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .destination-card .highlights {
+            color: #4B5563;
+            font-size: 14px;
+        }
+
+        .destination-card .highlights ul {
+            list-style: none;
+            padding: 0;
+            margin: 12px 0 0 0;
+        }
+
+        .destination-card .highlights li {
+            padding: 6px 0;
+            color: #6B7280;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .destination-card .highlights li::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+            top: 6px;
+        }
+
+        .destination-card .highlights li:last-child {
+            border-bottom: none;
+        }
+
+        .data-source-info {
+            background: #E3F2FD;
+            color: #1976D2;
+            padding: 12px 24px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .destination-loading {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            border: 2px solid #E2E8F0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #E2E8F0;
+            border-top: 4px solid #3B82F6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .destination-loading p {
+            color: #6B7280;
+            font-size: 16px;
+            margin: 0;
         }
     </style>
 </head>
@@ -604,10 +1145,286 @@
             <!-- Messages will be dynamically added here -->
         </div>
 
-        <!-- Enhanced Quick Replies -->
+        <!-- Content Container for better organization -->
+        <div class="content-container">
+
+        <!-- Enhanced Quick Replies with Interest-Based Planning -->
         <div class="travel-quick-replies" id="travelQuickReplies" style="display: none;">
             <!-- Quick reply buttons will be dynamically added here -->
         </div>
+
+        <!-- Conversational Interest Planning - Integrated into chat flow -->
+        <div class="conversational-interests" id="conversationalInterests" style="display: none;">
+            <div class="conversational-interests-content">
+                <h3>🎯 Let's Get to Know Your Travel Style</h3>
+                <p>I'll ask you a few questions to personalize your trip recommendations</p>
+            
+            <!-- Quick Interest Buttons for Common Scenarios -->
+            <div class="interest-quick-buttons">
+                <button class="interest-quick-btn" onclick="enhancedTravelInterface.askTripType()">
+                    <i class="fas fa-question-circle"></i>
+                    <span>What type of trip?</span>
+                </button>
+                <button class="interest-quick-btn" onclick="enhancedTravelInterface.askOccasion()">
+                    <i class="fas fa-gift"></i>
+                    <span>Special occasion?</span>
+                </button>
+                <button class="interest-quick-btn" onclick="enhancedTravelInterface.askInterests()">
+                    <i class="fas fa-heart"></i>
+                    <span>What interests you?</span>
+                </button>
+                <button class="interest-quick-btn" onclick="enhancedTravelInterface.askAccommodation()">
+                    <i class="fas fa-bed"></i>
+                    <span>Accommodation preferences?</span>
+                </button>
+            </div>
+
+            <!-- Seasonal Planning -->
+            <div class="interest-planning-step" id="seasonalStep" style="display: none;">
+                <h4>When do you want to travel?</h4>
+                <div class="season-options">
+                    <button class="season-option" data-season="summer" onclick="enhancedTravelInterface.selectSeason('summer')">
+                        <i class="fas fa-sun"></i>
+                        <span>Summer</span>
+                        <small>June - August</small>
+                    </button>
+                    <button class="season-option" data-season="winter" onclick="enhancedTravelInterface.selectSeason('winter')">
+                        <i class="fas fa-snowflake"></i>
+                        <span>Winter</span>
+                        <small>December - February</small>
+                    </button>
+                    <button class="season-option" data-season="spring" onclick="enhancedTravelInterface.selectSeason('spring')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Spring</span>
+                        <small>March - May</small>
+                    </button>
+                    <button class="season-option" data-season="fall" onclick="enhancedTravelInterface.selectSeason('fall')">
+                        <i class="fas fa-leaf"></i>
+                        <span>Fall</span>
+                        <small>September - November</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Celebration Planning -->
+            <div class="interest-planning-step" id="celebrationStep" style="display: none;">
+                <h4>What are you celebrating?</h4>
+                <div class="celebration-options">
+                    <button class="celebration-option" data-celebration="birthday" onclick="enhancedTravelInterface.selectCelebration('birthday')">
+                        <i class="fas fa-birthday-cake"></i>
+                        <span>Birthday</span>
+                    </button>
+                    <button class="celebration-option" data-celebration="anniversary" onclick="enhancedTravelInterface.selectCelebration('anniversary')">
+                        <i class="fas fa-heart"></i>
+                        <span>Anniversary</span>
+                    </button>
+                    <button class="celebration-option" data-celebration="honeymoon" onclick="enhancedTravelInterface.selectCelebration('honeymoon')">
+                        <i class="fas fa-ring"></i>
+                        <span>Honeymoon</span>
+                    </button>
+                    <button class="celebration-option" data-celebration="babymoon" onclick="enhancedTravelInterface.selectCelebration('babymoon')">
+                        <i class="fas fa-baby"></i>
+                        <span>Babymoon</span>
+                    </button>
+                    <button class="celebration-option" data-celebration="bachelor" onclick="enhancedTravelInterface.selectCelebration('bachelor')">
+                        <i class="fas fa-glass-cheers"></i>
+                        <span>Bachelor Party</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Business Trip Planning -->
+            <div class="interest-planning-step" id="businessStep" style="display: none;">
+                <h4>What's your business travel priority?</h4>
+                <div class="business-options">
+                    <button class="business-option" data-priority="downtown" onclick="enhancedTravelInterface.selectBusinessPriority('downtown')">
+                        <i class="fas fa-building"></i>
+                        <span>Downtown Location</span>
+                        <small>Close to business district</small>
+                    </button>
+                    <button class="business-option" data-priority="airport" onclick="enhancedTravelInterface.selectBusinessPriority('airport')">
+                        <i class="fas fa-plane"></i>
+                        <span>Airport Proximity</span>
+                        <small>Easy access to flights</small>
+                    </button>
+                    <button class="business-option" data-priority="office" onclick="enhancedTravelInterface.selectBusinessPriority('office')">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Near Specific Office</span>
+                        <small>Close to your workplace</small>
+                    </button>
+                    <button class="business-option" data-priority="flexible" onclick="enhancedTravelInterface.selectBusinessPriority('flexible')">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>Flexible Location</span>
+                        <small>Any convenient area</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Leisure Planning -->
+            <div class="interest-planning-step" id="leisureStep" style="display: none;">
+                <h4>What interests you most?</h4>
+                <div class="leisure-options">
+                    <button class="leisure-option" data-interest="beach" onclick="enhancedTravelInterface.selectLeisureInterest('beach')">
+                        <i class="fas fa-umbrella-beach"></i>
+                        <span>Beach & Water</span>
+                    </button>
+                    <button class="leisure-option" data-interest="mountain" onclick="enhancedTravelInterface.selectLeisureInterest('mountain')">
+                        <i class="fas fa-mountain"></i>
+                        <span>Mountains & Nature</span>
+                    </button>
+                    <button class="leisure-option" data-interest="city" onclick="enhancedTravelInterface.selectLeisureInterest('city')">
+                        <i class="fas fa-city"></i>
+                        <span>City & Culture</span>
+                    </button>
+                    <button class="leisure-option" data-interest="adventure" onclick="enhancedTravelInterface.selectLeisureInterest('adventure')">
+                        <i class="fas fa-hiking"></i>
+                        <span>Adventure & Sports</span>
+                    </button>
+                    <button class="leisure-option" data-interest="relaxation" onclick="enhancedTravelInterface.selectLeisureInterest('relaxation')">
+                        <i class="fas fa-spa"></i>
+                        <span>Relaxation & Wellness</span>
+                    </button>
+                    <button class="leisure-option" data-interest="food" onclick="enhancedTravelInterface.selectLeisureInterest('food')">
+                        <i class="fas fa-utensils"></i>
+                        <span>Food & Dining</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hotel Preferences -->
+            <div class="interest-planning-step" id="hotelPreferencesStep" style="display: none;">
+                <h4>What's important for your accommodation?</h4>
+                <div class="hotel-preferences">
+                    <button class="hotel-preference" data-preference="proximity" onclick="enhancedTravelInterface.selectHotelPreference('proximity')">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Location Proximity</span>
+                        <small>Close to attractions/offices</small>
+                    </button>
+                    <button class="hotel-preference" data-preference="luxury" onclick="enhancedTravelInterface.selectHotelPreference('luxury')">
+                        <i class="fas fa-star"></i>
+                        <span>Luxury & Comfort</span>
+                        <small>Premium amenities</small>
+                    </button>
+                    <button class="hotel-preference" data-preference="budget" onclick="enhancedTravelInterface.selectHotelPreference('budget')">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>Budget Friendly</span>
+                        <small>Best value for money</small>
+                    </button>
+                    <button class="hotel-preference" data-preference="family" onclick="enhancedTravelInterface.selectHotelPreference('family')">
+                        <i class="fas fa-home"></i>
+                        <span>Family Friendly</span>
+                        <small>Kid-friendly amenities</small>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="interest-planning-progress">
+                <div class="interest-progress-bar">
+                    <div class="interest-progress-fill" id="planningProgress"></div>
+                </div>
+                <div class="interest-progress-text">Step <span id="currentStep">1</span> of <span id="totalSteps">5</span></div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="interest-planning-navigation">
+                <button class="interest-planning-nav-btn secondary" id="prevStepBtn" onclick="enhancedTravelInterface.previousStep()" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button class="interest-planning-nav-btn primary" id="nextStepBtn" onclick="enhancedTravelInterface.nextStep()" style="display: none;">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="interest-planning-nav-btn primary" id="startPlanningBtn" onclick="enhancedTravelInterface.startInterestBasedPlanning()" style="display: none;">
+                    <i class="fas fa-rocket"></i> Start Planning
+                </button>
+            </div>
+        </div>
+
+        <!-- Location Discovery Section -->
+        <div class="location-discovery-section" id="locationDiscoverySection">
+            <div class="location-discovery-header">
+                <div class="location-discovery-title">🌍 Location-Based Discovery</div>
+                <div class="location-discovery-subtitle">Get personalized destination recommendations</div>
+            </div>
+            
+            <div class="location-consent-section" id="locationConsentSection">
+                <div class="location-consent-header">
+                    <h3>📍 Location Access</h3>
+                    <p>Get personalized destination recommendations based on your location</p>
+                </div>
+                
+                <div class="location-consent-options">
+                    <div class="location-option">
+                        <div class="location-option-icon">📍</div>
+                        <div class="location-option-content">
+                            <h4>Use Your Location</h4>
+                            <p>Get recommendations for destinations near you and domestic travel options</p>
+                            <button class="location-btn location-btn-primary" onclick="enhancedTravelInterface.requestLocationAccess()">
+                                Allow Location Access
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="location-option">
+                        <div class="location-option-icon">🌐</div>
+                        <div class="location-option-content">
+                            <h4>Global Recommendations</h4>
+                            <p>Explore worldwide destinations without sharing your location</p>
+                            <button class="location-btn location-btn-secondary" onclick="enhancedTravelInterface.useDefaultLocation()">
+                                Show Global Destinations
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="location-info" id="locationInfo" style="display: none;">
+                    <h4>📍 Your Location</h4>
+                    <p id="locationDetails">Detecting your location...</p>
+                </div>
+            </div>
+
+            <div class="destination-filters" id="destinationFilters" style="display: none;">
+                <h3>🎯 Customize Your Recommendations</h3>
+                <div class="filter-group">
+                    <select class="filter-select" id="tripTypeFilter" onchange="enhancedTravelInterface.applyLocationFilters()">
+                        <option value="">All Trip Types</option>
+                        <option value="summer">Summer Vacation</option>
+                        <option value="winter">Winter Getaway</option>
+                        <option value="spring">Spring Break</option>
+                        <option value="fall">Fall Foliage</option>
+                        <option value="honeymoon">Honeymoon</option>
+                        <option value="business">Business Trip</option>
+                        <option value="family">Family Vacation</option>
+                        <option value="adventure">Adventure</option>
+                        <option value="relaxation">Relaxation</option>
+                        <option value="culture">Cultural Experience</option>
+                    </select>
+
+                    <select class="filter-select" id="interestsFilter" onchange="enhancedTravelInterface.applyLocationFilters()">
+                        <option value="">All Interests</option>
+                        <option value="beach">Beach</option>
+                        <option value="city">City</option>
+                        <option value="culture">Culture</option>
+                        <option value="nature">Nature</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="history">History</option>
+                        <option value="luxury">Luxury</option>
+                        <option value="adventure">Adventure</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="destination-grid" id="destinationGrid">
+                <div class="destination-loading" id="destinationLoading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Discovering amazing destinations for you...</p>
+                </div>
+            </div>
+            
+            <div class="data-source-info" id="dataSourceInfo" style="display: none;"></div>
+        </div>
+
+        </div> <!-- End of content-container -->
 
         <!-- Enhanced Input Area -->
         <div class="travel-input-area">
@@ -627,6 +1444,18 @@
                 this.quickReplies = document.getElementById('travelQuickReplies');
                 this.sessionId = this.generateSessionId();
                 this.conversationState = {};
+                
+                // Interest-based planning properties
+                this.planningData = {
+                    tripType: null,
+                    season: null,
+                    celebration: null,
+                    businessPriority: null,
+                    leisureInterest: null,
+                    hotelPreference: null
+                };
+                this.currentStep = 1;
+                this.totalSteps = 5;
                 
                 this.initializeEventListeners();
                 this.showWelcomeMessage();
@@ -656,7 +1485,9 @@
                     'Plan a beach vacation 🏖️',
                     'Explore a new city 🏙️',
                     'Adventure trip 🏔️',
-                    'Cultural journey 🏛️'
+                    'Cultural journey 🏛️',
+                    'Discover destinations near me 📍',
+                    'Interest-based planning 🎯'
                 ]);
             }
 
@@ -754,10 +1585,23 @@
                 // Always hide quick replies after any AI response
                 this.hideQuickReplies();
 
+                // Handle enhancement state
+                if (response.state === 'enhancement') {
+                    // Show enhancement questions
+                    this.askEnhancementQuestions();
+                    return;
+                }
+
                 // Robust missing info/state handling
                 const missing = response.missing_info || [];
-                if (response.state === 'planning' && response.can_start_planning && response.trip_request) {
-                    this.startTripPlanning(response.trip_request);
+                if (response.state === 'planning' && response.can_start_planning) {
+                    // We have a planning result - display it directly
+                    if (response.planning_result && response.planning_result.success) {
+                        this.displayItinerary(response.planning_result);
+                    } else if (response.trip_request) {
+                        // Fallback: start trip planning if no planning result
+                        this.startTripPlanning(response.trip_request);
+                    }
                     return;
                 }
                 // If missing required info, wait for user input (do nothing else)
@@ -777,7 +1621,7 @@
 
             showQuickReplies(replies) {
                 this.quickReplies.innerHTML = replies.map(reply => 
-                    `<button class="travel-quick-reply" onclick="travelInterface.handleQuickReply('${reply}')">${reply}</button>`
+                    `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleQuickReply('${reply}')">${reply}</button>`
                 ).join('');
                 this.quickReplies.style.display = 'flex';
             }
@@ -787,8 +1631,30 @@
             }
 
             handleQuickReply(reply) {
-                this.input.value = reply;
-                this.sendMessage();
+                if (reply.includes('Discover destinations near me')) {
+                    // Show location discovery section
+                    const locationSection = document.getElementById('locationDiscoverySection');
+                    locationSection.style.display = 'block';
+                    console.log('Location discovery section displayed:', locationSection.style.display);
+                    console.log('Location discovery section visible:', locationSection.offsetHeight > 0);
+                    
+                    // Debug the location options
+                    const locationOptions = document.querySelectorAll('.location-option');
+                    console.log('Location options found:', locationOptions.length);
+                    locationOptions.forEach((option, index) => {
+                        console.log(`Option ${index + 1}:`, option.offsetWidth, 'x', option.offsetHeight);
+                        console.log(`Option ${index + 1} visible:`, option.offsetHeight > 0);
+                    });
+                    
+                    this.scrollToBottom();
+                } else if (reply.includes('Interest-based planning')) {
+                    // Show interest-based planning section
+                    this.showInterestPlanning();
+                    this.scrollToBottom();
+                } else {
+                    this.input.value = reply;
+                    this.sendMessage();
+                }
             }
 
             async startTripPlanning(tripRequest) {
@@ -1164,10 +2030,921 @@
             scrollToBottom() {
                 this.chatArea.scrollTop = this.chatArea.scrollHeight;
             }
+
+            // Location Discovery Methods
+            async requestLocationAccess() {
+                try {
+                    const position = await this.getCurrentPosition();
+                    this.userLocation = {
+                        lat: position.coords.latitude,
+                        lon: position.coords.longitude
+                    };
+                    
+                    this.showLocationInfo(`📍 Location detected: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                    await this.loadLocationDiscoveryData(true, this.userLocation);
+                    
+                } catch (error) {
+                    console.error('Location access denied or failed:', error);
+                    this.showLocationInfo('❌ Location access denied. Using IP-based detection.');
+                    await this.loadLocationDiscoveryData(true);
+                }
+            }
+
+            useDefaultLocation() {
+                this.showLocationInfo('🌐 Using global recommendations (no location access)');
+                this.loadLocationDiscoveryData(false);
+            }
+
+            getCurrentPosition() {
+                return new Promise((resolve, reject) => {
+                    if (!navigator.geolocation) {
+                        reject(new Error('Geolocation not supported'));
+                        return;
+                    }
+
+                    const timeout = setTimeout(() => {
+                        reject(new Error('Location request timed out'));
+                    }, 10000);
+
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            clearTimeout(timeout);
+                            resolve(position);
+                        },
+                        (error) => {
+                            clearTimeout(timeout);
+                            reject(error);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 60000
+                        }
+                    );
+                });
+            }
+
+            showLocationInfo(message) {
+                const locationInfo = document.getElementById('locationInfo');
+                const locationDetails = document.getElementById('locationDetails');
+                
+                locationDetails.textContent = message;
+                locationInfo.classList.add('show');
+            }
+
+            async loadLocationDiscoveryData(userConsent = false, gpsCoordinates = null) {
+                try {
+                    // Show discovery content (filters will be shown only if user requests them)
+                    document.getElementById('locationDiscoverySection').style.display = 'block';
+
+                    // Build API URL with parameters
+                    const params = new URLSearchParams({
+                        user_consent: userConsent
+                    });
+
+                    if (gpsCoordinates) {
+                        params.append('lat', gpsCoordinates.lat);
+                        params.append('lon', gpsCoordinates.lon);
+                    }
+
+                    const response = await fetch(`/api/location/discovery-homepage?${params}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.displayLocationDiscoveryData(data);
+                    } else {
+                        throw new Error(data.message || 'Failed to load discovery data');
+                    }
+
+                } catch (error) {
+                    console.error('Error loading discovery data:', error);
+                    this.showLocationError('Failed to load discovery data. Please try again.');
+                }
+            }
+
+            displayLocationDiscoveryData(data) {
+                // Display location info
+                const location = data.user_location;
+                this.showLocationInfo(`📍 ${location.country} (${location.city}) - Detected via ${location.detection_method}`);
+
+                // Display destinations
+                this.displayDestinations(data.domestic_suggestions, data.international_suggestions);
+
+                // Show data source
+                this.showDataSource(data.data_source);
+            }
+
+            displayDestinations(domesticSuggestions, internationalSuggestions) {
+                const grid = document.getElementById('destinationGrid');
+                grid.innerHTML = '';
+
+                // Combine and display all suggestions
+                const allDestinations = [
+                    ...(domesticSuggestions || []),
+                    ...(internationalSuggestions || [])
+                ];
+
+                if (allDestinations.length === 0) {
+                    grid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1 / -1;">No recommendations available at the moment.</p>';
+                    return;
+                }
+
+                allDestinations.forEach(destination => {
+                    const card = this.createDestinationCard(destination);
+                    grid.appendChild(card);
+                });
+            }
+
+            createDestinationCard(destination) {
+                const card = document.createElement('div');
+                card.className = 'destination-card';
+                
+                const highlights = destination.highlights || [];
+                const highlightsHtml = highlights.length > 0 
+                    ? `<ul>${highlights.map(h => `<li>• ${h}</li>`).join('')}</ul>`
+                    : '<p>Discover amazing experiences</p>';
+
+                card.innerHTML = `
+                    <h3>${destination.name}</h3>
+                    <div class="type">${destination.type || 'Destination'}</div>
+                    ${destination.country ? `<div class="country">${destination.country}</div>` : ''}
+                    <div class="highlights">
+                        ${highlightsHtml}
+                    </div>
+                `;
+
+                // Add click handler to start trip planning
+                card.addEventListener('click', () => {
+                    this.startTripPlanningFromDestination(destination);
+                });
+
+                return card;
+            }
+
+            startTripPlanningFromDestination(destination) {
+                const location = this.userLocation ? `${this.userLocation.lat},${this.userLocation.lon}` : 'Unknown';
+                
+                // Add a message about the selected destination
+                const message = `I want to plan a trip to ${destination.name}`;
+                this.input.value = message;
+                this.sendMessage();
+                
+                // Hide location discovery section
+                document.getElementById('locationDiscoverySection').style.display = 'none';
+            }
+
+            showDataSource(dataSource) {
+                const dataSourceInfo = document.getElementById('dataSourceInfo');
+                dataSourceInfo.textContent = `Data Source: ${dataSource === 'dynamic_api' ? 'Real-time API' : 'Fallback Database'}`;
+                dataSourceInfo.style.display = 'block';
+            }
+
+            applyLocationFilters() {
+                const tripType = document.getElementById('tripTypeFilter').value;
+                const interests = document.getElementById('interestsFilter').value;
+                
+                // Reload data with new filters
+                if (this.userLocation) {
+                    this.loadLocationDiscoveryData(true, this.userLocation);
+                } else {
+                    this.loadLocationDiscoveryData(false);
+                }
+            }
+
+            showLocationError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'travel-message ai';
+                errorDiv.innerHTML = `<div style="color: #DC2626; font-weight: 600;">${message}</div>`;
+                
+                this.chatArea.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            // Conversational Interest Planning Methods - Integrated with chat_integration_router.py
+            showInterestPlanning() {
+                // Show the conversational interface instead of step-based
+                document.getElementById('conversationalInterests').style.display = 'block';
+                document.getElementById('locationDiscoverySection').style.display = 'none';
+                
+                // Start the conversational flow that syncs with the backend
+                this.startConversationalFlow();
+            }
+
+            startConversationalFlow() {
+                // Initialize conversation state to match chat_integration_router.py
+                this.conversationState = {
+                    current_state: 'greeting',
+                    trip_data: {},
+                    session_id: this.generateSessionId()
+                };
+                
+                // Show the first conversational question using the conversation service pattern
+                this.askFirstQuestion();
+            }
+
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+
+
+            askFirstQuestion() {
+                // This follows the conversation_service.py pattern
+                const message = `🎯 Perfect! Let's plan your dream adventure together! I'll ask you a few key questions to understand your preferences, and then we'll create an amazing itinerary with real flights and hotels!`;
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div style="margin-top: 12px;">
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.askOriginQuestion()">
+                                🚀 Start Planning
+                            </button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            // Conversational questions that follow the 4-key-question structure from conversation_service.py
+            askOriginQuestion() {
+                const message = `🚀 **Where are you starting from?** What city or airport should I use as your departure point?`;
+                const quickReplies = ['New York', 'Los Angeles', 'Chicago', 'Miami', 'Other city'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOriginResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleOriginResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                if (!this.conversationState.trip_data) this.conversationState.trip_data = {};
+                this.conversationState.trip_data.origin = response;
+                
+                // Ask the next question
+                this.askDestinationQuestion();
+            }
+
+            askDestinationQuestion() {
+                const message = `🌍 **Where's calling your name?** Got a destination in mind or shall I reveal some hidden gems?`;
+                const quickReplies = ['Beach paradise', 'Urban exploration', 'Mountain adventure', 'Cultural journey', 'Tell me more'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleDestinationResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleDestinationResponse(response) {
+                // Add user's response to chat
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state (following chat_integration_router.py pattern)
+                if (!this.conversationState.trip_data) this.conversationState.trip_data = {};
+                this.conversationState.trip_data.destination = response;
+                
+                // Ask the next question in the sequence
+                this.askTravelersQuestion();
+            }
+
+            askTravelersQuestion() {
+                const message = `👥 **Who's joining your adventure?** Solo explorer, romantic duo, family expedition, or friend squad?`;
+                const quickReplies = ['Solo explorer', 'Romantic duo', 'Family expedition', 'Friend squad', 'Other'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleTravelersResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleTravelersResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.travelers = response;
+                
+                // Ask the next question
+                this.askDatesQuestion();
+            }
+
+            askDatesQuestion() {
+                const message = `📅 **When's your adventure time?** Dates and how long you want to immerse yourself?`;
+                const quickReplies = ['Next month', 'Summer', 'Winter', 'Spring', 'Flexible dates'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleDatesResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleDatesResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.dates = response;
+                
+                // Ask the final question
+                this.askVibeQuestion();
+            }
+
+            askVibeQuestion() {
+                const message = `🎯 **What's your adventure style?** Relaxation, thrill-seeking, cultural immersion, or pure exploration?`;
+                const quickReplies = ['Relaxation', 'Thrill-seeking', 'Cultural immersion', 'Perfect blend', 'Surprise me'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="travelInterface.handleVibeResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleVibeResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.vibe = response;
+                
+                // Show trip summary and start planning
+                this.showTripSummary();
+            }
+
+            showTripSummary() {
+                const tripData = this.conversationState.trip_data;
+                const summary = `🎉 **Perfect! Here's your adventure summary:**
+
+• **Destination**: ${tripData.destination || 'Your chosen destination'}
+• **Travelers**: ${tripData.travelers || 'Your travel companions'}
+• **When**: ${tripData.dates || 'Your selected dates'}
+• **Style**: ${tripData.vibe || 'Your adventure style'}
+
+Now let me craft your complete itinerary with real flights and hotels! 🚀`;
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${summary}</div>
+                        <div style="margin-top: 16px;">
+                            <button class="travel-quick-reply primary" onclick="travelInterface.startTripPlanning()">
+                                🎯 Start Planning My Trip
+                            </button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            startTripPlanning() {
+                // Hide the conversational interface
+                document.getElementById('conversationalInterests').style.display = 'none';
+                
+                // Create a natural language message that the chat_integration_router.py can process
+                const tripData = this.conversationState.trip_data;
+                const message = `I want to plan a trip to ${tripData.destination} for ${tripData.travelers} starting ${tripData.dates} with a ${tripData.vibe} style.`;
+                
+                // Set the message in the input and send it
+                this.input.value = message;
+                this.sendMessage();
+                
+                // Clear conversation state for next use
+                this.conversationState = null;
+            }
+
+            handleDatesResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.dates = response;
+                
+                // Ask the final question
+                this.askVibeQuestion();
+            }
+
+            askVibeQuestion() {
+                const message = `🎯 **What's your adventure style?** Relaxation, thrill-seeking, cultural immersion, or pure exploration?`;
+                const quickReplies = ['Relaxation', 'Thrill-seeking', 'Cultural immersion', 'Perfect blend', 'Surprise me'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="travelInterface.handleVibeResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleVibeResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.vibe = response;
+                
+                // Show trip summary and start planning
+                this.showTripSummary();
+            }
+
+            showTripSummary() {
+                const tripData = this.conversationState.trip_data;
+                const summary = `🎉 **Perfect! Here's your adventure summary:**
+
+• **Destination**: ${tripData.destination || 'Your chosen destination'}
+• **Travelers**: ${tripData.travelers || 'Your travel companions'}
+• **When**: ${tripData.dates || 'Your selected dates'}
+• **Style**: ${tripData.vibe || 'Your adventure style'}
+
+Now let me craft your complete itinerary with real flights and hotels! 🚀`;
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${summary}</div>
+                        <div style="margin-top: 16px;">
+                            <button class="travel-quick-reply primary" onclick="travelInterface.startTripPlanning()">
+                                🎯 Start Planning My Trip
+                            </button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            startTripPlanning() {
+                // Hide the conversational interface
+                document.getElementById('conversationalInterests').style.display = 'none';
+                
+                // Create a natural language message that the chat_integration_router.py can process
+                const tripData = this.conversationState.trip_data;
+                const message = `I want to plan a trip to ${tripData.destination} for ${tripData.travelers} starting ${tripData.dates} with a ${tripData.vibe} style.`;
+                
+                // Set the message in the input and send it
+                this.input.value = message;
+                this.sendMessage();
+                
+                // Clear conversation state for next use
+                this.conversationState = null;
+            }
+
+            // Quick action methods for conversational flow
+            askTripType() {
+                this.askDestinationQuestion();
+            }
+
+            askOccasion() {
+                this.askTravelersQuestion();
+            }
+
+            askInterests() {
+                this.askVibeQuestion();
+            }
+
+            askAccommodation() {
+                // This will be handled naturally in the conversation flow
+                const message = `🏨 Great question! I'll ask about your accommodation preferences as we plan your trip. For now, let's focus on the main details first.`;
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div style="margin-top: 12px;">
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.askDestinationQuestion()">
+                                🚀 Continue Planning
+                            </button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            selectTripType(type) {
+                this.planningData.tripType = type;
+                this.updateSelection('interest-option', type);
+                this.showNextStep();
+            }
+
+            selectSeason(season) {
+                this.planningData.season = season;
+                this.updateSelection('season-option', season);
+                this.showNextStep();
+            }
+
+            selectCelebration(celebration) {
+                this.planningData.celebration = celebration;
+                this.updateSelection('celebration-option', celebration);
+                this.showNextStep();
+            }
+
+            selectBusinessPriority(priority) {
+                this.planningData.businessPriority = priority;
+                this.updateSelection('business-option', priority);
+                this.showNextStep();
+            }
+
+            selectLeisureInterest(interest) {
+                this.planningData.leisureInterest = interest;
+                this.updateSelection('leisure-option', interest);
+                this.showNextStep();
+            }
+
+            selectHotelPreference(preference) {
+                this.planningData.hotelPreference = preference;
+                this.updateSelection('hotel-preference', preference);
+                this.showNextStep();
+            }
+
+            updateSelection(className, value) {
+                // Remove previous selections
+                document.querySelectorAll(`.${className}`).forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // Select current option
+                const selectedOption = document.querySelector(`[data-${className.split('-')[0]}="${value}"]`);
+                if (selectedOption) {
+                    selectedOption.classList.add('selected');
+                }
+            }
+
+            showNextStep() {
+                const currentStepElement = document.querySelector(`#${this.getCurrentStepId()}`);
+                if (currentStepElement) {
+                    currentStepElement.style.display = 'none';
+                }
+
+                this.currentStep++;
+                this.updateProgress();
+                this.updateNavigation();
+
+                const nextStepElement = document.querySelector(`#${this.getCurrentStepId()}`);
+                if (nextStepElement) {
+                    nextStepElement.style.display = 'block';
+                }
+            }
+
+            previousStep() {
+                if (this.currentStep > 1) {
+                    const currentStepElement = document.querySelector(`#${this.getCurrentStepId()}`);
+                    if (currentStepElement) {
+                        currentStepElement.style.display = 'none';
+                    }
+
+                    this.currentStep--;
+                    this.updateProgress();
+                    this.updateNavigation();
+
+                    const previousStepElement = document.querySelector(`#${this.getCurrentStepId()}`);
+                    if (previousStepElement) {
+                        previousStepElement.style.display = 'block';
+                    }
+                }
+            }
+
+            getCurrentStepId() {
+                const stepMap = {
+                    1: 'tripTypeStep',
+                    2: this.planningData.tripType === 'seasonal' ? 'seasonalStep' : 
+                        this.planningData.tripType === 'celebration' ? 'celebrationStep' :
+                        this.planningData.tripType === 'business' ? 'businessStep' :
+                        this.planningData.tripType === 'leisure' ? 'leisureStep' : 'hotelPreferencesStep',
+                    3: 'hotelPreferencesStep',
+                    4: 'hotelPreferencesStep',
+                    5: 'hotelPreferencesStep'
+                };
+                return stepMap[this.currentStep] || 'tripTypeStep';
+            }
+
+            updateProgress() {
+                const progressFill = document.getElementById('planningProgress');
+                const currentStepSpan = document.getElementById('currentStep');
+                const totalStepsSpan = document.getElementById('totalSteps');
+                
+                if (progressFill) {
+                    const progressPercentage = (this.currentStep / this.totalSteps) * 100;
+                    progressFill.style.width = `${progressPercentage}%`;
+                }
+                
+                if (currentStepSpan) {
+                    currentStepSpan.textContent = this.currentStep;
+                }
+                
+                if (totalStepsSpan) {
+                    totalStepsSpan.textContent = this.totalSteps;
+                }
+            }
+
+            updateNavigation() {
+                const prevBtn = document.getElementById('prevStepBtn');
+                const nextBtn = document.getElementById('nextStepBtn');
+                const startBtn = document.getElementById('startPlanningBtn');
+
+                if (prevBtn) {
+                    prevBtn.style.display = this.currentStep > 1 ? 'block' : 'none';
+                }
+
+                if (nextBtn) {
+                    nextBtn.style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
+                }
+
+                if (startBtn) {
+                    startBtn.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
+                }
+            }
+
+            async startInterestBasedPlanning() {
+                // Create a comprehensive trip request based on user selections
+                const tripRequest = this.createTripRequestFromInterests();
+                
+                // Add a message about the planned trip
+                const message = this.createTripMessage();
+                this.input.value = message;
+                
+                // Hide interest planning section
+                document.getElementById('interestPlanningSection').style.display = 'none';
+                
+                // Send the message to start planning
+                this.sendMessage();
+            }
+
+            createTripRequestFromInterests() {
+                return {
+                    trip_type: this.planningData.tripType,
+                    season: this.planningData.season,
+                    celebration: this.planningData.celebration,
+                    business_priority: this.planningData.businessPriority,
+                    leisure_interest: this.planningData.leisureInterest,
+                    hotel_preference: this.planningData.hotelPreference,
+                    interests: this.getInterestsArray()
+                };
+            }
+
+            getInterestsArray() {
+                const interests = [];
+                if (this.planningData.season) interests.push(this.planningData.season);
+                if (this.planningData.celebration) interests.push(this.planningData.celebration);
+                if (this.planningData.businessPriority) interests.push(this.planningData.businessPriority);
+                if (this.planningData.leisureInterest) interests.push(this.planningData.leisureInterest);
+                if (this.planningData.hotelPreference) interests.push(this.planningData.hotelPreference);
+                return interests;
+            }
+
+            createTripMessage() {
+                let message = `I want to plan a `;
+                
+                if (this.planningData.tripType === 'seasonal') {
+                    message += `${this.planningData.season} vacation`;
+                } else if (this.planningData.tripType === 'celebration') {
+                    message += `${this.planningData.celebration} trip`;
+                } else if (this.planningData.tripType === 'business') {
+                    message += `business trip with ${this.planningData.businessPriority} priority`;
+                } else if (this.planningData.tripType === 'leisure') {
+                    message += `${this.planningData.leisureInterest} focused trip`;
+                }
+                
+                if (this.planningData.hotelPreference) {
+                    message += ` and prefer ${this.planningData.hotelPreference} accommodation`;
+                }
+                
+                return message;
+            }
+
+            // Add missing conversational methods for complete trip planning
+            askDurationQuestion() {
+                const message = `📅 **How many days do you want to travel?** This helps me plan the perfect itinerary length!`;
+                const quickReplies = ['3-5 days', '1 week', '10 days', '2 weeks', 'Other'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleDurationResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleDurationResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.duration = response;
+                
+                // Ask the next question
+                this.askBudgetQuestion();
+            }
+
+            askBudgetQuestion() {
+                const message = `💰 **What's your budget preference?** This helps me find the perfect flights and hotels for you!`;
+                const quickReplies = ['Budget-friendly', 'Moderate', 'Luxury', 'Tell me more'];
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleBudgetResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleBudgetResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.trip_data.budget = response;
+                
+                // Show trip summary and start planning
+                this.showTripSummary();
+            }
+
+            // Handle enhancement questions when basic info is complete
+            askEnhancementQuestions() {
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>🎯 **Is this trip for a special occasion or just a casual getaway?**</div>
+                        <div class="travel-quick-replies">
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOccasionResponse('casual')">Casual getaway</button>
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOccasionResponse('anniversary')">Anniversary</button>
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOccasionResponse('birthday')">Birthday</button>
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOccasionResponse('honeymoon')">Honeymoon</button>
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOccasionResponse('business')">Business trip</button>
+                            <button class="travel-quick-reply" onclick="enhancedTravelInterface.handleOccasionResponse('other')">Other special occasion</button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleOccasionResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.occasion = response;
+                
+                // Ask for interests based on occasion
+                this.askInterestsQuestion(response);
+            }
+
+            askInterestsQuestion(occasion) {
+                let message = `🎯 **What interests you most about this trip?**`;
+                let quickReplies = [];
+                
+                if (occasion === 'casual') {
+                    quickReplies = ['Relaxation & wellness', 'Adventure & outdoor', 'Culture & history', 'Food & dining', 'Shopping & entertainment', 'Mix of everything'];
+                } else if (occasion === 'anniversary' || occasion === 'honeymoon') {
+                    quickReplies = ['Romantic experiences', 'Fine dining', 'Luxury & pampering', 'Cultural exploration', 'Adventure together', 'Relaxation'];
+                } else if (occasion === 'birthday') {
+                    quickReplies = ['Celebration & fun', 'Adventure & excitement', 'Cultural experiences', 'Food & entertainment', 'Relaxation', 'Mix of everything'];
+                } else if (occasion === 'business') {
+                    quickReplies = ['Efficient logistics', 'Professional amenities', 'Cultural experiences', 'Networking opportunities', 'Relaxation after work', 'Mix of business & leisure'];
+                } else {
+                    quickReplies = ['Cultural exploration', 'Adventure & outdoor', 'Relaxation & wellness', 'Food & dining', 'Entertainment', 'Mix of everything'];
+                }
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${message}</div>
+                        <div class="travel-quick-replies">
+                            ${quickReplies.map(reply => 
+                                `<button class="travel-quick-reply" onclick="enhancedTravelInterface.handleInterestsResponse('${reply}')">${reply}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `);
+            }
+
+            handleInterestsResponse(response) {
+                this.addMessage(`
+                    <div class="travel-message user">
+                        <div>${response}</div>
+                    </div>
+                `);
+
+                // Store in conversation state
+                this.conversationState.interests = [response]; // Store as array to match backend format
+                
+                // Now we have everything - show enhanced trip summary
+                this.showEnhancedTripSummary();
+            }
+
+            showEnhancedTripSummary() {
+                // Get trip data from the main conversation state, not from trip_data
+                const tripData = this.conversationState;
+                const summary = `🎉 **Perfect! Here's your enhanced trip summary:**
+
+• **From**: ${tripData.origin || 'Your departure city'}
+• **To**: ${tripData.destination || 'Your destination'}
+• **Travelers**: ${tripData.travelers || 'Your travel companions'}
+• **When**: ${tripData.start_date || 'Your selected dates'}${tripData.duration_days ? ` for ${tripData.duration_days} days` : ''}
+• **Budget**: ${tripData.budget_range || 'Your budget preference'}
+• **Occasion**: ${tripData.occasion || 'Your trip purpose'}
+• **Interests**: ${tripData.interests ? tripData.interests.join(', ') : 'Your travel preferences'}
+
+Now let me craft your perfect personalized itinerary! 🚀`;
+                
+                this.addMessage(`
+                    <div class="travel-message ai">
+                        <div>${summary}</div>
+                        <div style="margin-top: 16px;">
+                            <button class="travel-quick-reply primary" onclick="enhancedTravelInterface.startEnhancedTripPlanning()">
+                                🎯 Start Planning My Perfect Trip
+                            </button>
+                        </div>
+                    </div>
+                `);
+            }
+
+            startEnhancedTripPlanning() {
+                // Hide the conversational interface
+                document.getElementById('conversationalInterests').style.display = 'none';
+                
+                // Create a comprehensive natural language message
+                const tripData = this.conversationState;
+                const message = `I want to plan a trip from ${tripData.origin} to ${tripData.destination} for ${tripData.travelers} starting ${tripData.start_date} for ${tripData.duration_days} days with a ${tripData.budget_range} budget. This is for a ${tripData.occasion} and I'm interested in ${tripData.interests ? tripData.interests.join(', ') : 'general travel'}.`;
+                
+                // Set the message in the input and send it
+                this.input.value = message;
+                this.sendMessage();
+                
+                // Clear conversation state for next use
+                this.conversationState = null;
+            }
         }
 
         // Initialize the enhanced travel interface
-        const travelInterface = new EnhancedTravelInterface();
+        const enhancedTravelInterface = new EnhancedTravelInterface();
     </script>
 </body>
 </html>

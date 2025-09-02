@@ -47,6 +47,13 @@ async def process_chat_message(request: Dict[str, Any]):
             # Frontend is sending flat structure, treat the conversation_state as trip_data
             existing_trip_data = {k: v for k, v in conversation_state.items() if k not in ["current_state", "session_id"]}
         
+        # Check if we have enhancement information (occasion and interests) in conversation_state
+        has_enhancement_info = (
+            conversation_state.get("occasion") and 
+            conversation_state.get("interests") and 
+            len(conversation_state.get("interests", [])) > 0
+        )
+        
         # If we have existing trip_data, always use conversation service to allow updates
         if existing_trip_data:
             # Extract any new information from the message
@@ -60,6 +67,8 @@ async def process_chat_message(request: Dict[str, Any]):
                 existing_trip_data["total_budget"] = new_total_budget
             if new_interests:
                 existing_trip_data["interests"] = new_interests
+            
+
             
             # Create trip_request from updated trip_data
             trip_request = TripPlanningRequest(
@@ -75,6 +84,23 @@ async def process_chat_message(request: Dict[str, Any]):
                 special_requirements="",
                 total_budget=existing_trip_data.get("total_budget")
             )
+            
+            # Check if we now have all enhancement information and should proceed to planning
+            if has_enhancement_info and _has_sufficient_info(trip_request):
+                # We have everything - start planning immediately
+                planning_result = await _start_trip_planning(trip_request)
+                
+                response_dict = {
+                    "session_id": session_id,
+                    "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
+                    "state": "planning",
+                    "can_start_planning": True,
+                    "trip_request": trip_request.dict() if trip_request else None,
+                    "planning_result": planning_result,
+                    "conversation_state": conversation_state
+                }
+                logger.info(f"[DEBUG] Returning FULL RESPONSE (planning with enhancement): {response_dict}")
+                return response_dict
         else:
             # No existing trip_data, try to extract complete trip request
             trip_request = await _extract_trip_request(message, conversation_state)
@@ -191,20 +217,41 @@ async def process_chat_message(request: Dict[str, Any]):
             else:
                 # No existing trip_data, check if we have enough info to start planning
                 if _has_sufficient_info(trip_request):
-                    # We have enough info to start planning immediately
-                    planning_result = await _start_trip_planning(trip_request)
-                    
-                    response_dict = {
-                        "session_id": session_id,
-                        "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
-                        "state": "planning",
-                        "can_start_planning": True,
-                        "trip_request": trip_request.dict() if trip_request else None,
-                        "planning_result": planning_result,
-                        "conversation_state": conversation_state
-                    }
-                    logger.info(f"[DEBUG] Returning FULL RESPONSE (planning): {response_dict}")
-                    return response_dict
+                    # Check if we should ask for enhancement information
+                    if _should_ask_for_enhancement(trip_request, conversation_state):
+                        # We have basic info but need enhancement - ask for occasion/interests
+                        enhancement_message = "Great! I have the basic trip details. Now let me ask a few more questions to make your trip truly special! 🎯"
+                        
+                        # Store the trip_request in conversation_state for later use
+                        conversation_state.update(trip_request.dict())
+                        conversation_state["enhancement_needed"] = True
+                        
+                        response_dict = {
+                            "session_id": session_id,
+                            "message": enhancement_message,
+                            "state": "enhancement",
+                            "can_start_planning": False,
+                            "missing_info": ["occasion", "interests"],
+                            "conversation_state": conversation_state,
+                            "trip_request": trip_request.dict()
+                        }
+                        logger.info(f"[DEBUG] Returning ENHANCEMENT response: {response_dict}")
+                        return response_dict
+                    else:
+                        # We have everything including enhancement info - start planning immediately
+                        planning_result = await _start_trip_planning(trip_request)
+                        
+                        response_dict = {
+                            "session_id": session_id,
+                            "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
+                            "state": "planning",
+                            "can_start_planning": True,
+                            "trip_request": trip_request.dict() if trip_request else None,
+                            "planning_result": planning_result,
+                            "conversation_state": conversation_state
+                        }
+                        logger.info(f"[DEBUG] Returning FULL RESPONSE (planning): {response_dict}")
+                        return response_dict
                 else:
                     # Need more information - call conversation service
                     response = await conversation_service.process_user_input(message, conversation_state.get("current_state", "greeting"), conversation_state, missing_info)
@@ -658,6 +705,24 @@ def _extract_travelers(message: str) -> Optional[int]:
             else:
                 return int(match.group(1))
     
+    # NEW: Look for standalone numbers that might be travelers
+    # This catches cases like "for 2 starting" or "2 travelers"
+    standalone_number_patterns = [
+        r"for\s+(\d+)\s+starting",
+        r"(\d+)\s+starting",
+        r"(\d+)\s+travelers?",
+        r"(\d+)\s+people",
+        r"(\d+)\s+adults?"
+    ]
+    
+    for pattern in standalone_number_patterns:
+        match = re.search(pattern, message_processed)
+        if match:
+            number = int(match.group(1))
+            # Validate reasonable traveler count
+            if 1 <= number <= 20:
+                return number
+    
     return None
 
 def _extract_start_date(message: str) -> Optional[str]:
@@ -699,16 +764,9 @@ def _extract_end_date(message: str) -> Optional[str]:
 
 def _extract_budget(message: str):
     """Extract budget range and numeric value from message"""
-    budget_keywords = {
-        "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty", "backpacker"],
-        "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable", "balanced"],
-        "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe", "premium"]
-    }
     message_lower = message.lower()
-    for budget_range, keywords in budget_keywords.items():
-        if any(keyword in message_lower for keyword in keywords):
-            return budget_range, None
-    # Also check for dollar amounts and price ranges
+    
+    # FIRST: Check for dollar amounts and price ranges (priority over keywords)
     dollar_patterns = [
         r"\$(\d+)(?:-\d+)?\s*(?:per\s+day|daily|budget)",
         r"(\d+)(?:-\d+)?\s*dollars?\s*(?:per\s+day|daily|budget)",
@@ -719,8 +777,14 @@ def _extract_budget(message: str):
         r"^(\d+)$",    # Just "2000"
         r"luxury\s*\(\$(\d+)\+/day\)",  # "Luxury ($300+/day)"
         r"moderate\s*\(\$(\d+)-(\d+)/day\)",  # "Moderate ($100-300/day)"
-        r"budget-friendly\s*\(\$(\d+)-(\d+)/day\)"  # "Budget-friendly ($50-100/day)"
+        r"budget-friendly\s*\(\$(\d+)-(\d+)/day\)",  # "Budget-friendly ($50-100/day)"
+        r"with\s*(\d+)\$",  # "with 3500$"
+        r"(\d+)\$\s*budget",  # "3500$ budget"
+        r"budget\s*(\d+)\$",  # "budget 3500$"
+        r"(\d+)\$\s*starting",  # "3500$ starting"
+        r"starting\s*(\d+)\$"   # "starting 3500$"
     ]
+    
     for pattern in dollar_patterns:
         match = re.search(pattern, message_lower)
         if match:
@@ -732,16 +796,34 @@ def _extract_budget(message: str):
                 return "moderate", avg_amount
             else:
                 return "luxury", avg_amount
+    
+    # SECOND: Check for budget keywords (only if no dollar amounts found)
+    budget_keywords = {
+        "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty", "backpacker"],
+        "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable", "balanced"],
+        "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe", "premium"]
+    }
+    
+    for budget_range, keywords in budget_keywords.items():
+        if any(keyword in message_lower for keyword in keywords):
+            return budget_range, None
+    
     return None, None
 
 def _extract_duration_days(message: str) -> Optional[int]:
     """Extract duration in days from message"""
     # Look for patterns like "for X days", "X days", "X-day trip"
     duration_patterns = [
-        r"for\s+(\d+)\s+days?",
-        r"(\d+)\s+days?",
-        r"(\d+)-day\s+trip",
-        r"(\d+)\s+day\s+trip"
+        r"for\s+(\d+)\s+days?",  # "for 5 days"
+        r"(\d+)\s+days?",  # "5 days"
+        r"(\d+)-day\s+trip",  # "5-day trip"
+        r"(\d+)\s+day\s+trip",  # "5 day trip"
+        r"(\d+)\s+days?\s+with",  # "5 days with"
+        r"(\d+)\s+days?\s+starting",  # "5 days starting"
+        r"starting.*?(\d+)\s+days?",  # "starting ... 5 days"
+        r"(\d+)\s+days?\s+budget",  # "5 days budget"
+        r"for\s+(\d+)\s+days?\s+with",  # "for 5 days with"
+        r"for\s+(\d+)\s+days?\s+starting"  # "for 5 days starting"
     ]
     
     message_lower = message.lower()
@@ -749,7 +831,9 @@ def _extract_duration_days(message: str) -> Optional[int]:
         match = re.search(pattern, message_lower)
         if match:
             days = int(match.group(1))
-            return days
+            # Validate reasonable duration
+            if 1 <= days <= 365:
+                return days
     
     return None
 
@@ -779,15 +863,25 @@ def _has_sufficient_info(trip_request: TripPlanningRequest) -> bool:
     """Check if we have sufficient information to start planning"""
     logger.info(f"[DEBUG] (before sufficiency check) TripPlanningRequest: {trip_request.dict()} (duration_days type: {type(trip_request.duration_days)})")
     logger.info(f"[DEBUG] (before sufficiency check) Missing info: {_get_missing_info(trip_request)}")
-    return (
+    
+    # Basic required information
+    has_basic_info = (
         trip_request.origin and 
         trip_request.destination and 
         trip_request.travelers and
         trip_request.duration_days and
         trip_request.start_date and
         trip_request.budget_range
-        # interests is optional
     )
+    
+    # Check if we have enhancement information for better personalization
+    has_enhancement_info = (
+        trip_request.interests and len(trip_request.interests) > 0
+    )
+    
+    # For now, return True if we have basic info
+    # We'll enhance this to ask for occasion/interests even when basic info is complete
+    return has_basic_info
 
 def _get_missing_info(trip_request: TripPlanningRequest) -> List[str]:
     """Get list of missing mandatory information"""
@@ -810,6 +904,32 @@ def _get_missing_info(trip_request: TripPlanningRequest) -> List[str]:
     # interests is optional
     
     return missing
+
+def _should_ask_for_enhancement(trip_request: TripPlanningRequest, conversation_state: Dict[str, Any] = None) -> bool:
+    """Check if we should ask for enhancement information (occasion, interests) even when basic info is complete"""
+    # Check if we have specific occasion-related information
+    occasion_keywords = ['anniversary', 'birthday', 'honeymoon', 'graduation', 'wedding', 'celebration', 'business', 'work', 'casual', 'getaway']
+    
+    # First check if we have occasion info in conversation_state (frontend stores it there)
+    if conversation_state and conversation_state.get("occasion"):
+        return False  # We have occasion info, no need to ask
+    
+    # Also check if we have occasion info in special_requirements
+    if trip_request.special_requirements:
+        all_text = trip_request.special_requirements.lower()
+        has_occasion_info = any(keyword in all_text for keyword in occasion_keywords)
+        if has_occasion_info:
+            return False
+    
+    # Check if we have specific occasion-related interests
+    if trip_request.interests:
+        all_text = f"{trip_request.interests}".lower()
+        has_occasion_info = any(keyword in all_text for keyword in occasion_keywords)
+        if has_occasion_info:
+            return False
+    
+    # If we don't have occasion info, ask for it
+    return True
 
 def _calculate_extraction_confidence(trip_request: Optional[TripPlanningRequest]) -> float:
     """Calculate confidence score for extracted information"""

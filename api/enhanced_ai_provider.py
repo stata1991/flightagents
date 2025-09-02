@@ -22,7 +22,7 @@ from .search_one_way import search_one_way_flights
 from .models import HotelSearchRequest
 from services.budget_allocation_service import BudgetAllocationService
 from services.price_display_service import price_display_service
-from services.location_detection_service import location_detection_service
+from services.location_detection_service import LocationDetectionService
 
 load_dotenv()
 
@@ -36,6 +36,7 @@ class EnhancedAITripProvider(TripPlannerProvider):
         self._available = bool(os.getenv("ANTHROPIC_API_KEY"))
         self.hotel_client = HotelClient()
         self.budget_service = BudgetAllocationService()
+        self.location_service = LocationDetectionService()
     
     def get_provider_type(self) -> ProviderType:
         return ProviderType.AI
@@ -259,16 +260,16 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 top_hotels = hotel_response.hotels[:8]
                 
                 # Detect user's currency and determine trip currency strategy
-                user_location = await location_detection_service.detect_user_location()
+                user_location = await self.location_service.detect_user_location_with_consent()
                 user_country = user_location.get("country_code", "US")
                 user_currency = user_location.get("currency", "USD")
                 
                 # Determine origin and destination countries
-                origin_country = await location_detection_service.get_country_from_city(request.origin)
-                destination_country = await location_detection_service.get_country_from_city(request.destination)
+                origin_country = await self.location_service.get_country_from_city(request.origin)
+                destination_country = await self.location_service.get_country_from_city(request.destination)
                 
                 # Get currency strategy for this trip
-                currency_strategy = location_detection_service.determine_trip_currency_strategy(
+                currency_strategy = self.location_service.determine_trip_currency_strategy(
                     origin_country, destination_country, user_country
                 )
                 
@@ -372,16 +373,16 @@ class EnhancedAITripProvider(TripPlannerProvider):
                             logger.info(f"Found {len(result['flights'])} flights")
                             
                             # Detect user's currency and determine trip currency strategy
-                            user_location = await location_detection_service.detect_user_location()
+                            user_location = await self.location_service.detect_user_location_with_consent()
                             user_country = user_location.get("country_code", "US")
                             user_currency = user_location.get("currency", "USD")
                             
                             # Determine origin and destination countries
-                            origin_country = await location_detection_service.get_country_from_city(request.origin)
-                            destination_country = await location_detection_service.get_country_from_city(request.destination)
+                            origin_country = await self.location_service.get_country_from_city(request.origin)
+                            destination_country = await self.location_service.get_country_from_city(request.destination)
                             
                             # Get currency strategy for this trip
-                            currency_strategy = location_detection_service.determine_trip_currency_strategy(
+                            currency_strategy = self.location_service.determine_trip_currency_strategy(
                                 origin_country, destination_country, user_country
                             )
                             

@@ -11,6 +11,7 @@ from .search_one_way import search_one_way_flights
 from .search_round_trip import search_round_trip_flights
 from .enhanced_parser import get_parser, EnhancedQueryParser
 from .hybrid_trip_router import router as hybrid_router
+from .location_discovery_router import router as location_router
 from itertools import product
 import os
 from dotenv import load_dotenv
@@ -44,6 +45,9 @@ templates = Jinja2Templates(directory="templates")
 
 # Include hybrid trip planning router
 app.include_router(hybrid_router)
+
+# Include location discovery router
+app.include_router(location_router)
 
 # Initialize parser with Anthropic API key
 api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -79,6 +83,14 @@ async def root(request: Request):
 @app.get("/hybrid", response_class=HTMLResponse)
 async def hybrid_planner_page(request: Request):
     return templates.TemplateResponse("hybrid_trip_planner.html", {"request": request})
+
+@app.get("/enhanced", response_class=HTMLResponse)
+async def enhanced_travel_interface(request: Request):
+    return templates.TemplateResponse("enhanced_travel_interface.html", {"request": request})
+
+@app.get("/location-discovery", response_class=HTMLResponse)
+async def location_discovery_page(request: Request):
+    return templates.TemplateResponse("location_discovery.html", {"request": request})
 
 @app.get("/test-hybrid")
 async def test_hybrid():
@@ -273,4 +285,8 @@ async def search_flights_natural(request: Request):
         return JSONResponse(
             status_code=500,
             content={"error": str(e)}
-        ) 
+        )
+
+
+
+ 

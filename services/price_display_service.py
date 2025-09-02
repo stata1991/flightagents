@@ -3,7 +3,7 @@
 import logging
 from typing import Dict, Optional, Union, List
 from api.currency_converter import currency_converter
-from services.location_detection_service import location_detection_service
+from services.location_detection_service import LocationDetectionService
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ class PriceDisplayService:
     
     def __init__(self):
         self.currency_converter = currency_converter
-        self.location_service = location_detection_service
+        self.location_service = LocationDetectionService()
     
     async def convert_and_format_price(self, price_usd: float, user_currency: str = "USD") -> Dict[str, str]:
         """
