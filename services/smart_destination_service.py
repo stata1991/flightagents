@@ -18,6 +18,15 @@ class SmartDestinationService:
         self.rapid_api_key = os.getenv("RAPID_API_KEY")
         if not self.rapid_api_key:
             logger.error("RAPID_API_KEY not found")
+        
+        # Initialize maps and weather service for dynamic analysis
+        try:
+            from .maps_weather_service import MapsWeatherService
+            self.maps_weather_service = MapsWeatherService()
+            logger.info("Maps and Weather service initialized")
+        except ImportError:
+            self.maps_weather_service = None
+            logger.warning("Maps and Weather service not available - using fallback methods")
     
     async def get_airports_near_destination(self, destination: str) -> Optional[Dict[str, Any]]:
         """
@@ -145,42 +154,100 @@ class SmartDestinationService:
     
     async def get_smart_airport_recommendation(self, destination: str, trip_type: str) -> Optional[Dict[str, Any]]:
         """
-        Get smart airport recommendation prioritizing major airports for better connectivity and cost-effectiveness.
+        Get smart airport recommendation using dynamic maps and weather analysis.
         """
         try:
             if trip_type == "national_park":
-                # Get airports near the national park
+                # Use dynamic maps and weather service for comprehensive analysis
+                if self.maps_weather_service:
+                    logger.info(f"Using dynamic maps and weather service for {destination}")
+                    
+                    # Get comprehensive destination analysis
+                    analysis = await self.maps_weather_service.analyze_destination_for_travel(destination)
+                    
+                    if analysis and "error" not in analysis:
+                        airports_data = analysis["airports"]
+                        weather_data = analysis.get("weather")
+                        transportation_data = analysis.get("transportation", [])
+                        
+                        # Extract airport information
+                        primary_airport = airports_data.get("primary")
+                        major_alternatives = airports_data.get("major_alternatives", [])
+                        regional_alternatives = airports_data.get("regional_alternatives", [])
+                        
+                        if primary_airport:
+                            # Build comprehensive recommendation
+                            recommendation = {
+                                "primary_airport": primary_airport["id"],
+                                "airport_name": primary_airport["name"],
+                                "airport_code": primary_airport["code"],
+                                "airport_type": "major" if airports_data["recommendation_type"] == "major_airport" else "regional",
+                                "recommendation_type": airports_data["recommendation_type"],
+                                "reasoning": airports_data["reasoning"],
+                                "alternative_airports": [ap["id"] for ap in major_alternatives + regional_alternatives],
+                                "alternative_names": [ap["name"] for ap in major_alternatives + regional_alternatives],
+                                "alternative_codes": [ap["code"] for ap in major_alternatives + regional_alternatives],
+                                "distance_to_destination": f"{primary_airport['distance']:.1f} km",
+                                "transportation_options": transportation_data,
+                                "minimum_days": 4,
+                                "cost_considerations": {
+                                    "primary": "Dynamic analysis based on real-time airport data",
+                                    "transportation": "Personalized recommendations based on destination type",
+                                    "time_tradeoff": f"Drive time: {primary_airport['distance']:.1f} km from destination",
+                                    "weather_considerations": "Weather data available for trip planning" if weather_data else "Weather data not available"
+                                }
+                            }
+                            
+                            # Add weather information if available
+                            if weather_data:
+                                recommendation["weather_forecast"] = {
+                                    "destination": weather_data["destination"],
+                                    "forecasts": weather_data["forecasts"][:5],  # Next 5 days
+                                    "recommendations": self._get_weather_based_recommendations(weather_data)
+                                }
+                            
+                            # Add maps integration information
+                            recommendation["maps_integration"] = {
+                                "coordinates": analysis["coordinates"],
+                                "analysis_timestamp": analysis["analysis_timestamp"]
+                            }
+                            
+                            return recommendation
+                    
+                    # Fallback to API-based search if dynamic service fails
+                    logger.info(f"Dynamic service failed, falling back to API search for {destination}")
+                
+                # Fallback to original API-based airport search
                 airport_data = await self.get_airports_near_destination(destination)
                 if airport_data and airport_data["airports"]:
                     airports = airport_data["airports"]
                     
-                    # Define major airports with high connectivity (these are typically cheaper and have more flights)
-                    major_airports = {
-                        "SFO": "San Francisco International Airport",
-                        "SJC": "San Jose International Airport", 
-                        "OAK": "Oakland International Airport",
-                        "LAX": "Los Angeles International Airport",
-                        "LAS": "Las Vegas McCarran International Airport",
-                        "PHX": "Phoenix Sky Harbor International Airport",
-                        "DEN": "Denver International Airport",
-                        "SEA": "Seattle-Tacoma International Airport",
-                        "PDX": "Portland International Airport",
-                        "SLC": "Salt Lake City International Airport"
-                    }
+                    # Dynamic airport classification using major_airports_filtered.json
+                    # No hardcoded lists - everything is data-driven!
                     
                     # Categorize airports into major and regional
                     major_airport_options = []
                     regional_airport_options = []
                     
+                    # Load major airports database dynamically
+                    major_airports_db = self._load_major_airports_database()
+                    
                     for airport in airports:
                         airport_code = airport.get("code", "")
-                        if airport_code in major_airports:
+                        airport_name = airport.get("name", "")
+                        distance = airport.get("distance", 0)
+                        
+                        # Check if this airport is in our major airports database
+                        is_major = self._is_major_airport(airport_code, airport_name, major_airports_db)
+                        
+                        if is_major:
                             # Major airport - prioritize for better connectivity and cheaper flights
                             major_airport_options.append({
                                 **airport,
                                 "type": "major",
                                 "connectivity": "high",
-                                "cost_advantage": "better_flight_prices"
+                                "cost_advantage": "better_flight_prices",
+                                "reasoning": "Major airport with better connectivity and typically cheaper flights"
                             })
                         else:
                             # Regional airport - closer but potentially more expensive
@@ -188,13 +255,14 @@ class SmartDestinationService:
                                 **airport,
                                 "type": "regional", 
                                 "connectivity": "limited",
-                                "cost_advantage": "closer_distance"
+                                "cost_advantage": "closer_distance",
+                                "reasoning": "Regional airport - closer distance but check major airports for better prices"
                             })
                     
-                    # Prioritize major airports for cost-effectiveness and connectivity
+                    # Smart prioritization: Balance distance vs connectivity
                     if major_airport_options:
-                        # Sort major airports by distance (closest major airport first)
-                        major_airport_options.sort(key=lambda x: x.get("distance", float('inf')))
+                        # Sort major airports by smart score (distance + connectivity factor)
+                        major_airport_options.sort(key=lambda x: self._calculate_airport_score(x))
                         primary_airport = major_airport_options[0]
                         alternative_majors = major_airport_options[1:3]
                         
@@ -206,7 +274,7 @@ class SmartDestinationService:
                             alternative_airports = alternative_majors
                             
                         recommendation_type = "major_airport"
-                        reasoning = f"Major airport with high connectivity and typically cheaper flights"
+                        reasoning = primary_airport.get("reasoning", "Major airport with high connectivity and typically cheaper flights")
                         
                     else:
                         # Fallback to regional airports if no major airports found
@@ -214,7 +282,7 @@ class SmartDestinationService:
                         primary_airport = regional_airport_options[0]
                         alternative_airports = regional_airport_options[1:3]
                         recommendation_type = "regional_airport"
-                        reasoning = f"Closest regional airport - check major airports in nearby cities for better prices"
+                        reasoning = primary_airport.get("reasoning", "Closest regional airport - check major airports in nearby cities for better prices")
                     
                     return {
                         "primary_airport": primary_airport["id"],
@@ -250,6 +318,45 @@ class SmartDestinationService:
         except Exception as e:
             logger.error(f"Error getting smart airport recommendation: {e}")
             return None
+    
+    def _get_weather_based_recommendations(self, weather_data: Dict[str, Any]) -> List[str]:
+        """Generate weather-based travel recommendations."""
+        recommendations = []
+        
+        if not weather_data or "forecasts" not in weather_data:
+            return recommendations
+        
+        # Analyze weather patterns
+        forecasts = weather_data["forecasts"]
+        if not forecasts:
+            return recommendations
+        
+        # Get average temperatures
+        temps = [f.get("temp_max", 0) for f in forecasts if f.get("temp_max")]
+        if temps:
+            avg_temp = sum(temps) / len(temps)
+            
+            if avg_temp < 10:  # Cold weather
+                recommendations.extend([
+                    "Pack warm clothing and layers",
+                    "Consider indoor activities for bad weather days",
+                    "Check road conditions for driving to national parks"
+                ])
+            elif avg_temp > 25:  # Hot weather
+                recommendations.extend([
+                    "Pack light, breathable clothing",
+                    "Plan outdoor activities for early morning or evening",
+                    "Stay hydrated and use sun protection"
+                ])
+        
+        # Check for rain/snow
+        weather_conditions = [f.get("weather", "").lower() for f in forecasts]
+        if any("rain" in w for w in weather_conditions):
+            recommendations.append("Pack rain gear and waterproof shoes")
+        if any("snow" in w for w in weather_conditions):
+            recommendations.append("Check road closures and pack winter gear")
+        
+        return recommendations
     
     def get_multi_city_route_suggestion(self, country: str) -> Optional[Dict[str, Any]]:
         """
@@ -327,3 +434,66 @@ class SmartDestinationService:
                 "destination": None,
                 "requires_basic_planning": True
             } 
+    
+    def _load_major_airports_database(self) -> Dict[str, Any]:
+        """Load the major airports database from major_airports_filtered.json."""
+        try:
+            import json
+            from pathlib import Path
+            
+            airport_file = Path("major_airports_filtered.json")
+            if not airport_file.exists():
+                logger.warning("Major airports database not found")
+                return {}
+            
+            with open(airport_file, 'r') as f:
+                airports_data = json.load(f)
+            
+            # Create a lookup dictionary for fast airport code checking
+            airports_lookup = {}
+            for airport in airports_data:
+                airport_code = airport.get("column_1", "")
+                if airport_code:
+                    airports_lookup[airport_code] = airport
+            
+            logger.info(f"Loaded {len(airports_lookup)} airports from database")
+            return airports_lookup
+            
+        except Exception as e:
+            logger.error(f"Error loading major airports database: {e}")
+            return {}
+    
+    def _is_major_airport(self, airport_code: str, airport_name: str, major_airports_db: Dict[str, Any]) -> bool:
+        """Determine if an airport is major based on database lookup and name analysis."""
+        if not airport_code or not airport_name:
+            return False
+        
+        # Check if airport code exists in our major airports database
+        if airport_code in major_airports_db:
+            return True
+        
+        # Additional heuristics for major airports based on name patterns
+        major_indicators = [
+            "international", "intl", "int'l", "international airport",
+            "major", "hub", "gateway", "central", "main"
+        ]
+        
+        airport_name_lower = airport_name.lower()
+        return any(indicator in airport_name_lower for indicator in major_indicators)
+    
+    def _calculate_airport_score(self, airport: Dict[str, Any]) -> float:
+        """Calculate a smart score for airport prioritization (lower is better)."""
+        distance = airport.get("distance", 0)
+        
+        # Base score is distance
+        score = distance
+        
+        # Bonus for major airports (prioritize connectivity over distance)
+        if airport.get("type") == "major":
+            score *= 0.7  # 30% bonus for major airports
+        
+        # Additional bonus for very close major airports
+        if airport.get("type") == "major" and distance < 100:
+            score *= 0.8  # Extra 20% bonus for close major airports
+        
+        return score 
