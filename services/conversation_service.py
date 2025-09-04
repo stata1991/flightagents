@@ -254,7 +254,7 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         self._update_trip_data_from_input(user_input, trip_data)
         
         # Check if all required info is present
-        mandatory_fields = ['origin', 'destination', 'start_date', 'travelers', 'kids_info', 'duration_days', 'budget_range']
+        mandatory_fields = ['origin', 'destination', 'start_date', 'travelers', 'duration_days', 'budget_range']
         missing_required = [field for field in mandatory_fields if not trip_data.get(field)]
         if not missing_required:
             return {
@@ -274,7 +274,6 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             'destination': "Where would you like to go?",
             'start_date': "When would you like to start your trip? (e.g., 2025-09-20)",
             'travelers': "How many people are traveling? (e.g., 2 adults, 1 child)",
-            'kids_info': "Are there any kids in your group? If yes, how many and what ages? (e.g., 2 kids, ages 5 and 8)",
             'duration_days': "How many days would you like to travel? (e.g., 5 days)",
             'budget_range': "What's your budget for this trip? (e.g., budget, moderate, luxury, or a dollar amount)"
         }

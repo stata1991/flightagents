@@ -188,7 +188,7 @@ class LocationDetectionService:
         }
     
     async def get_destination_suggestions(self, country_code: str = "default", trip_type: str = None, 
-                                        interests: List[str] = None) -> Dict[str, Any]:
+                                        interests: List[str] = None, use_global: bool = False) -> Dict[str, Any]:
         """
         Get dynamic destination suggestions based on user's country and interests.
         
@@ -201,9 +201,14 @@ class LocationDetectionService:
             Dictionary with domestic and international suggestions
         """
         try:
-            # Get dynamic suggestions from external APIs
-            domestic_suggestions = await self._get_domestic_suggestions(country_code, trip_type, interests)
-            international_suggestions = await self._get_international_suggestions(country_code, trip_type, interests)
+            if use_global:
+                # For global recommendations, only show international destinations
+                domestic_suggestions = []
+                international_suggestions = await self._get_global_suggestions(trip_type, interests)
+            else:
+                # Get dynamic suggestions from external APIs
+                domestic_suggestions = await self._get_domestic_suggestions(country_code, trip_type, interests)
+                international_suggestions = await self._get_international_suggestions(country_code, trip_type, interests)
             
             return {
                 "user_country": country_code,
@@ -484,19 +489,68 @@ class LocationDetectionService:
         
         return suggestions[:5]
     
+    async def _get_global_suggestions(self, trip_type: str = None, 
+                                    interests: List[str] = None) -> List[Dict]:
+        """Get global destination suggestions (worldwide popular destinations)."""
+        try:
+            if not self.rapid_api_key:
+                logger.warning("RapidAPI key not available, using fallback global suggestions")
+                return await self._get_fallback_global_suggestions(trip_type, interests)
+            
+            # Get popular worldwide destinations from external API
+            url = f"{self.travel_apis['booking']['base_url']}/hotels/locations"
+            params = {
+                "name": "worldwide destinations",
+                "locale": "en-us"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=self.travel_apis['booking']['headers'], params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        destinations = []
+                        
+                        for item in data[:15]:  # More suggestions for global view
+                            destination = {
+                                "name": item.get("name", "Unknown"),
+                                "type": self._categorize_destination(item.get("name", ""), trip_type),
+                                "highlights": await self._get_destination_highlights(item.get("name", ""), "global"),
+                                "country": await self._get_destination_country(item.get("name", ""))
+                            }
+                            destinations.append(destination)
+                        
+                        return destinations
+                    else:
+                        logger.warning(f"API request failed with status {response.status}")
+                        return await self._get_fallback_global_suggestions(trip_type, interests)
+                        
+        except Exception as e:
+            logger.error(f"Error getting global suggestions: {e}")
+            return await self._get_fallback_global_suggestions(trip_type, interests)
+
     async def _get_fallback_global_suggestions(self, trip_type: str = None, 
-                                             interests: List[str] = None) -> Dict[str, Any]:
+                                             interests: List[str] = None) -> List[Dict]:
         """Get fallback global suggestions."""
         suggestions = await self._get_fallback_international_suggestions(trip_type, interests)
         
-        return {
-            "user_country": "global",
-            "global_suggestions": suggestions,
-            "trip_type": trip_type,
-            "interests": interests,
-            "total_suggestions": len(suggestions),
-            "data_source": "fallback"
-        }
+        # Add more global destinations to the fallback
+        additional_global = [
+            {"name": "Sydney", "country": "Australia", "type": "city", "highlights": ["Opera House", "Harbour Bridge", "Beaches"]},
+            {"name": "Dubai", "country": "UAE", "type": "modern", "highlights": ["Burj Khalifa", "Desert Safari", "Shopping"]},
+            {"name": "Singapore", "country": "Singapore", "type": "modern", "highlights": ["Marina Bay", "Gardens by the Bay", "Food"]},
+            {"name": "Bangkok", "country": "Thailand", "type": "culture", "highlights": ["Temples", "Street Food", "Markets"]},
+            {"name": "Istanbul", "country": "Turkey", "type": "history", "highlights": ["Hagia Sophia", "Bosphorus", "Bazaars"]}
+        ]
+        
+        suggestions.extend(additional_global)
+        
+        if trip_type:
+            suggestions = self._filter_by_trip_type(suggestions, trip_type)
+        
+        if interests:
+            suggestions = self._filter_by_interests(suggestions, interests)
+        
+        return suggestions[:10]  # Return more suggestions for global view
     
     async def _get_fallback_celebration_suggestions(self, celebration_type: str) -> List[Dict]:
         """Get fallback celebration suggestions when APIs are unavailable."""

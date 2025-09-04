@@ -511,6 +511,147 @@
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
         }
+
+        /* Location Discovery Styles */
+        .location-discovery-section {
+            margin-top: 40px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .location-consent-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .location-consent-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .location-consent-card p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            color: white;
+        }
+
+        .location-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .location-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .location-btn.primary {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .location-btn.primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .location-btn.secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .location-btn.secondary:hover {
+            background: white;
+            color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .destination-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .destination-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            color: white;
+        }
+
+        .destination-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .destination-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .destination-card p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .destination-type {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .planning-prompt {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .planning-prompt h4 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .planning-prompt p {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -569,7 +710,7 @@
                 From inspiration to booking, we own the complete AI travel experience.
             </p>
             <div class="hero-buttons">
-                <a href="/enhanced-travel" class="hero-btn primary">
+                <a href="/enhanced-travel" class="hero-btn primary" id="startPlanningBtn">
                     <i class="fas fa-rocket"></i>
                     Start Planning Now
                 </a>
@@ -577,6 +718,37 @@
                     <i class="fas fa-info-circle"></i>
                     Learn More
                 </a>
+            </div>
+            
+            <!-- Location Discovery Section -->
+            <div class="location-discovery-section" id="locationDiscoverySection" style="display: none;">
+                <div class="location-consent-card">
+                    <h3>📍 Get Personalized Recommendations</h3>
+                    <p>Allow location access to discover amazing destinations near you, or explore global recommendations.</p>
+                    <div class="location-options">
+                        <button class="location-btn primary" onclick="requestLocationAccess()">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Use My Location
+                        </button>
+                        <button class="location-btn secondary" onclick="useGlobalRecommendations()">
+                            <i class="fas fa-globe"></i>
+                            Show Global Destinations
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="destination-grid" id="destinationGrid" style="display: none;">
+                    <!-- Destinations will be loaded here -->
+                </div>
+                
+                <div class="planning-prompt" id="planningPrompt" style="display: none;">
+                    <h4>🎯 Already know where you want to go?</h4>
+                    <p>Let's get your trip planning started with some basic information!</p>
+                    <a href="/enhanced-travel" class="hero-btn primary">
+                        <i class="fas fa-plane"></i>
+                        Start Planning My Trip
+                    </a>
+                </div>
             </div>
         </div>
         
@@ -852,6 +1024,127 @@
                 videoObserver.observe(video);
             }
         }
+
+        // Location Discovery Functions
+        let userLocation = null;
+        let destinations = [];
+
+        async function requestLocationAccess() {
+            try {
+                const position = await getCurrentPosition();
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                };
+                
+                document.querySelector('.location-consent-card').style.display = 'none';
+                await loadDestinations(false); // false = use location-based
+                
+            } catch (error) {
+                console.error('Location access denied or failed:', error);
+                useGlobalRecommendations();
+            }
+        }
+
+        function useGlobalRecommendations() {
+            document.querySelector('.location-consent-card').style.display = 'none';
+            loadDestinations(true); // true = use global
+        }
+
+        function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocation not supported'));
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            });
+        }
+
+        async function loadDestinations(useGlobal = false) {
+            try {
+                const params = new URLSearchParams();
+                if (useGlobal) {
+                    params.append('use_global', 'true');
+                } else if (userLocation) {
+                    params.append('lat', userLocation.lat);
+                    params.append('lon', userLocation.lon);
+                    params.append('user_consent', 'true');
+                }
+                
+                const response = await fetch(`/api/location-discovery/discovery-homepage?${params}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    destinations = data.domestic_suggestions.concat(data.international_suggestions);
+                    renderDestinations(destinations);
+                    document.getElementById('destinationGrid').style.display = 'grid';
+                    document.getElementById('planningPrompt').style.display = 'block';
+                } else {
+                    throw new Error(data.message || 'Failed to load destinations');
+                }
+                
+            } catch (error) {
+                console.error('Error loading destinations:', error);
+                // Show fallback message
+                document.getElementById('destinationGrid').innerHTML = 
+                    '<div style="grid-column: 1 / -1; text-align: center; color: white; padding: 40px;">Unable to load destinations. Please try again later.</div>';
+                document.getElementById('destinationGrid').style.display = 'grid';
+                document.getElementById('planningPrompt').style.display = 'block';
+            }
+        }
+
+        function renderDestinations(destinations) {
+            const grid = document.getElementById('destinationGrid');
+            grid.innerHTML = '';
+            
+            destinations.slice(0, 6).forEach(destination => {
+                const card = document.createElement('div');
+                card.className = 'destination-card';
+                card.onclick = () => selectDestination(destination);
+                
+                card.innerHTML = `
+                    <div class="destination-type">${destination.type || 'Destination'}</div>
+                    <h4>${destination.name}</h4>
+                    <p>${destination.country || ''}</p>
+                    <div style="font-size: 0.8rem; opacity: 0.7;">
+                        ${(destination.highlights || []).slice(0, 2).join(' • ')}
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function selectDestination(destination) {
+            // Store selected destination
+            sessionStorage.setItem('selectedDestination', JSON.stringify(destination));
+            
+            // Redirect to enhanced travel interface with destination pre-filled
+            const params = new URLSearchParams({
+                destination: destination.name,
+                destination_type: destination.type,
+                country: destination.country || ''
+            });
+            
+            window.location.href = `/enhanced-travel?${params}`;
+        }
+
+        // Show location discovery section when "Start Planning Now" is clicked
+        document.getElementById('startPlanningBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('locationDiscoverySection').style.display = 'block';
+            this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
     </script>
 </body>
 </html>

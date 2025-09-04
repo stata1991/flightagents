@@ -47,6 +47,105 @@ async def process_chat_message(request: Dict[str, Any]):
             # Frontend is sending flat structure, treat the conversation_state as trip_data
             existing_trip_data = {k: v for k, v in conversation_state.items() if k not in ["current_state", "session_id"]}
         
+        # Do context-aware extraction FIRST, before calling conversation service
+        missing_info = conversation_state.get("missing_info", [])
+        context_aware_extraction = False
+        
+        # Context-aware extraction: if we're asking for origin and user provides a city, treat it as origin
+        if "origin" in missing_info and not _extract_origin(message):
+            # User might be providing origin in response to our question
+            potential_origin = _extract_city_name(message)
+            if potential_origin:
+                existing_trip_data["origin"] = potential_origin
+                conversation_state["origin"] = potential_origin
+                context_aware_extraction = True
+                logger.info(f"Context-aware origin extraction: '{potential_origin}' from message: '{message}'")
+        
+        # Context-aware extraction: if we're asking for destination and user provides a city, treat it as destination
+        if "destination" in missing_info and not _extract_destination(message):
+            potential_destination = _extract_city_name(message)
+            if potential_destination:
+                existing_trip_data["destination"] = potential_destination
+                conversation_state["destination"] = potential_destination
+                context_aware_extraction = True
+                logger.info(f"Context-aware destination extraction: '{potential_destination}' from message: '{message}'")
+        
+        # If we have context-aware extraction, handle it immediately without calling conversation service
+        if context_aware_extraction:
+            # Update missing_info to reflect what we now have
+            updated_missing_info = []
+            if not existing_trip_data.get("origin"):
+                updated_missing_info.append("origin")
+            if not existing_trip_data.get("destination"):
+                updated_missing_info.append("destination")
+            if not existing_trip_data.get("travelers"):
+                updated_missing_info.append("number of travelers")
+            if not existing_trip_data.get("duration_days"):
+                updated_missing_info.append("duration_days")
+            if not existing_trip_data.get("start_date"):
+                updated_missing_info.append("start date")
+            if not existing_trip_data.get("budget_range"):
+                updated_missing_info.append("budget preference")
+            
+            conversation_state["missing_info"] = updated_missing_info
+            
+            # If we have both origin and destination, we can proceed with planning
+            if existing_trip_data.get("origin") and existing_trip_data.get("destination"):
+                # Create a proper trip request
+                trip_request = TripPlanningRequest(
+                    origin=existing_trip_data["origin"],
+                    destination=existing_trip_data["destination"],
+                    travelers=existing_trip_data.get("travelers"),
+                    start_date=existing_trip_data.get("start_date"),
+                    end_date=existing_trip_data.get("end_date"),
+                    duration_days=existing_trip_data.get("duration_days"),
+                    budget_range=existing_trip_data.get("budget_range"),
+                    interests=existing_trip_data.get("interests", []),
+                    trip_type=TripType.LEISURE,
+                    special_requirements="",
+                    total_budget=existing_trip_data.get("total_budget")
+                )
+                
+                # Check if we have enough info to start planning
+                if _has_sufficient_info(trip_request):
+                    planning_result = await _start_trip_planning(trip_request)
+                    response_dict = {
+                        "session_id": session_id,
+                        "message": "Perfect! I have all the information I need. Let me craft your perfect itinerary!",
+                        "state": "planning",
+                        "can_start_planning": True,
+                        "planning_result": planning_result,
+                        "conversation_state": conversation_state
+                    }
+                    return response_dict
+            
+            # If we still need more info, ask for the next missing piece
+            if updated_missing_info:
+                next_missing = updated_missing_info[0]
+                follow_up_questions = {
+                    "origin": "Where will you be traveling from?",
+                    "destination": "Where would you like to go?",
+                    "number of travelers": "How many people are traveling? (e.g., 2 adults, 1 child)",
+                    "duration_days": "How many days would you like to travel? (e.g., 5 days)",
+                    "start date": "When would you like to start your trip? (e.g., 2025-09-20)",
+                    "budget preference": "What's your budget preference? (e.g., budget, moderate, luxury)"
+                }
+                
+                response_dict = {
+                    "session_id": session_id,
+                    "message": follow_up_questions.get(next_missing, f"Please provide {next_missing}."),
+                    "state": "collecting_info",
+                    "can_start_planning": False,
+                    "missing_info": updated_missing_info,
+                    "conversation_state": conversation_state
+                }
+                logger.info(f"Returning context-aware response with updated conversation state: {conversation_state}")
+                logger.info(f"Returning context-aware response for missing info: {next_missing}")
+                logger.info(f"Response message: {response_dict['message']}")
+                logger.info(f"Response missing_info: {response_dict['missing_info']}")
+                logger.info(f"Response conversation_state: {response_dict['conversation_state']}")
+                return response_dict
+        
         # Check if we have enhancement information (occasion and interests) in conversation_state
         has_enhancement_info = (
             conversation_state.get("occasion") and 
@@ -71,19 +170,38 @@ async def process_chat_message(request: Dict[str, Any]):
 
             
             # Create trip_request from updated trip_data
-            trip_request = TripPlanningRequest(
-                origin=existing_trip_data.get("origin"),
-                destination=existing_trip_data.get("destination"),
-                travelers=existing_trip_data.get("travelers"),
-                start_date=existing_trip_data.get("start_date"),
-                end_date=existing_trip_data.get("end_date"),
-                duration_days=existing_trip_data.get("duration_days"),
-                budget_range=existing_trip_data.get("budget_range"),
-                interests=existing_trip_data.get("interests", []),
-                trip_type=TripType.LEISURE,
-                special_requirements="",
-                total_budget=existing_trip_data.get("total_budget")
-            )
+            # Handle case where we only have destination (from discovery page)
+            origin = existing_trip_data.get("origin")
+            destination = existing_trip_data.get("destination")
+            
+            # If we don't have origin but have destination, we need to ask for origin first
+            if not origin and destination:
+                # Return a response asking for origin
+                return {
+                    "message": f"Great choice! I see you want to visit **{destination}**. Where will you be traveling from? Please let me know your departure city or airport.",
+                    "state": "collecting_info",
+                    "missing_info": ["origin"],
+                    "conversation_state": conversation_state
+                }
+            
+            # Only create TripPlanningRequest if we have both origin and destination
+            if origin and destination:
+                trip_request = TripPlanningRequest(
+                    origin=origin,
+                    destination=destination,
+                    travelers=existing_trip_data.get("travelers"),
+                    start_date=existing_trip_data.get("start_date"),
+                    end_date=existing_trip_data.get("end_date"),
+                    duration_days=existing_trip_data.get("duration_days"),
+                    budget_range=existing_trip_data.get("budget_range"),
+                    interests=existing_trip_data.get("interests", []),
+                    trip_type=TripType.LEISURE,
+                    special_requirements="",
+                    total_budget=existing_trip_data.get("total_budget")
+                )
+            else:
+                # We don't have enough info to create a trip request yet
+                trip_request = None
             
             # Check if we now have all enhancement information and should proceed to planning
             if has_enhancement_info and _has_sufficient_info(trip_request):
@@ -141,21 +259,33 @@ async def process_chat_message(request: Dict[str, Any]):
                         conversation_state[k] = v
                     # Always use conversation_state directly for latest trip data (flat structure)
                     latest_trip_data = conversation_state
-                    trip_request = TripPlanningRequest(
-                        origin=latest_trip_data.get("origin"),
-                        destination=latest_trip_data.get("destination"),
-                        travelers=latest_trip_data.get("travelers"),
-                        start_date=latest_trip_data.get("start_date"),
-                        end_date=latest_trip_data.get("end_date"),
-                        duration_days=latest_trip_data.get("duration_days"),
-                        budget_range=latest_trip_data.get("budget_range"),
-                        interests=latest_trip_data.get("interests", []),
-                        trip_type=TripType.LEISURE,
-                        special_requirements="",
-                        total_budget=latest_trip_data.get("total_budget")
-                    )
-                    logger.info(f"[DEBUG] (after trip_data update) TripPlanningRequest: {trip_request.dict()} (duration_days type: {type(trip_request.duration_days)})")
-                    logger.info(f"[DEBUG] (after trip_data update) Missing info: {_get_missing_info(trip_request)}")
+                    
+                    # Check if we have both origin and destination before creating TripPlanningRequest
+                    origin = latest_trip_data.get("origin")
+                    destination = latest_trip_data.get("destination")
+                    
+                    if origin and destination:
+                        trip_request = TripPlanningRequest(
+                            origin=origin,
+                            destination=destination,
+                            travelers=latest_trip_data.get("travelers"),
+                            start_date=latest_trip_data.get("start_date"),
+                            end_date=latest_trip_data.get("end_date"),
+                            duration_days=latest_trip_data.get("duration_days"),
+                            budget_range=latest_trip_data.get("budget_range"),
+                            interests=latest_trip_data.get("interests", []),
+                            trip_type=TripType.LEISURE,
+                            special_requirements="",
+                            total_budget=latest_trip_data.get("total_budget")
+                        )
+                    else:
+                        # We don't have enough info to create a trip request yet
+                        trip_request = None
+                    if trip_request:
+                        logger.info(f"[DEBUG] (after trip_data update) TripPlanningRequest: {trip_request.dict()} (duration_days type: {type(trip_request.duration_days)})")
+                        logger.info(f"[DEBUG] (after trip_data update) Missing info: {_get_missing_info(trip_request)}")
+                    else:
+                        logger.info(f"[DEBUG] (after trip_data update) TripPlanningRequest: None - missing origin or destination")
                 
                 # Check if we now have sufficient info after the update
                 if _has_sufficient_info(trip_request):
@@ -274,11 +404,24 @@ async def process_chat_message(request: Dict[str, Any]):
                     return response_dict
         else:
             # If trip_request is None, we need to extract basic info to determine what's missing
+            # Extract trip information from the message
             origin = _extract_origin(message)
             destination = _extract_destination(message)
             travelers = _extract_travelers(message)
             duration_days = _extract_duration_days(message)
             start_date = _extract_start_date(message)
+            
+            # Update conversation state with extracted information
+            if origin:
+                conversation_state["origin"] = origin
+            if destination:
+                conversation_state["destination"] = destination
+            if travelers:
+                conversation_state["travelers"] = travelers
+            if duration_days:
+                conversation_state["duration_days"] = duration_days
+            if start_date:
+                conversation_state["start_date"] = start_date
             
             missing_info = []
             if not origin:
@@ -333,7 +476,7 @@ async def process_chat_message(request: Dict[str, Any]):
                     "message": response.get("message"),
                     "state": response.get("state", "gathering_info"),
                     "can_start_planning": False,
-                    "missing_info": missing_info,
+                    "missing_info": response.get("missing_info", missing_info),
                     "conversation_state": conversation_state
                 }
                 logger.info(f"[DEBUG] Returning FULL RESPONSE (gathering_info): {response_dict}")
@@ -566,6 +709,29 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
     except Exception as e:
         logger.error(f"Error extracting trip request: {e}")
         return None
+
+def _extract_city_name(message: str) -> Optional[str]:
+    """Extract a city name from a simple message (for context-aware extraction)"""
+    # Remove common words and clean the message
+    message_clean = re.sub(r'\b(plan|trip|travel|go|visit|to|from|the|a|an)\b', '', message.lower()).strip()
+    
+    # Look for city-like patterns (2-3 words, capitalized)
+    city_pattern = r'\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b'
+    matches = re.findall(city_pattern, message)
+    
+    if matches:
+        # Return the first match that looks like a city name
+        for match in matches:
+            # Check if it's a known city name
+            known_cities = ['dallas', 'miami', 'new york', 'los angeles', 'chicago', 'houston', 'phoenix', 'philadelphia', 'san antonio', 'san diego', 'austin', 'jacksonville', 'fort worth', 'columbus', 'charlotte', 'san francisco', 'indianapolis', 'seattle', 'denver', 'washington', 'boston', 'el paso', 'nashville', 'detroit', 'oklahoma city', 'portland', 'las vegas', 'memphis', 'louisville', 'baltimore', 'milwaukee', 'albuquerque', 'tucson', 'fresno', 'sacramento', 'mesa', 'kansas city', 'atlanta', 'long beach', 'colorado springs', 'raleigh', 'virginia beach', 'omaha', 'oakland', 'minneapolis', 'tulsa', 'arlington', 'tampa', 'new orleans']
+            if match.lower() in known_cities:
+                return match
+    
+    # If no matches found, try to extract from the cleaned message
+    if message_clean and len(message_clean.split()) <= 3:
+        return message_clean.title()
+    
+    return None
 
 def _extract_origin(message: str) -> Optional[str]:
     """Extract origin from message"""
@@ -859,8 +1025,12 @@ def _extract_interests(message: str) -> Optional[List[str]]:
     
     return interests if interests else None
 
-def _has_sufficient_info(trip_request: TripPlanningRequest) -> bool:
+def _has_sufficient_info(trip_request: Optional[TripPlanningRequest]) -> bool:
     """Check if we have sufficient information to start planning"""
+    if not trip_request:
+        logger.info(f"[DEBUG] (before sufficiency check) TripPlanningRequest: None")
+        return False
+        
     logger.info(f"[DEBUG] (before sufficiency check) TripPlanningRequest: {trip_request.dict()} (duration_days type: {type(trip_request.duration_days)})")
     logger.info(f"[DEBUG] (before sufficiency check) Missing info: {_get_missing_info(trip_request)}")
     
@@ -883,8 +1053,11 @@ def _has_sufficient_info(trip_request: TripPlanningRequest) -> bool:
     # We'll enhance this to ask for occasion/interests even when basic info is complete
     return has_basic_info
 
-def _get_missing_info(trip_request: TripPlanningRequest) -> List[str]:
+def _get_missing_info(trip_request: Optional[TripPlanningRequest]) -> List[str]:
     """Get list of missing mandatory information"""
+    if not trip_request:
+        return ["origin", "destination", "number of travelers", "duration", "start date", "budget preference"]
+        
     missing = []
     
     if not trip_request.origin:
@@ -905,8 +1078,11 @@ def _get_missing_info(trip_request: TripPlanningRequest) -> List[str]:
     
     return missing
 
-def _should_ask_for_enhancement(trip_request: TripPlanningRequest, conversation_state: Dict[str, Any] = None) -> bool:
+def _should_ask_for_enhancement(trip_request: Optional[TripPlanningRequest], conversation_state: Dict[str, Any] = None) -> bool:
     """Check if we should ask for enhancement information (occasion, interests) even when basic info is complete"""
+    if not trip_request:
+        return False  # Can't ask for enhancement if we don't have basic trip info
+        
     # Check if we have specific occasion-related information
     occasion_keywords = ['anniversary', 'birthday', 'honeymoon', 'graduation', 'wedding', 'celebration', 'business', 'work', 'casual', 'getaway']
     
@@ -967,13 +1143,13 @@ def _generate_suggestions(trip_request: Optional[TripPlanningRequest]) -> List[s
     if not trip_request.destination:
         suggestions.append("Where would you like to go?")
     if not trip_request.travelers:
-        suggestions.append("How many people are traveling?")
+        suggestions.append("How many people are traveling? (e.g., 2 adults, 1 child)")
     if not trip_request.duration_days:
-        suggestions.append("How many days would you like to travel?")
+        suggestions.append("How many days would you like to travel? (e.g., 5 days)")
     if not trip_request.start_date:
-        suggestions.append("When would you like to travel?")
+        suggestions.append("When would you like to start your trip? (e.g., 2025-09-20)")
     if not trip_request.budget_range:
-        suggestions.append("What's your budget preference?")
+        suggestions.append("What's your budget preference? (e.g., budget, moderate, luxury)")
     
     return suggestions
 

@@ -255,14 +255,16 @@
         function skipLocationDetection() {
             document.getElementById('locationConsent').style.display = 'none';
             document.getElementById('filterSection').style.display = 'block';
-            loadDestinations();
+            loadDestinations(true); // Pass true for global recommendations
         }
 
         // Load destinations
-        async function loadDestinations() {
+        async function loadDestinations(useGlobal = false) {
             try {
                 const params = new URLSearchParams();
-                if (userLocation && userLocation.consent_given) {
+                if (useGlobal) {
+                    params.append('use_global', 'true');
+                } else if (userLocation && userLocation.consent_given) {
                     params.append('user_country', userLocation.country_code);
                 }
                 

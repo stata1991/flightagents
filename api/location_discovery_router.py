@@ -41,17 +41,23 @@ async def detect_user_location(
 async def get_destination_recommendations(
     user_country: Optional[str] = Query(None, description="User's country (optional, will be detected if not provided)"),
     trip_type: Optional[str] = Query(None, description="Trip type: summer, winter, spring, fall, business, celebration"),
-    interests: Optional[str] = Query(None, description="Comma-separated interests: beach, mountains, city, cultural")
+    interests: Optional[str] = Query(None, description="Comma-separated interests: beach, mountains, city, cultural"),
+    use_global: bool = Query(False, description="Whether to use global recommendations instead of location-based")
 ):
     """Get personalized destination recommendations based on user location and interests."""
     try:
-        # Get user location if not provided
-        if not user_country:
-            location = await location_service.detect_user_location_with_consent(user_consent=True)
-            if location and location.get("consent_given"):
-                user_country = location.get("country_code", "default")
-            else:
-                user_country = "default"
+        # Handle location detection based on use_global flag
+        if use_global:
+            # Use global recommendations - no location detection
+            user_country = "global"
+        else:
+            # Get user location if not provided
+            if not user_country:
+                location = await location_service.detect_user_location_with_consent(user_consent=True)
+                if location and location.get("consent_given"):
+                    user_country = location.get("country_code", "default")
+                else:
+                    user_country = "default"
         
         # Parse interests if provided
         interest_list = []
@@ -62,7 +68,8 @@ async def get_destination_recommendations(
         suggestions = await location_service.get_destination_suggestions(
             country_code=user_country,
             trip_type=trip_type,
-            interests=interest_list
+            interests=interest_list,
+            use_global=use_global
         )
         
         return {
@@ -164,23 +171,30 @@ async def get_global_suggestions(
 async def get_discovery_homepage_data(
     user_consent: bool = Query(False, description="Whether user has given consent for location detection"),
     lat: Optional[float] = Query(None, description="GPS latitude"),
-    lon: Optional[float] = Query(None, description="GPS longitude")
+    lon: Optional[float] = Query(None, description="GPS longitude"),
+    use_global: bool = Query(False, description="Whether to use global recommendations instead of location-based")
 ):
     """Get location discovery data for the homepage/interface."""
     try:
-        # Detect user location with consent
-        location = await location_service.detect_user_location_with_consent(
-            user_consent=user_consent,
-            gps_coordinates={"lat": lat, "lon": lon} if lat and lon else None
-        )
-        
-        # Get destination suggestions based on location
-        country_code = location.get("country_code", "default") if location and location.get("consent_given") else "default"
+        if use_global:
+            # Use global recommendations - no location detection
+            location = {"consent_given": False, "country_code": "global", "detection_method": "global"}
+            country_code = "global"
+        else:
+            # Detect user location with consent
+            location = await location_service.detect_user_location_with_consent(
+                user_consent=user_consent,
+                gps_coordinates={"lat": lat, "lon": lon} if lat and lon else None
+            )
+            
+            # Get destination suggestions based on location
+            country_code = location.get("country_code", "default") if location and location.get("consent_given") else "default"
         
         suggestions = await location_service.get_destination_suggestions(
             country_code=country_code,
             trip_type=None,
-            interests=None
+            interests=None,
+            use_global=use_global
         )
         
         return {

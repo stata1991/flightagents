@@ -1458,7 +1458,7 @@
                 this.totalSteps = 5;
                 
                 this.initializeEventListeners();
-                this.showWelcomeMessage();
+                // Don't call showWelcomeMessage here - let handleUrlParameters handle it
             }
 
             generateSessionId() {
@@ -1485,6 +1485,15 @@
                     // User came from destination discovery page
                     const message = `I want to plan a trip to ${destination}`;
                     this.input.value = message;
+                    
+                    // Initialize conversation state with the selected destination
+                    this.conversationState = {
+                        current_state: "destination_selected",
+                        destination: destination,
+                        destination_type: destinationType,
+                        country: country,
+                        session_id: this.sessionId
+                    };
                     
                     // Show a welcome message with the selected destination
                     const welcomeMessage = `
@@ -1587,10 +1596,15 @@
             }
 
             async processMessage(message) {
+                console.log('Sending message:', message);
+                console.log('Current conversation state:', this.conversationState);
+                
                 const response = await fetch('/chat-integration/process-message', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
                     },
                     body: JSON.stringify({
                         message: message,
@@ -1607,9 +1621,25 @@
             }
 
             handleResponse(response) {
+                // Debug logging
+                console.log('Frontend received response:', response);
+                console.log('Current conversation state before update:', this.conversationState);
+                console.log('Response message:', response.message);
+                console.log('Response missing_info:', response.missing_info);
+                console.log('Response conversation_state:', response.conversation_state);
+                
                 // Update conversation state
                 if (response.conversation_state) {
                     this.conversationState = response.conversation_state;
+                    console.log('Updated conversation state:', this.conversationState);
+                } else {
+                    console.log('No conversation_state in response!');
+                }
+                
+                // Ensure missing_info is preserved in conversation state
+                if (response.missing_info) {
+                    this.conversationState.missing_info = response.missing_info;
+                    console.log('Updated missing_info in conversation state:', this.conversationState.missing_info);
                 }
 
                 // Show AI message
@@ -1634,15 +1664,23 @@
 
                 // Robust missing info/state handling
                 const missing = response.missing_info || [];
-                if (response.state === 'planning' && response.can_start_planning) {
-                    // We have a planning result - display it directly
-                    if (response.planning_result && response.planning_result.success) {
-                        this.displayItinerary(response.planning_result);
-                    } else if (response.trip_request) {
-                        // Fallback: start trip planning if no planning result
-                        this.startTripPlanning(response.trip_request);
+                if (response.state === 'planning') {
+                    // System says it has all information and is ready to plan
+                    if (response.can_start_planning) {
+                        // We have a planning result - display it directly
+                        if (response.planning_result && response.planning_result.success) {
+                            this.displayItinerary(response.planning_result);
+                        } else if (response.trip_request) {
+                            // Fallback: start trip planning if no planning result
+                            this.startTripPlanning(response.trip_request);
+                        }
+                        return;
+                    } else {
+                        // System says it's ready to plan but needs to start the planning process
+                        console.log('System ready to plan - starting trip planning process');
+                        this.startTripPlanningFromConversationState();
+                        return;
                     }
-                    return;
                 }
                 // If missing required info, wait for user input (do nothing else)
                 if (missing.length > 0) {
@@ -1688,8 +1726,8 @@
                     
                     this.scrollToBottom();
                 } else if (reply.includes('Browse all destinations')) {
-                    // Navigate to the dedicated destination discovery page
-                    window.open('/destination-discovery', '_blank');
+                    // Navigate to the dedicated destination discovery page in same tab
+                    window.location.href = '/destination-discovery';
                 } else if (reply.includes('Interest-based planning')) {
                     // Show interest-based planning section
                     this.showInterestPlanning();
@@ -1733,6 +1771,43 @@
                     this.hideLoading();
                     this.showErrorMessage();
                     console.error("Error in startTripPlanning:", error);
+                }
+            }
+
+            async startTripPlanningFromConversationState() {
+                this.showLoading();
+                try {
+                    // Create a trip request from the current conversation state
+                    const tripRequest = {
+                        origin: this.conversationState.origin,
+                        destination: this.conversationState.destination,
+                        travelers: this.conversationState.travelers,
+                        start_date: this.conversationState.start_date,
+                        duration_days: this.conversationState.duration_days,
+                        budget_range: this.conversationState.budget_range,
+                        trip_type: 'leisure',
+                        interests: this.conversationState.interests || [],
+                        special_requirements: '',
+                        total_budget: this.conversationState.total_budget
+                    };
+                    
+                    console.log('Starting trip planning with request:', tripRequest);
+                    
+                    const response = await fetch('/chat-integration/start-planning', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ trip_request: tripRequest, session_id: this.sessionId })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to start trip planning');
+                    }
+                    const result = await response.json();
+                    this.hideLoading();
+                    this.displayItinerary(result);
+                } catch (error) {
+                    this.hideLoading();
+                    this.showErrorMessage();
+                    console.error("Error in startTripPlanningFromConversationState:", error);
                 }
             }
 
@@ -2110,7 +2185,7 @@
 
             useDefaultLocation() {
                 this.showLocationInfo('🌐 Using global recommendations (no location access)');
-                this.loadLocationDiscoveryData(false);
+                this.loadLocationDiscoveryData(false, null, true); // Pass true for global
             }
 
             getCurrentPosition() {
@@ -2150,7 +2225,7 @@
                 locationInfo.classList.add('show');
             }
 
-            async loadLocationDiscoveryData(userConsent = false, gpsCoordinates = null) {
+            async loadLocationDiscoveryData(userConsent = false, gpsCoordinates = null, useGlobal = false) {
                 try {
                     // Show discovery content (filters will be shown only if user requests them)
                     document.getElementById('locationDiscoverySection').style.display = 'block';
@@ -2160,7 +2235,9 @@
                         user_consent: userConsent
                     });
 
-                    if (gpsCoordinates) {
+                    if (useGlobal) {
+                        params.append('use_global', 'true');
+                    } else if (gpsCoordinates) {
                         params.append('lat', gpsCoordinates.lat);
                         params.append('lon', gpsCoordinates.lon);
                     }
