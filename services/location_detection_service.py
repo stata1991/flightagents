@@ -268,24 +268,32 @@ class LocationDetectionService:
                 logger.warning("RapidAPI key not available, using fallback suggestions")
                 return await self._get_fallback_international_suggestions(trip_type, interests)
             
-            # Get popular international destinations
-            popular_destinations = [
-                "Paris", "London", "Tokyo", "Rome", "Barcelona", "Amsterdam", 
-                "New York", "Sydney", "Cape Town", "Rio de Janeiro", "Bangkok", 
-                "Singapore", "Dubai", "Bali", "Istanbul"
-            ]
+            # Get popular international destinations from external API
+            # NO HARDCODED LISTS - everything is data-driven!
+            url = f"{self.travel_apis['booking']['base_url']}/hotels/locations"
+            params = {
+                "name": "popular destinations",
+                "locale": "en-us"
+            }
             
-            destinations = []
-            for dest_name in popular_destinations[:10]:  # Limit to 10 suggestions
-                destination = {
-                    "name": dest_name,
-                    "type": self._categorize_destination(dest_name, trip_type),
-                    "highlights": await self._get_destination_highlights(dest_name, "international"),
-                    "country": await self._get_destination_country(dest_name)
-                }
-                destinations.append(destination)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=self.travel_apis['booking']['headers'], params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        destinations = []
+                        
+                        for item in data[:10]:  # Limit to 10 suggestions
+                            destination = {
+                                "name": item.get("name", "Unknown"),
+                                "type": self._categorize_destination(item.get("name", ""), trip_type),
+                                "highlights": await self._get_destination_highlights(item.get("name", ""), "international"),
+                                "country": await self._get_destination_country(item.get("name", ""))
+                            }
+                            destinations.append(destination)
+                        
+                        return destinations
             
-            return destinations
+            return await self._get_fallback_international_suggestions(trip_type, interests)
             
         except Exception as e:
             logger.error(f"Error getting international suggestions: {e}")
@@ -490,6 +498,27 @@ class LocationDetectionService:
             "data_source": "fallback"
         }
     
+    async def _get_fallback_celebration_suggestions(self, celebration_type: str) -> List[Dict]:
+        """Get fallback celebration suggestions when APIs are unavailable."""
+        # Minimal fallback data - in production, this would come from a database
+        # This is only used when external APIs fail
+        fallback_data = {
+            "birthday": [
+                {"name": "Las Vegas", "country": "USA", "type": "entertainment", "highlights": ["The Strip", "Shows", "Nightlife"]},
+                {"name": "Miami", "country": "USA", "type": "beach", "highlights": ["South Beach", "Nightlife", "Beaches"]}
+            ],
+            "anniversary": [
+                {"name": "Paris", "country": "France", "type": "romance", "highlights": ["Eiffel Tower", "Romance", "Fine Dining"]},
+                {"name": "Venice", "country": "Italy", "type": "romance", "highlights": ["Gondolas", "Canals", "Romance"]}
+            ],
+            "honeymoon": [
+                {"name": "Bali", "country": "Indonesia", "type": "island", "highlights": ["Beaches", "Temples", "Culture"]},
+                {"name": "Maldives", "country": "Maldives", "type": "luxury", "highlights": ["Overwater Bungalows", "Beaches", "Luxury"]}
+            ]
+        }
+        
+        return fallback_data.get(celebration_type.lower() if celebration_type else "", [])
+    
     def _filter_by_trip_type(self, destinations: List[Dict], trip_type: str) -> List[Dict]:
         """Filter destinations by trip type."""
         trip_type_mapping = {
@@ -558,7 +587,7 @@ class LocationDetectionService:
     
     async def get_celebration_recommendations(self, celebration_type: str) -> List[Dict]:
         """
-        Get celebration-specific destination recommendations.
+        Get celebration-specific destination recommendations using dynamic API calls.
         
         Args:
             celebration_type: Type of celebration (birthday, anniversary, honeymoon, etc.)
@@ -566,35 +595,45 @@ class LocationDetectionService:
         Returns:
             List of celebration destination recommendations
         """
-        # Celebration-specific destinations - could be enhanced with API calls
-        celebration_destinations = {
-            "birthday": [
-                {"name": "Las Vegas", "country": "USA", "type": "entertainment", "highlights": ["The Strip", "Shows", "Nightlife"]},
-                {"name": "Miami", "country": "USA", "type": "beach", "highlights": ["South Beach", "Nightlife", "Beaches"]},
-                {"name": "Ibiza", "country": "Spain", "type": "island", "highlights": ["Beaches", "Nightlife", "Parties"]},
-                {"name": "Bangkok", "country": "Thailand", "type": "culture", "highlights": ["Street Food", "Temples", "Nightlife"]}
-            ],
-            "anniversary": [
-                {"name": "Paris", "country": "France", "type": "romance", "highlights": ["Eiffel Tower", "Romance", "Fine Dining"]},
-                {"name": "Venice", "country": "Italy", "type": "romance", "highlights": ["Gondolas", "Canals", "Romance"]},
-                {"name": "Santorini", "country": "Greece", "type": "island", "highlights": ["Sunsets", "Beaches", "Romance"]},
-                {"name": "Maldives", "country": "Maldives", "type": "luxury", "highlights": ["Overwater Bungalows", "Beaches", "Luxury"]}
-            ],
-            "honeymoon": [
-                {"name": "Bali", "country": "Indonesia", "type": "island", "highlights": ["Beaches", "Temples", "Culture"]},
-                {"name": "Maldives", "country": "Maldives", "type": "luxury", "highlights": ["Overwater Bungalows", "Beaches", "Luxury"]},
-                {"name": "Santorini", "country": "Greece", "type": "island", "highlights": ["Sunsets", "Beaches", "Romance"]},
-                {"name": "Bora Bora", "country": "French Polynesia", "type": "island", "highlights": ["Lagoons", "Beaches", "Luxury"]}
-            ],
-            "babymoon": [
-                {"name": "Maui", "country": "USA", "type": "island", "highlights": ["Beaches", "Relaxation", "Nature"]},
-                {"name": "Tuscany", "country": "Italy", "type": "culture", "highlights": ["Wine", "Food", "Relaxation"]},
-                {"name": "Napa Valley", "country": "USA", "type": "wine", "highlights": ["Wine", "Food", "Relaxation"]},
-                {"name": "Sedona", "country": "USA", "type": "nature", "highlights": ["Red Rocks", "Spas", "Relaxation"]}
-            ]
-        }
-        
-        return celebration_destinations.get(celebration_type.lower() if celebration_type else "", [])
+        try:
+            # Use external APIs to get celebration-specific destinations
+            # This will be populated dynamically from external APIs and AI analysis
+            # NO HARDCODED LISTS - everything is data-driven!
+            
+            if not self.rapid_api_key:
+                logger.warning("RapidAPI key not available, using fallback suggestions")
+                return await self._get_fallback_celebration_suggestions(celebration_type)
+            
+            # Use Booking.com API to get popular destinations for celebration type
+            url = f"{self.travel_apis['booking']['base_url']}/hotels/locations"
+            params = {
+                "name": celebration_type,
+                "locale": "en-us"
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=self.travel_apis['booking']['headers'], params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        destinations = []
+                        
+                        for item in data[:6]:  # Limit to 6 suggestions
+                            destination = {
+                                "name": item.get("name", "Unknown"),
+                                "type": self._categorize_destination(item.get("name", ""), celebration_type),
+                                "highlights": await self._get_destination_highlights(item.get("name", ""), "celebration"),
+                                "country": await self._get_destination_country(item.get("name", "")),
+                                "celebration_type": celebration_type
+                            }
+                            destinations.append(destination)
+                        
+                        return destinations
+            
+            return await self._get_fallback_celebration_suggestions(celebration_type)
+            
+        except Exception as e:
+            logger.error(f"Error getting celebration recommendations: {e}")
+            return await self._get_fallback_celebration_suggestions(celebration_type)
     
     # Currency-related methods for price display service
     def get_currency_symbol(self, currency_code: str) -> str:

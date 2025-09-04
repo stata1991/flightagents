@@ -1470,6 +1470,45 @@
                 this.input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') this.sendMessage();
                 });
+                
+                // Check for URL parameters from destination discovery
+                this.handleUrlParameters();
+            }
+
+            handleUrlParameters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const destination = urlParams.get('destination');
+                const destinationType = urlParams.get('destination_type');
+                const country = urlParams.get('country');
+                
+                if (destination) {
+                    // User came from destination discovery page
+                    const message = `I want to plan a trip to ${destination}`;
+                    this.input.value = message;
+                    
+                    // Show a welcome message with the selected destination
+                    const welcomeMessage = `
+                        <div class="travel-message ai">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">🌍 Great choice! ${destination}</div>
+                            <div style="margin-bottom: 16px;">I see you've selected <strong>${destination}</strong>${destinationType ? ` (${destinationType})` : ''}${country ? ` in ${country}` : ''}. Let me help you plan the perfect trip there!</div>
+                            <div style="font-weight: 600; color: #3B82F6;">Ready to start planning your ${destination} adventure? 🚀</div>
+                        </div>
+                    `;
+                    this.addMessage(welcomeMessage);
+                    
+                    // Show quick replies for next steps
+                    this.showQuickReplies([
+                        'Start planning this trip 🚀',
+                        'Tell me more about this destination 📍',
+                        'Show me similar destinations 🌍',
+                        'Plan a different trip 🔄'
+                    ]);
+                    
+                    // Clear URL parameters
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                } else {
+                    this.showWelcomeMessage();
+                }
             }
 
             showWelcomeMessage() {
@@ -1487,6 +1526,7 @@
                     'Adventure trip 🏔️',
                     'Cultural journey 🏛️',
                     'Discover destinations near me 📍',
+                    'Browse all destinations 🌍',
                     'Interest-based planning 🎯'
                 ]);
             }
@@ -1647,10 +1687,28 @@
                     });
                     
                     this.scrollToBottom();
+                } else if (reply.includes('Browse all destinations')) {
+                    // Navigate to the dedicated destination discovery page
+                    window.open('/destination-discovery', '_blank');
                 } else if (reply.includes('Interest-based planning')) {
                     // Show interest-based planning section
                     this.showInterestPlanning();
                     this.scrollToBottom();
+                } else if (reply.includes('Start planning this trip')) {
+                    // User wants to start planning with the pre-filled destination
+                    this.sendMessage();
+                } else if (reply.includes('Tell me more about this destination')) {
+                    // Ask for more information about the destination
+                    this.input.value = 'Tell me more about this destination and what makes it special';
+                    this.sendMessage();
+                } else if (reply.includes('Show me similar destinations')) {
+                    // Show similar destinations
+                    this.input.value = 'Show me similar destinations to this one';
+                    this.sendMessage();
+                } else if (reply.includes('Plan a different trip')) {
+                    // Reset to normal welcome flow
+                    this.input.value = '';
+                    this.showWelcomeMessage();
                 } else {
                     this.input.value = reply;
                     this.sendMessage();
@@ -2107,7 +2165,7 @@
                         params.append('lon', gpsCoordinates.lon);
                     }
 
-                    const response = await fetch(`/api/location/discovery-homepage?${params}`);
+                    const response = await fetch(`/api/location-discovery/discovery-homepage?${params}`);
                     
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);

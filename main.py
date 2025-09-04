@@ -64,6 +64,10 @@ async def enhanced_chat_page(request: Request):
 async def enhanced_travel_page(request: Request):
     return templates.TemplateResponse("enhanced_travel_interface.html", {"request": request})
 
+@app.get("/destination-discovery", response_class=HTMLResponse)
+async def destination_discovery_page(request: Request):
+    return templates.TemplateResponse("destination_discovery.html", {"request": request})
+
 if __name__ == "__main__":
     import uvicorn
     print("🚀 Starting FlightTickets.ai API server...")
