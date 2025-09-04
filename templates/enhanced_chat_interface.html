@@ -1023,7 +1023,7 @@
         <div class="header">
             <div class="agent-info">
                 <div class="agent-avatar">A</div>
-                <div class="agent-name">Adventure Guide</div>
+                <div class="agent-name">Travel Expert</div>
             </div>
             <div class="header-actions">
                 <button class="action-btn" title="Settings">⚙️</button>
@@ -1107,24 +1107,24 @@
                 await this.addMessage('ai', this.getGreetingMessage());
                 await this.delay(1000);
                 await this.addMessage('ai', this.getStructuredQuestions());
-                this.showQuickReplies(['Beach paradise', 'Urban exploration', 'Mountain adventure', 'Cultural journey']);
+                this.showQuickReplies(this.generateContextualQuickReplies('vibe'));
             }
 
             getGreetingMessage() {
-                return `Welcome, adventurer! 🌟 I'm your personal travel expert, ready to turn your dreams into incredible journeys! 
+                return `Hey there, adventurer! 🌟 I'm your personal travel expert, ready to turn your dreams into incredible journeys! 
 
-I can discover hidden gems, find the perfect timing, and craft experiences that will create memories for a lifetime. Where shall we start your next adventure? 🗺️`;
+I can tell you where to go, what time of year to visit, what to do there...the list is endless. I'm on the edge of my seat, ask me anything! 🗺️`;
             }
 
             getStructuredQuestions() {
-                return `Perfect! Let's craft your dream adventure! 🚀 First, I need to understand your vision to create something truly magical:
+                return `Alright, let's get this travel party started! But first, I gotta know the basics to whip up your perfect itinerary:
 
-1. **Where's calling your name?** 🌍 Got a destination in mind or shall I reveal some hidden gems?
-2. **Who's joining your adventure?** 👥 Solo explorer, romantic duo, family expedition, or friend squad?
-3. **When's your adventure time?** 📅 Dates and how long you want to immerse yourself?
-4. **What's your adventure style?** 🎯 Relaxation, thrill-seeking, cultural immersion, or pure exploration?
+1. **Where do you want to go?** 🌍 Got a dream spot or should I throw some inspo your way?
+2. **Who's coming with you?** 👥 Flying solo, with your squad, family, or that special someone?
+3. **When and for how long?** 📅 Dates and duration, please!
+4. **What's the vibe?** 🎯 Relaxation, adventure, culture, party, or something else?
 
-Share your dreams with me! ✨`;
+Hit me with the deets! ✨`;
             }
 
             async addMessage(sender, content, isTyping = false) {
@@ -1199,8 +1199,86 @@ Share your dreams with me! ✨`;
                 await this.addMessage('user', reply);
                 this.hideQuickReplies();
                 
+                // Handle modification options
+                if (reply.includes('Make it cheaper') || reply.includes('Add more activities') || reply.includes('Change dates') || reply.includes('Different destination')) {
+                    await this.handleModificationRequest(reply);
+                    return;
+                }
+                
                 // Process quick reply with backend
                 await this.processUserMessage(reply);
+            }
+
+            // New method to handle modification requests
+            async handleModificationRequest(modificationType) {
+                let response = '';
+                
+                switch (modificationType) {
+                    case 'Make it cheaper':
+                        response = `Absolutely! 💰 Let's find some budget-friendly alternatives that still give you an amazing experience. I can suggest:
+• More affordable accommodation options
+• Free or low-cost activities
+• Budget dining recommendations
+• Alternative transportation
+
+What's your target budget range?`;
+                        break;
+                    case 'Add more activities':
+                        response = `Perfect! 🎯 Let's pack your itinerary with even more exciting experiences. I can add:
+• Hidden local gems
+• Unique cultural experiences
+• Adventure activities
+• Food tours and tastings
+
+What type of activities are you most interested in?`;
+                        break;
+                    case 'Change dates':
+                        response = `No problem! 📅 Let's find the perfect timing for your trip. I can help you:
+• Find better weather conditions
+• Avoid peak tourist seasons
+• Get better flight and hotel prices
+• Align with local events and festivals
+
+When would you prefer to travel?`;
+                        break;
+                    case 'Different destination':
+                        response = `Great idea! 🌍 Let's explore some amazing alternatives. I can suggest destinations that offer:
+• Similar experiences but different locations
+• Better value for your budget
+• Different cultural experiences
+• Alternative climates or seasons
+
+What type of experience are you looking for?`;
+                        break;
+                    case 'Book now':
+                        response = `Excellent! 🚀 Let's get you booked and ready for your amazing adventure. I'll help you:
+• Secure the best flight deals
+• Reserve your perfect accommodation
+• Book must-do activities
+• Get travel insurance recommendations
+
+Ready to make it official?`;
+                        break;
+                    default:
+                        response = `I'd love to help you modify your trip! What specific changes would you like to make?`;
+                }
+                
+                await this.addMessage('ai', response);
+                
+                // Show relevant quick replies based on modification type
+                if (modificationType === 'Make it cheaper') {
+                    this.showQuickReplies(['$50-100/day', '$100-200/day', '$200-300/day', 'Show me options']);
+                } else if (modificationType === 'Add more activities') {
+                    this.showQuickReplies(['Cultural experiences', 'Adventure activities', 'Food & dining', 'Local gems']);
+                } else if (modificationType === 'Change dates') {
+                    this.showQuickReplies(['Next month', 'Summer', 'Winter', 'Spring', 'Fall']);
+                } else if (modificationType === 'Different destination') {
+                    this.showQuickReplies(['Similar vibe', 'Different culture', 'Better weather', 'More affordable']);
+                } else if (modificationType === 'Book now') {
+                    this.showQuickReplies(['Yes, book everything', 'Just flights', 'Just hotels', 'Step by step']);
+                } else {
+                    this.showQuickReplies(['Make it cheaper', 'Add more activities', 'Change dates', 'Different destination']);
+                }
             }
 
             async simulateAIResponse(userInput) {
@@ -1213,9 +1291,62 @@ Share your dreams with me! ✨`;
                 this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
             }
             
+            // New method for contextual responses - Dynamic approach
+            getContextualResponse(destination, userInput) {
+                // Dynamic contextual response without hardcoded destinations
+                return `Amazing choice! 🌟 I can see you're excited about exploring ${destination || 'new places'}. Let me help you discover the perfect experiences for your adventure.
+
+Now, to make this trip truly yours:`;
+            }
+
+            // New method for trip summary
+            createTripSummary(tripData) {
+                const { origin, destination, travelers, duration, startDate, budget, purpose } = tripData;
+                
+                return `Perfect! So here's the lowdown for your ${purpose || 'amazing'} trip:
+• **From:** ${origin || 'TBD'}
+• **To:** ${destination || 'TBD'} 
+• **When:** ${startDate || 'TBD'} (${duration || 'TBD'})
+• **Who:** ${travelers || 'TBD'}
+• **Purpose:** ${purpose || 'Adventure'} (${purpose ? 'You tell me!' : 'What kind of experience are you seeking?'})
+
+Ready to craft your perfect itinerary? 🚀`;
+            }
+
+            // Enhanced quick reply generation - Dynamic approach
+            generateContextualQuickReplies(context, missingInfo = []) {
+                // Dynamic quick reply generation based on context and missing info
+                if (missingInfo.length > 0) {
+                    const relevantReplies = [];
+                    missingInfo.forEach(info => {
+                        if (info.includes('destination')) {
+                            relevantReplies.push('I have a destination in mind', 'Show me popular destinations', 'Surprise me with options');
+                        } else if (info.includes('travelers')) {
+                            relevantReplies.push('Solo traveler', 'Couple', 'Family', 'Group of friends');
+                        } else if (info.includes('date')) {
+                            relevantReplies.push('Next month', 'Summer', 'Winter', 'Flexible dates');
+                        } else if (info.includes('budget')) {
+                            relevantReplies.push('Budget-friendly', 'Moderate', 'Luxury', 'Flexible budget');
+                        }
+                    });
+                    return relevantReplies.length > 0 ? relevantReplies : ['I have a destination in mind', 'Show me options', 'Help me decide'];
+                }
+
+                // Context-based dynamic replies
+                const contextReplies = {
+                    vibe: ['Beach & relaxation', 'City exploration', 'Cultural experiences', 'Adventure & nature', 'Food & dining'],
+                    modification: ['Make it cheaper', 'Add more activities', 'Change dates', 'Different destination', 'Book now']
+                };
+
+                return contextReplies[context] || ['I have a destination in mind', 'Show me options', 'Help me decide'];
+            }
+
             generateDynamicResponse(userInput) {
                 const input = userInput.toLowerCase();
                 
+                // Dynamic destination detection without hardcoded list
+                // This will be handled by the backend for proper destination recognition
+
                 // Dynamic category detection
                 const categories = {
                     beach: {
@@ -1394,8 +1525,8 @@ What type of experience are you looking for?`;
                 // Add the itinerary as a special message
                 await this.addItineraryMessage(itineraryHTML);
                 
-                // Show action buttons
-                this.showQuickReplies(['Modify trip details', 'Book now', 'Start over']);
+                // Show modification options after trip creation
+                this.showQuickReplies(this.generateContextualQuickReplies('modification'));
             }
             
             createTabbedItinerary(result) {
@@ -1774,36 +1905,16 @@ What type of experience are you looking for?`;
                 console.log('showMissingInfoSuggestions called with:', missingInfo);
                 if (!missingInfo || !Array.isArray(missingInfo)) {
                     console.error('Invalid missingInfo:', missingInfo);
-                    this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
+                    this.showQuickReplies(this.generateContextualQuickReplies('destination'));
                     return;
                 }
                 
                 const suggestions = missingInfo.map(info => `Please provide ${info}`).join(', ');
                 console.log('Missing info suggestions:', suggestions);
                 
-                // Show follow-up questions based on what's missing
-                const followUpQuestions = [];
-                if (missingInfo.includes('duration_days') || missingInfo.includes('duration')) {
-                    followUpQuestions.push('How many days?', 'Weekend trip?', 'Week-long adventure?');
-                }
-                if (missingInfo.includes('travelers') || missingInfo.includes('number of travelers')) {
-                    followUpQuestions.push('Solo explorer?', 'Romantic duo?', 'Family trip?');
-                }
-                if (missingInfo.includes('start_date') || missingInfo.includes('start date')) {
-                    followUpQuestions.push('When to travel?', 'Next month?', 'Summer vacation?');
-                }
-                if (missingInfo.includes('budget_range') || missingInfo.includes('budget preference')) {
-                    followUpQuestions.push('Budget-friendly ($50-100/day)', 'Moderate ($100-300/day)', 'Luxury ($300+/day)');
-                }
-                if (missingInfo.includes('interests') || missingInfo.includes('preferences')) {
-                    followUpQuestions.push('Adventure & Nature', 'Culture & History', 'Food & Dining', 'Relaxation');
-                }
-                
-                if (followUpQuestions.length > 0) {
-                    this.showQuickReplies(followUpQuestions);
-                } else {
-                    this.showQuickReplies(['I have a destination in mind', 'Reveal hidden gems', 'Show me adventures']);
-                }
+                // Use the new contextual quick replies method
+                const contextualReplies = this.generateContextualQuickReplies('', missingInfo);
+                this.showQuickReplies(contextualReplies);
             }
             
             generateUserMessageResponse(message) {
@@ -1812,33 +1923,14 @@ What type of experience are you looking for?`;
                 // Check for "from X to Y" pattern first
                 const fromToResponse = this.handleDestinationRequest(message);
                 if (fromToResponse) {
-                    this.showQuickReplies(['Romantic duo', 'Family expedition', 'Solo explorer', 'Friend squad']);
+                    this.showQuickReplies(['Solo traveler', 'Couple', 'Family', 'Group of friends']);
                     return fromToResponse;
                 }
                 
-                // Dynamic destination detection
-                const destinations = {
-                    goa: {
-                        keywords: ['goa', 'india'],
-                        response: `Incredible choice! 🏖️ Goa is a paradise of golden beaches, vibrant culture, and endless adventures. I can already see you exploring ancient Portuguese churches, dancing to beachside music, and discovering hidden beach shacks!
-
-Now, let's craft your perfect Goa adventure:
-• **Who's joining your journey?** Solo explorer, romantic duo, family expedition, or friend squad?
-• **When's your adventure time?** Dates and how long you want to immerse yourself?
-• **What's your adventure style?** Beach relaxation, cultural exploration, nightlife excitement, or pure discovery?
-
-Share your vision with me! ✨`,
-                        quickReplies: ['Romantic duo', 'Family expedition', 'Solo explorer', 'Friend squad']
-                    }
-                };
+                // Dynamic destination detection - handled by backend
+                // No hardcoded destinations to ensure flexibility
                 
-                // Check for destination matches
-                for (const [dest, config] of Object.entries(destinations)) {
-                    if (config.keywords.some(keyword => input.includes(keyword))) {
-                        this.showQuickReplies(config.quickReplies);
-                        return config.response;
-                    }
-                }
+                // Destination detection is now handled by the backend for dynamic responses
                 
                 // Check for traveler type matches
                 const travelerTypes = {
@@ -1847,28 +1939,28 @@ Share your vision with me! ✨`,
                         response: `Magical! 💕 A romantic adventure sounds absolutely enchanting. I'm dreaming of romantic experiences that will create memories forever.
 
 When are you planning this romantic journey?`,
-                        quickReplies: ['August 25th', 'September', 'October', 'Flexible dates']
+                        quickReplies: ['Next month', 'Summer', 'Winter', 'Flexible dates']
                     },
                     family: {
                         keywords: ['family', 'kids', 'children', 'parents'],
-                        response: `Wonderful! 👨‍👩‍👧‍👦 Family expeditions are truly special. I'll craft experiences that everyone will treasure - from little explorers to wise grandparents.
+                        response: `Wonderful! 👨‍👩‍👧‍👦 Family trips are truly special. I'll craft experiences that everyone will treasure - from little explorers to wise grandparents.
 
 When's the perfect time for your family adventure?`,
-                        quickReplies: ['Summer break', 'Spring break', 'Holiday season', 'Any time']
+                        quickReplies: ['Summer', 'Winter', 'Spring', 'Flexible dates']
                     },
                     solo: {
                         keywords: ['solo', 'alone', 'myself'],
                         response: `Adventurous! 🧳 Solo exploration is incredibly rewarding. I'll focus on experiences perfect for independent discovery and meaningful connections.
 
 When are you ready to embark on this solo journey?`,
-                        quickReplies: ['Next month', 'In 3 months', 'Flexible', 'Show me adventures']
+                        quickReplies: ['Next month', 'Summer', 'Winter', 'Flexible dates']
                     },
                     friends: {
                         keywords: ['friends', 'group', 'squad'],
                         response: `Epic! 👥 Group adventures with friends create the best memories. I'll plan activities perfect for shared experiences and group excitement.
 
 When's your squad getting together for this adventure?`,
-                        quickReplies: ['Next weekend', 'Next month', 'Summer', 'Flexible']
+                        quickReplies: ['Next month', 'Summer', 'Winter', 'Flexible dates']
                     }
                 };
                 
@@ -1898,7 +1990,7 @@ When's your squad getting together for this adventure?`,
                     return `Incredible choice! 🌟 A trip from ${origin} to ${destination} sounds absolutely amazing! I can see you're excited about this adventure.
 
 Now, let's craft your perfect journey:
-• **Who's joining your adventure?** Solo explorer, romantic duo, family expedition, or friend squad?
+• **Who's joining your adventure?** Solo traveler, couple, family, or group of friends?
 • **When's your adventure time?** Dates and how long you want to immerse yourself?
 • **What's your adventure style?** Relaxation, thrill-seeking, cultural immersion, or pure exploration?
 

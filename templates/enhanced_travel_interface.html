@@ -722,6 +722,229 @@
             margin-top: 4px;
         }
 
+        /* Agentic AI Workflow Animation */
+        .agentic-workflow {
+            background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
+            border-radius: 20px;
+            margin: 15px 0;
+            padding: 25px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agentic-workflow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .workflow-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .workflow-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .workflow-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .agents-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .agent-card.completed {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .agent-card.error {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .agent-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .agent-avatar.flight { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .agent-avatar.hotel { background: linear-gradient(135deg, #10b981, #059669); }
+        .agent-avatar.budget { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .agent-avatar.destination { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+        .agent-info h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .agent-info p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .agent-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6b7280;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.working {
+            background: #3b82f6;
+            animation: pulse 1s infinite;
+        }
+
+        .status-indicator.completed {
+            background: #10b981;
+            animation: none;
+        }
+
+        .status-indicator.error {
+            background: #ef4444;
+            animation: none;
+        }
+
+        .status-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .agent-details {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .completion-message {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(34, 197, 94, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .completion-message h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #10b981;
+        }
+
+        .completion-message p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Mobile responsiveness for agentic workflow */
+        @media (max-width: 768px) {
+            .agents-container {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .agent-card {
+                padding: 15px;
+            }
+            
+            .workflow-title {
+                font-size: 1.1rem;
+            }
+            
+            .agentic-workflow {
+                padding: 20px;
+                margin: 10px 0;
+            }
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .travel-message {
@@ -1578,21 +1801,300 @@
             }
 
             showLoading() {
-                const loading = `
-                    <div class="travel-loading">
-                        <div class="travel-loading-spinner"></div>
-                        <div>
-                            <div class="travel-loading-text">Crafting your perfect itinerary...</div>
-                            <div class="travel-loading-subtext">Gathering the best flights, hotels, and experiences for you</div>
+                const agenticWorkflow = `
+                    <div class="agentic-workflow" id="agenticWorkflow">
+                        <div class="workflow-header">
+                            <div class="workflow-title">
+                                🤖 AI Travel Agents at Work
+                            </div>
+                            <div class="workflow-subtitle">
+                                Crafting your perfect personalized itinerary
+                            </div>
+                        </div>
+                        
+                        <div class="agents-container">
+                            <div class="agent-card" id="flightAgent">
+                                <div class="agent-header">
+                                    <div class="agent-avatar flight">✈️</div>
+                                    <div class="agent-info">
+                                        <h4>Flight Search Agent</h4>
+                                        <p>Finding optimal routes & prices</p>
+                                    </div>
+                                </div>
+                                <div class="agent-status">
+                                    <div class="status-indicator" id="flightStatus"></div>
+                                    <div class="status-text" id="flightStatusText">Initializing...</div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="flightProgress"></div>
+                                </div>
+                                <div class="agent-details" id="flightDetails">
+                                    Analyzing your route and finding the best flight options...
+                                </div>
+                            </div>
+                            
+                            <div class="agent-card" id="hotelAgent">
+                                <div class="agent-header">
+                                    <div class="agent-avatar hotel">🏨</div>
+                                    <div class="agent-info">
+                                        <h4>Hotel Search Agent</h4>
+                                        <p>Locating perfect accommodations</p>
+                                    </div>
+                                </div>
+                                <div class="agent-status">
+                                    <div class="status-indicator" id="hotelStatus"></div>
+                                    <div class="status-text" id="hotelStatusText">Waiting...</div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="hotelProgress"></div>
+                                </div>
+                                <div class="agent-details" id="hotelDetails">
+                                    Ready to find hotels that match your preferences...
+                                </div>
+                            </div>
+                            
+                            <div class="agent-card" id="budgetAgent">
+                                <div class="agent-header">
+                                    <div class="agent-avatar budget">💰</div>
+                                    <div class="agent-info">
+                                        <h4>Budget Analyst</h4>
+                                        <p>Optimizing your spending</p>
+                                    </div>
+                                </div>
+                                <div class="agent-status">
+                                    <div class="status-indicator" id="budgetStatus"></div>
+                                    <div class="status-text" id="budgetStatusText">Waiting...</div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="budgetProgress"></div>
+                                </div>
+                                <div class="agent-details" id="budgetDetails">
+                                    Preparing to allocate your budget across all categories...
+                                </div>
+                            </div>
+                            
+                            <div class="agent-card" id="destinationAgent">
+                                <div class="agent-header">
+                                    <div class="agent-avatar destination">🗺️</div>
+                                    <div class="agent-info">
+                                        <h4>Destination Specialist</h4>
+                                        <p>Creating your perfect itinerary</p>
+                                    </div>
+                                </div>
+                                <div class="agent-status">
+                                    <div class="status-indicator" id="destinationStatus"></div>
+                                    <div class="status-text" id="destinationStatusText">Waiting...</div>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="destinationProgress"></div>
+                                </div>
+                                <div class="agent-details" id="destinationDetails">
+                                    Ready to craft your personalized travel experience...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="completion-message" id="completionMessage" style="display: none;">
+                            <h3>🎉 Your Perfect Trip is Ready!</h3>
+                            <p>All agents have completed their tasks. Your personalized itinerary is being prepared...</p>
                         </div>
                     </div>
                 `;
-                this.addMessage(loading);
+                this.addMessage(agenticWorkflow);
+                
+                // Note: Animation is now started by the planning methods, not here
+            }
+
+            startAgenticAnimation() {
+                // Agent workflow sequence with realistic timing
+                const agents = [
+                    {
+                        id: 'flightAgent',
+                        name: 'Flight Search Agent',
+                        steps: [
+                            { delay: 500, status: 'working', text: 'Analyzing route...', progress: 20, details: 'Identifying optimal airports and flight paths...' },
+                            { delay: 1500, status: 'working', text: 'Searching flights...', progress: 60, details: 'Finding real-time flight options and prices...' },
+                            { delay: 2500, status: 'working', text: 'Optimizing prices...', progress: 90, details: 'Comparing prices and selecting best options...' },
+                            { delay: 3500, status: 'completed', text: 'Found 9 flights!', progress: 100, details: 'Successfully found optimal flight options for your trip!' }
+                        ]
+                    },
+                    {
+                        id: 'hotelAgent',
+                        name: 'Hotel Search Agent',
+                        steps: [
+                            { delay: 2000, status: 'working', text: 'Finding locations...', progress: 25, details: 'Identifying best areas near your destination...' },
+                            { delay: 3000, status: 'working', text: 'Filtering by budget...', progress: 50, details: 'Matching hotels to your budget preferences...' },
+                            { delay: 4000, status: 'working', text: 'Checking availability...', progress: 80, details: 'Verifying room availability for your dates...' },
+                            { delay: 5000, status: 'completed', text: 'Found 9 hotels!', progress: 100, details: 'Perfect accommodations selected for your stay!' }
+                        ]
+                    },
+                    {
+                        id: 'budgetAgent',
+                        name: 'Budget Analyst',
+                        steps: [
+                            { delay: 1000, status: 'working', text: 'Analyzing budget...', progress: 30, details: 'Reviewing your total budget allocation...' },
+                            { delay: 2500, status: 'working', text: 'Allocating funds...', progress: 60, details: 'Distributing budget across flights, hotels, and activities...' },
+                            { delay: 4000, status: 'working', text: 'Optimizing costs...', progress: 85, details: 'Ensuring best value for your money...' },
+                            { delay: 5500, status: 'completed', text: 'Budget optimized!', progress: 100, details: 'Perfect budget allocation: 30% hotels, 25% flights, 45% activities!' }
+                        ]
+                    },
+                    {
+                        id: 'destinationAgent',
+                        name: 'Destination Specialist',
+                        steps: [
+                            { delay: 3000, status: 'working', text: 'Analyzing interests...', progress: 25, details: 'Understanding your travel preferences and interests...' },
+                            { delay: 4500, status: 'working', text: 'Planning itinerary...', progress: 60, details: 'Creating day-by-day activities and experiences...' },
+                            { delay: 6000, status: 'working', text: 'Adding recommendations...', progress: 85, details: 'Including local insights and hidden gems...' },
+                            { delay: 7000, status: 'completed', text: 'Itinerary ready!', progress: 100, details: 'Your personalized 5-day adventure is perfectly planned!' }
+                        ]
+                    }
+                ];
+
+                // Execute agent workflows
+                agents.forEach(agent => {
+                    agent.steps.forEach((step, index) => {
+                        setTimeout(() => {
+                            this.updateAgentStatus(agent.id, step);
+                        }, step.delay);
+                    });
+                });
+
+                // Note: Completion is now handled by completeAnimationWithSuccess/Error methods
+                // based on actual backend response, not a fixed timer
+            }
+
+            updateAgentStatus(agentId, step) {
+                const agentCard = document.getElementById(agentId);
+                const statusIndicator = document.getElementById(agentId.replace('Agent', 'Status'));
+                const statusText = document.getElementById(agentId.replace('Agent', 'StatusText'));
+                const progressBar = document.getElementById(agentId.replace('Agent', 'Progress'));
+                const details = document.getElementById(agentId.replace('Agent', 'Details'));
+
+                if (!agentCard || !statusIndicator || !statusText || !progressBar || !details) return;
+
+                // Update status indicator
+                statusIndicator.className = `status-indicator ${step.status}`;
+                
+                // Update status text
+                statusText.textContent = step.text;
+                
+                // Update progress bar
+                progressBar.style.width = `${step.progress}%`;
+                
+                // Update details
+                details.textContent = step.details;
+                
+                // Update card appearance
+                if (step.status === 'working') {
+                    agentCard.classList.add('active');
+                } else if (step.status === 'completed') {
+                    agentCard.classList.remove('active');
+                    agentCard.classList.add('completed');
+                }
+            }
+
+            showCompletionMessage() {
+                const completionMessage = document.getElementById('completionMessage');
+                if (completionMessage) {
+                    completionMessage.style.display = 'block';
+                }
+            }
+
+            // Complete animation with success - smoothly transition to itinerary
+            async completeAnimationWithSuccess() {
+                return new Promise((resolve) => {
+                    // Complete all remaining agents quickly
+                    const allAgents = ['flightAgent', 'hotelAgent', 'budgetAgent', 'destinationAgent'];
+                    
+                    allAgents.forEach((agentId, index) => {
+                        setTimeout(() => {
+                            const agentCard = document.getElementById(agentId);
+                            const statusIndicator = document.getElementById(agentId.replace('Agent', 'Status'));
+                            const statusText = document.getElementById(agentId.replace('Agent', 'StatusText'));
+                            const progressBar = document.getElementById(agentId.replace('Agent', 'Progress'));
+                            const details = document.getElementById(agentId.replace('Agent', 'Details'));
+                            
+                            if (agentCard && !agentCard.classList.contains('completed')) {
+                                // Complete the agent
+                                statusIndicator.className = 'status-indicator completed';
+                                statusText.textContent = 'Completed!';
+                                progressBar.style.width = '100%';
+                                details.textContent = 'Task completed successfully!';
+                                
+                                agentCard.classList.remove('active');
+                                agentCard.classList.add('completed');
+                            }
+                        }, index * 200); // Stagger completions
+                    });
+                    
+                    // Show success completion message and resolve
+                    setTimeout(() => {
+                        this.showSuccessCompletionMessage();
+                        setTimeout(resolve, 1500); // Give user time to see success message
+                    }, allAgents.length * 200 + 500);
+                });
+            }
+
+            // Complete animation with error - show error state
+            async completeAnimationWithError() {
+                return new Promise((resolve) => {
+                    // Show error state for all agents
+                    const allAgents = ['flightAgent', 'hotelAgent', 'budgetAgent', 'destinationAgent'];
+                    
+                    allAgents.forEach((agentId, index) => {
+                        setTimeout(() => {
+                            const agentCard = document.getElementById(agentId);
+                            const statusIndicator = document.getElementById(agentId.replace('Agent', 'Status'));
+                            const statusText = document.getElementById(agentId.replace('Agent', 'StatusText'));
+                            const details = document.getElementById(agentId.replace('Agent', 'Details'));
+                            
+                            if (agentCard) {
+                                // Show error state
+                                statusIndicator.className = 'status-indicator error';
+                                statusText.textContent = 'Error occurred';
+                                details.textContent = 'Unable to complete task';
+                                
+                                agentCard.classList.remove('active');
+                                agentCard.classList.add('error');
+                            }
+                        }, index * 100);
+                    });
+                    
+                    // Show error completion message and resolve
+                    setTimeout(() => {
+                        this.showErrorCompletionMessage();
+                        setTimeout(resolve, 1000);
+                    }, allAgents.length * 100 + 300);
+                });
+            }
+
+            showSuccessCompletionMessage() {
+                const completionMessage = document.getElementById('completionMessage');
+                if (completionMessage) {
+                    completionMessage.innerHTML = `
+                        <h3>🎉 Your Perfect Trip is Ready!</h3>
+                        <p>All agents have completed their tasks successfully. Your personalized itinerary is being prepared...</p>
+                    `;
+                    completionMessage.style.display = 'block';
+                }
+            }
+
+            showErrorCompletionMessage() {
+                const completionMessage = document.getElementById('completionMessage');
+                if (completionMessage) {
+                    completionMessage.innerHTML = `
+                        <h3>⚠️ Planning Encountered Issues</h3>
+                        <p>Some agents encountered problems. Let's try a different approach...</p>
+                    `;
+                    completionMessage.style.display = 'block';
+                }
             }
 
             hideLoading() {
                 const loadingElements = this.chatArea.querySelectorAll('.travel-loading');
+                const agenticElements = this.chatArea.querySelectorAll('.agentic-workflow');
                 loadingElements.forEach(el => el.remove());
+                agenticElements.forEach(el => el.remove());
             }
 
             async processMessage(message) {
@@ -1755,6 +2257,10 @@
 
             async startTripPlanning(tripRequest) {
                 this.showLoading();
+                
+                // Start the animation
+                this.startAgenticAnimation();
+                
                 try {
                     const response = await fetch('/chat-integration/start-planning', {
                         method: 'POST',
@@ -1765,9 +2271,14 @@
                         throw new Error('Failed to start trip planning');
                     }
                     const result = await response.json();
+                    
+                    // Complete animation with success and transition to itinerary
+                    await this.completeAnimationWithSuccess();
                     this.hideLoading();
                     this.displayItinerary(result);
                 } catch (error) {
+                    // Complete animation with error and show error message
+                    await this.completeAnimationWithError();
                     this.hideLoading();
                     this.showErrorMessage();
                     console.error("Error in startTripPlanning:", error);
@@ -1776,6 +2287,10 @@
 
             async startTripPlanningFromConversationState() {
                 this.showLoading();
+                
+                // Start the animation
+                this.startAgenticAnimation();
+                
                 try {
                     // Create a trip request from the current conversation state
                     const tripRequest = {
@@ -1802,9 +2317,14 @@
                         throw new Error('Failed to start trip planning');
                     }
                     const result = await response.json();
+                    
+                    // Complete animation with success and transition to itinerary
+                    await this.completeAnimationWithSuccess();
                     this.hideLoading();
                     this.displayItinerary(result);
                 } catch (error) {
+                    // Complete animation with error and show error message
+                    await this.completeAnimationWithError();
                     this.hideLoading();
                     this.showErrorMessage();
                     console.error("Error in startTripPlanningFromConversationState:", error);

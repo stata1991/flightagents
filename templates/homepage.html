@@ -49,6 +49,7 @@
             height: 100%;
             object-fit: cover;
             filter: brightness(0.6);
+            transition: opacity 0.5s ease-in-out;
         }
 
         .video-fallback {
@@ -59,6 +60,67 @@
             height: 100%;
             background: var(--gradient-bg);
             display: none;
+        }
+
+        .fallback-gradient {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Video loading states */
+        .video-loading {
+            opacity: 0;
+            transform: scale(1.1);
+        }
+
+        .video-loaded {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Video transition effects */
+        .video-transition {
+            transition: all 0.8s ease-in-out;
+        }
+
+        /* Enhanced content overlay for better readability */
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .hero-content h1 {
+            background: linear-gradient(45deg, #ffffff, #f0f9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+
+        /* Mobile video optimization */
+        @media (max-width: 768px) {
+            .video-background video {
+                object-position: center center;
+            }
         }
 
         /* Navigation */
@@ -655,13 +717,15 @@
     </style>
 </head>
 <body>
-    <!-- Video Background -->
+    <!-- Dynamic Video Background -->
     <div class="video-background">
-        <video autoplay muted loop playsinline id="heroVideo">
-            <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
-            <!-- Fallback for browsers that don't support video -->
+        <video autoplay muted loop playsinline id="heroVideo" preload="none">
+            <!-- Video sources will be loaded dynamically -->
         </video>
-        <div class="video-fallback"></div>
+        <div class="video-fallback">
+            <div class="fallback-gradient"></div>
+        </div>
+        <div class="video-overlay"></div>
     </div>
 
     <!-- Navigation -->
@@ -923,22 +987,157 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Video Background Fallback
+        // Dynamic Video Background System
         document.addEventListener('DOMContentLoaded', function() {
             const video = document.getElementById('heroVideo');
             const fallback = document.querySelector('.video-fallback');
             
-            // Check if video can play
-            video.addEventListener('error', function() {
-                fallback.style.display = 'block';
-                video.style.display = 'none';
-            });
-            
-            // Fallback for mobile devices
-            if (window.innerWidth <= 768) {
+            // Travel video collection - using high-quality, royalty-free travel videos
+            const travelVideos = [
+                {
+                    src: 'https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=165&oauth2_token_id=57447761',
+                    title: 'Mountain Adventure',
+                    category: 'nature'
+                },
+                {
+                    src: 'https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=165&oauth2_token_id=57447761',
+                    title: 'Beach Paradise',
+                    category: 'beach'
+                },
+                {
+                    src: 'https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=165&oauth2_token_id=57447761',
+                    title: 'City Exploration',
+                    category: 'urban'
+                },
+                {
+                    src: 'https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0fd273d2c6d9a064f3ae35579b2bbdf&profile_id=165&oauth2_token_id=57447761',
+                    title: 'Cultural Journey',
+                    category: 'culture'
+                }
+            ];
+
+            // Lazy load video with performance optimization
+            function loadVideo() {
+                // Check if user prefers reduced motion
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    showFallback();
+                    return;
+                }
+
+                // Check if device is mobile and has limited bandwidth
+                if (window.innerWidth <= 768 && navigator.connection && navigator.connection.effectiveType === 'slow-2g') {
+                    showFallback();
+                    return;
+                }
+
+                // Select optimal video based on performance and time
+                const selectedVideo = selectOptimalVideo();
+                if (!selectedVideo) {
+                    showFallback();
+                    return;
+                }
+                
+                // Create video source element
+                const source = document.createElement('source');
+                source.src = selectedVideo.src;
+                source.type = 'video/mp4';
+                
+                // Clear existing sources and add new one
+                video.innerHTML = '';
+                video.appendChild(source);
+                
+                // Add loading and transition classes
+                video.classList.add('video-loading', 'video-transition');
+                
+                // Load video
+                video.load();
+                
+                // Handle video events
+                video.addEventListener('loadeddata', function() {
+                    video.classList.remove('video-loading');
+                    video.classList.add('video-loaded');
+                    
+                    // Smooth transition effect
+                    setTimeout(function() {
+                        video.classList.remove('video-transition');
+                    }, 800);
+                    
+                    video.play().catch(function(error) {
+                        console.log('Video autoplay failed:', error);
+                        showFallback();
+                    });
+                });
+                
+                video.addEventListener('error', function() {
+                    console.log('Video failed to load, showing fallback');
+                    showFallback();
+                });
+                
+                // Fallback timeout
+                setTimeout(function() {
+                    if (video.readyState < 2) { // HAVE_CURRENT_DATA
+                        showFallback();
+                    }
+                }, 5000);
+            }
+
+            function showFallback() {
                 fallback.style.display = 'block';
                 video.style.display = 'none';
             }
+
+            // Performance monitoring
+            function getPerformanceMetrics() {
+                const connection = navigator.connection;
+                return {
+                    effectiveType: connection ? connection.effectiveType : 'unknown',
+                    downlink: connection ? connection.downlink : 'unknown',
+                    rtt: connection ? connection.rtt : 'unknown'
+                };
+            }
+
+            // Smart video selection based on performance
+            function selectOptimalVideo() {
+                const metrics = getPerformanceMetrics();
+                const isSlowConnection = metrics.effectiveType === 'slow-2g' || metrics.effectiveType === '2g';
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isSlowConnection || isMobile) {
+                    // Use fallback for slow connections
+                    showFallback();
+                    return null;
+                }
+                
+                // Select video based on time of day for variety
+                const hour = new Date().getHours();
+                let category;
+                
+                if (hour >= 6 && hour < 12) {
+                    category = 'nature'; // Morning - nature videos
+                } else if (hour >= 12 && hour < 18) {
+                    category = 'beach'; // Afternoon - beach videos
+                } else if (hour >= 18 && hour < 22) {
+                    category = 'urban'; // Evening - city videos
+                } else {
+                    category = 'culture'; // Night - cultural videos
+                }
+                
+                // Find video by category or random
+                const categoryVideos = travelVideos.filter(v => v.category === category);
+                const selectedVideos = categoryVideos.length > 0 ? categoryVideos : travelVideos;
+                
+                return selectedVideos[Math.floor(Math.random() * selectedVideos.length)];
+            }
+
+            // Initialize video loading
+            loadVideo();
+            
+            // Refresh video every 45 seconds for variety (increased from 30s for better performance)
+            setInterval(function() {
+                if (!fallback.style.display || fallback.style.display === 'none') {
+                    loadVideo();
+                }
+            }, 45000);
         });
 
         // Navbar scroll effect

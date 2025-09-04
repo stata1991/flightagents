@@ -138,6 +138,42 @@
 
 ---
 
+### **6. 💸 LLM Token Optimization & Cost Reduction** 
+**Requirement**: Optimize all Claude API calls to reduce token usage and costs
+- **JSON Structure Optimization**:
+  - **Flatten nested objects** to reduce token count
+  - **Use short, descriptive keys** (pref_lang vs preferred_language)
+  - **Remove unnecessary whitespace** and formatting
+  - **Linear JSON structure** instead of deeply nested objects
+  - **Example**: 40% token reduction with same data meaning
+
+- **Prompt Engineering Optimization**:
+  - **Concise, focused prompts** without redundant information
+  - **Structured output formats** that minimize token overhead
+  - **Context compression** while maintaining accuracy
+  - **Smart caching** of repeated patterns
+
+- **API Call Optimization**:
+  - **Batch processing** where possible
+  - **Response streaming** for large outputs
+  - **Smart retry logic** to avoid unnecessary duplicate calls
+  - **Token usage monitoring** and alerting
+
+**Implementation Notes**:
+- Audit all current Claude API calls for token optimization opportunities
+- Refactor JSON structures to use flat, short-key format
+- Implement token usage tracking and cost monitoring
+- Create standardized prompt templates with minimal token overhead
+- Add cost optimization guidelines to development workflow
+- **Expected Impact**: 30-50% reduction in LLM costs at scale
+
+**Cost Impact Examples**:
+- 1 request = few cents saved
+- 1K requests = significant monthly savings
+- 1M requests = major cost reduction (potentially 50% of cloud bill)
+
+---
+
 ## 🛠 **Technical Implementation Priority**
 
 ### **Phase 1: Core Logic (Tomorrow Morning)**
@@ -157,6 +193,13 @@
 3. **User experience validation**
 4. **API Integration Testing** - Weather and Maps APIs
 5. **Location Detection Testing** - IP-based and GPS location services
+
+### **Phase 4: Cost Optimization & Scale**
+1. **LLM Token Optimization** - Reduce Claude API costs by 30-50%
+2. **JSON Structure Refactoring** - Flatten nested objects, use short keys
+3. **Prompt Engineering Optimization** - Minimize token overhead
+4. **Token Usage Monitoring** - Track and alert on cost spikes
+5. **Performance Benchmarking** - Measure optimization impact
 
 ---
 
