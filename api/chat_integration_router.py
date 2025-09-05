@@ -158,6 +158,7 @@ async def process_chat_message(request: Dict[str, Any]):
             # Extract any new information from the message
             new_budget, new_total_budget = _extract_budget(message)
             new_interests = _extract_interests(message)
+            new_occasion = _extract_occasion(message)
             
             # Update existing trip_data with new information
             if new_budget:
@@ -166,6 +167,8 @@ async def process_chat_message(request: Dict[str, Any]):
                 existing_trip_data["total_budget"] = new_total_budget
             if new_interests:
                 existing_trip_data["interests"] = new_interests
+            if new_occasion:
+                existing_trip_data["occasion"] = new_occasion
             
 
             
@@ -579,6 +582,7 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
             new_end_date = _extract_end_date(message)
             new_budget_range, new_total_budget = _extract_budget(message)
             new_interests = _extract_interests(message)
+            new_occasion = _extract_occasion(message)
             new_duration_days = _extract_duration_days(message)
             
             # Use new information if available, otherwise fall back to existing conversation state
@@ -624,6 +628,8 @@ async def _extract_trip_request(message: str, conversation_state: Dict[str, Any]
             conversation_state["budget_range"] = budget_range
         if interests:
             conversation_state["interests"] = interests
+        if new_occasion:
+            conversation_state["occasion"] = new_occasion
         if duration_days:
             conversation_state["duration_days"] = duration_days
         
@@ -963,11 +969,11 @@ def _extract_budget(message: str):
             else:
                 return "luxury", avg_amount
     
-    # SECOND: Check for budget keywords (only if no dollar amounts found)
+    # SECOND: Check for budget keywords (only if no dollar amounts found) - check luxury first
     budget_keywords = {
-        "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty", "backpacker"],
+        "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe", "premium"],
         "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable", "balanced"],
-        "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe", "premium"]
+        "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty", "backpacker"]
     }
     
     for budget_range, keywords in budget_keywords.items():
@@ -1000,6 +1006,27 @@ def _extract_duration_days(message: str) -> Optional[int]:
             # Validate reasonable duration
             if 1 <= days <= 365:
                 return days
+    
+    return None
+
+def _extract_occasion(message: str) -> Optional[str]:
+    """Extract occasion from message"""
+    message_lower = message.lower()
+    
+    occasion_keywords = {
+        "anniversary": ["anniversary", "anniversary trip", "wedding anniversary"],
+        "birthday": ["birthday", "birthday trip", "birthday celebration"],
+        "honeymoon": ["honeymoon", "honeymoon trip"],
+        "graduation": ["graduation", "graduation trip", "graduation celebration"],
+        "wedding": ["wedding", "wedding trip", "wedding celebration"],
+        "celebration": ["celebration", "celebrate", "special occasion"],
+        "business": ["business", "business trip", "work", "work trip", "conference"],
+        "casual": ["casual", "casual trip", "getaway", "relaxation", "vacation"]
+    }
+    
+    for occasion, keywords in occasion_keywords.items():
+        if any(keyword in message_lower for keyword in keywords):
+            return occasion
     
     return None
 

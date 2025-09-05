@@ -337,6 +337,11 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
             number_match = re.search(r'(\d+)\s+(people|travelers|guests|adults)', user_input_processed)
             if number_match:
                 trip_data['travelers'] = int(number_match.group(1))
+            else:
+                # Look for "for X" pattern (e.g., "for 2")
+                for_match = re.search(r'for\s+(\d+)', user_input_processed)
+                if for_match:
+                    trip_data['travelers'] = int(for_match.group(1))
         
         if 'travelers' in trip_data:
             logger.info(f"Extracted travelers: {trip_data['travelers']}")
@@ -397,6 +402,8 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
         date_patterns = [
             r'from\s+(\w+\s+\d+)',  # "from August 28th"
             r'starting\s+(\w+\s+\d+)',  # "starting August 28th"
+            r'(\d{4}-\d{2}-\d{2})',  # "2025-10-25"
+            r'starting\s+(\d{4}-\d{2}-\d{2})',  # "starting 2025-10-25"
         ]
         
         # Add patterns for each month name
@@ -411,6 +418,12 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                 try:
                     from datetime import datetime
                     import calendar
+                    
+                    # Check if it's already in ISO format (YYYY-MM-DD)
+                    if re.match(r'\d{4}-\d{2}-\d{2}', date_str):
+                        trip_data['start_date'] = date_str
+                        logger.info(f"Extracted start_date (ISO): {trip_data['start_date']}")
+                        break
                     
                     # Remove ordinal suffixes (th, st, nd, rd)
                     date_str = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
@@ -443,11 +456,11 @@ Before I craft your complete itinerary, any specific preferences or must-see pla
                     logger.info(f"Extracted start_date (fallback): {trip_data['start_date']}")
                 break
         
-        # Extract budget if mentioned
+        # Extract budget if mentioned - check for luxury first to avoid conflicts
         budget_keywords = {
-            "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty"],
+            "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe"],
             "moderate": ["moderate", "reasonable", "standard", "mid-range", "comfortable"],
-            "luxury": ["luxury", "premium", "high end", "expensive", "upscale", "deluxe"]
+            "budget": ["budget", "cheap", "affordable", "low cost", "economy", "thrifty"]
         }
         found_budget = False
         for budget_range, keywords in budget_keywords.items():

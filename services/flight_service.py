@@ -79,6 +79,49 @@ class FlightService:
             return {"success": False, "flights": [], "error": str(e)}
 
     @staticmethod
+    def _get_airport_code_direct(city_name: str) -> Optional[str]:
+        """Dynamic airport code lookup using the airports database"""
+        try:
+            import json
+            import os
+            
+            # Load airports database dynamically
+            airports_file = os.path.join(os.path.dirname(__file__), '..', 'api', 'airports-code.json')
+            if not os.path.exists(airports_file):
+                return None
+                
+            with open(airports_file, 'r', encoding='utf-8') as f:
+                airports_data = json.load(f)
+            
+            # Normalize city name for matching
+            normalized_city = city_name.lower().strip()
+            
+            # Search for matching airports
+            for airport in airports_data:
+                airport_city = airport.get('city_name', '').lower()
+                airport_name = airport.get('airport_name', '').lower()
+                airport_code = airport.get('column_1', '')  # CRS code
+                
+                # Exact city match
+                if normalized_city == airport_city:
+                    return airport_code
+                
+                # Partial city match
+                if normalized_city in airport_city or airport_city in normalized_city:
+                    return airport_code
+                
+                # Airport name match
+                if normalized_city in airport_name or airport_name in normalized_city:
+                    return airport_code
+            
+            return None
+            
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error in dynamic airport lookup: {e}")
+            return None
+
     async def _get_airport_id(location: str, context: dict = None) -> Optional[str]:
         """
         Get airport ID using Booking.com searchDestination API, robustly selecting the correct airport.
@@ -89,7 +132,7 @@ class FlightService:
         try:
             import logging
             logger = logging.getLogger(__name__)
-            from services.location_detection_service import location_detection_service
+            # from services.location_detection_service import location_detection_service
             import os
             import aiohttp
             rapid_api_key = os.getenv("RAPID_API_KEY")
@@ -118,8 +161,8 @@ class FlightService:
                             user_country = context["country"].strip().lower()
                             logger.info(f"[AIRPORT] Using user-specified country: {user_country}")
                         else:
-                            # Use geocoding
-                            user_country = await location_detection_service.get_country_from_city(location)
+                            # Use default country (US) for now
+                            user_country = "us"
                             if user_country:
                                 user_country = user_country.strip().lower()
                                 logger.info(f"[AIRPORT] Geocoded country: {user_country}")
@@ -156,6 +199,12 @@ class FlightService:
                         return None
         except Exception as e:
             logger.error(f"[AIRPORT] Error getting airport ID for {location}: {e}")
+            # Fallback to dynamic airport lookup
+            logger.info(f"[AIRPORT] Trying dynamic airport lookup for {location}")
+            airport_code = FlightService._get_airport_code_direct(location)
+            if airport_code:
+                logger.info(f"[AIRPORT] Found airport code via dynamic lookup: {airport_code}")
+                return airport_code
             return None
 
     @staticmethod

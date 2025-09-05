@@ -451,6 +451,17 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
+        .travel-input:disabled {
+            background: #F1F5F9;
+            color: #94A3B8;
+            cursor: not-allowed;
+            border-color: #E2E8F0;
+        }
+
+        .travel-input:disabled::placeholder {
+            color: #94A3B8;
+        }
+
         .travel-send-btn {
             width: 48px;
             height: 48px;
@@ -470,6 +481,18 @@
         .travel-send-btn:hover {
             transform: scale(1.1);
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .travel-send-btn:disabled {
+            background: #94A3B8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(148, 163, 184, 0.2);
+        }
+
+        .travel-send-btn:disabled:hover {
+            transform: none;
+            box-shadow: 0 2px 8px rgba(148, 163, 184, 0.2);
         }
 
         /* Enhanced Itinerary Display */
@@ -1691,7 +1714,7 @@
             initializeEventListeners() {
                 this.sendBtn.addEventListener('click', () => this.sendMessage());
                 this.input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.sendMessage();
+                    if (e.key === 'Enter' && !this.input.disabled) this.sendMessage();
                 });
                 
                 // Check for URL parameters from destination discovery
@@ -1765,7 +1788,7 @@
 
             async sendMessage() {
                 const message = this.input.value.trim();
-                if (!message) return;
+                if (!message || this.input.disabled) return;
 
                 // Add user message
                 this.addUserMessage(message);
@@ -1801,6 +1824,9 @@
             }
 
             showLoading() {
+                // Disable input and send button during planning
+                this.disableInput();
+                
                 const agenticWorkflow = `
                     <div class="agentic-workflow" id="agenticWorkflow">
                         <div class="workflow-header">
@@ -1906,61 +1932,181 @@
             }
 
             startAgenticAnimation() {
-                // Agent workflow sequence with realistic timing
-                const agents = [
+                // Wait for DOM elements to be ready before starting animation
+                const checkAndStart = () => {
+                    // Check if all agent cards exist
+                    const flightAgent = document.getElementById('flightAgent');
+                    const hotelAgent = document.getElementById('hotelAgent');
+                    const budgetAgent = document.getElementById('budgetAgent');
+                    const destinationAgent = document.getElementById('destinationAgent');
+                    
+                    if (flightAgent && hotelAgent && budgetAgent && destinationAgent) {
+                        console.log('All agent cards found, starting animation');
+                        // Get trip data for dynamic messaging
+                        const tripData = this.getTripDataFromConversationState();
+                        
+                        // Dynamic agent workflow based on actual trip data
+                        const agents = this.generateDynamicAgentWorkflow(tripData);
+
+                        // Execute agent workflows with realistic timing
+                        agents.forEach(agent => {
+                            agent.steps.forEach((step, index) => {
+                                setTimeout(() => {
+                                    this.updateAgentStatus(agent.id, step);
+                                }, step.delay);
+                            });
+                        });
+
+                        // Show final assembly message after all agents complete
+                        setTimeout(() => {
+                            this.showFinalAssemblyMessage(tripData);
+                        }, 6000);
+                    } else {
+                        console.log('Agent cards not ready yet, retrying...');
+                        setTimeout(checkAndStart, 100);
+                    }
+                };
+                
+                checkAndStart();
+            }
+
+            getTripDataFromConversationState() {
+                const state = this.conversationState || {};
+                return {
+                    origin: state.origin || 'your departure city',
+                    destination: state.destination || 'your destination',
+                    travelers: state.travelers || 'your group',
+                    duration: state.duration_days || 'your trip duration',
+                    budget: state.budget_range || state.total_budget || 'your budget',
+                    interests: state.interests || [],
+                    occasion: state.occasion || 'your trip purpose'
+                };
+            }
+
+            generateDynamicAgentWorkflow(tripData) {
+                const destination = tripData.destination;
+                const travelers = tripData.travelers;
+                const duration = tripData.duration;
+                const budget = tripData.budget;
+                const interests = tripData.interests;
+
+                // Generate dynamic status variations
+                const flightStatuses = this.generateFlightStatuses(destination, travelers, budget);
+                const hotelStatuses = this.generateHotelStatuses(destination, duration, budget);
+                const budgetStatuses = this.generateBudgetStatuses(budget);
+                const destinationStatuses = this.generateDestinationStatuses(destination, duration, interests);
+
+                return [
                     {
                         id: 'flightAgent',
                         name: 'Flight Search Agent',
-                        steps: [
-                            { delay: 500, status: 'working', text: 'Analyzing route...', progress: 20, details: 'Identifying optimal airports and flight paths...' },
-                            { delay: 1500, status: 'working', text: 'Searching flights...', progress: 60, details: 'Finding real-time flight options and prices...' },
-                            { delay: 2500, status: 'working', text: 'Optimizing prices...', progress: 90, details: 'Comparing prices and selecting best options...' },
-                            { delay: 3500, status: 'completed', text: 'Found 9 flights!', progress: 100, details: 'Successfully found optimal flight options for your trip!' }
-                        ]
+                        steps: flightStatuses.map((status, index) => ({
+                            delay: 500 + (index * 800),
+                            status: index === flightStatuses.length - 1 ? 'completed' : 'working',
+                            text: status.text,
+                            progress: Math.min(15 + (index * 20), 100),
+                            details: status.details
+                        }))
                     },
                     {
                         id: 'hotelAgent',
                         name: 'Hotel Search Agent',
-                        steps: [
-                            { delay: 2000, status: 'working', text: 'Finding locations...', progress: 25, details: 'Identifying best areas near your destination...' },
-                            { delay: 3000, status: 'working', text: 'Filtering by budget...', progress: 50, details: 'Matching hotels to your budget preferences...' },
-                            { delay: 4000, status: 'working', text: 'Checking availability...', progress: 80, details: 'Verifying room availability for your dates...' },
-                            { delay: 5000, status: 'completed', text: 'Found 9 hotels!', progress: 100, details: 'Perfect accommodations selected for your stay!' }
-                        ]
+                        steps: hotelStatuses.map((status, index) => ({
+                            delay: 1000 + (index * 800),
+                            status: index === hotelStatuses.length - 1 ? 'completed' : 'working',
+                            text: status.text,
+                            progress: Math.min(20 + (index * 20), 100),
+                            details: status.details
+                        }))
                     },
                     {
                         id: 'budgetAgent',
                         name: 'Budget Analyst',
-                        steps: [
-                            { delay: 1000, status: 'working', text: 'Analyzing budget...', progress: 30, details: 'Reviewing your total budget allocation...' },
-                            { delay: 2500, status: 'working', text: 'Allocating funds...', progress: 60, details: 'Distributing budget across flights, hotels, and activities...' },
-                            { delay: 4000, status: 'working', text: 'Optimizing costs...', progress: 85, details: 'Ensuring best value for your money...' },
-                            { delay: 5500, status: 'completed', text: 'Budget optimized!', progress: 100, details: 'Perfect budget allocation: 30% hotels, 25% flights, 45% activities!' }
-                        ]
+                        steps: budgetStatuses.map((status, index) => ({
+                            delay: 800 + (index * 800),
+                            status: index === budgetStatuses.length - 1 ? 'completed' : 'working',
+                            text: status.text,
+                            progress: Math.min(25 + (index * 18), 100),
+                            details: status.details
+                        }))
                     },
                     {
                         id: 'destinationAgent',
                         name: 'Destination Specialist',
-                        steps: [
-                            { delay: 3000, status: 'working', text: 'Analyzing interests...', progress: 25, details: 'Understanding your travel preferences and interests...' },
-                            { delay: 4500, status: 'working', text: 'Planning itinerary...', progress: 60, details: 'Creating day-by-day activities and experiences...' },
-                            { delay: 6000, status: 'working', text: 'Adding recommendations...', progress: 85, details: 'Including local insights and hidden gems...' },
-                            { delay: 7000, status: 'completed', text: 'Itinerary ready!', progress: 100, details: 'Your personalized 5-day adventure is perfectly planned!' }
-                        ]
+                        steps: destinationStatuses.map((status, index) => ({
+                            delay: 1200 + (index * 800),
+                            status: index === destinationStatuses.length - 1 ? 'completed' : 'working',
+                            text: status.text,
+                            progress: Math.min(20 + (index * 20), 100),
+                            details: status.details
+                        }))
                     }
                 ];
+            }
 
-                // Execute agent workflows
-                agents.forEach(agent => {
-                    agent.steps.forEach((step, index) => {
-                        setTimeout(() => {
-                            this.updateAgentStatus(agent.id, step);
-                        }, step.delay);
-                    });
-                });
+            generateFlightStatuses(destination, travelers, budget) {
+                const statuses = [
+                    { text: 'Connecting to airlines...', details: `Establishing connection to flight databases for ${destination} routes...` },
+                    { text: 'Searching routes...', details: `Finding optimal flight paths to ${destination}...` },
+                    { text: 'Comparing prices...', details: `Analyzing prices for ${travelers} travelers across multiple airlines...` },
+                    { text: 'Optimizing selection...', details: `Selecting best flight options based on your ${budget} budget...` },
+                    { text: 'Flights found!', details: `Successfully found 9 optimal flight options for your ${destination} trip!` }
+                ];
+                return statuses;
+            }
 
-                // Note: Completion is now handled by completeAnimationWithSuccess/Error methods
-                // based on actual backend response, not a fixed timer
+            generateHotelStatuses(destination, duration, budget) {
+                const statuses = [
+                    { text: 'Scanning accommodations...', details: `Searching hotels and accommodations in ${destination}...` },
+                    { text: 'Filtering by budget...', details: `Matching properties to your ${budget} budget preferences...` },
+                    { text: 'Checking availability...', details: `Verifying room availability for ${duration} days...` },
+                    { text: 'Evaluating locations...', details: `Assessing proximity to attractions and transportation...` },
+                    { text: 'Hotels selected!', details: `Found 9 perfect accommodations matching your preferences!` }
+                ];
+                return statuses;
+            }
+
+            generateBudgetStatuses(budget) {
+                const statuses = [
+                    { text: 'Analyzing expenses...', details: `Breaking down your ${budget} budget across all categories...` },
+                    { text: 'Allocating funds...', details: `Distributing budget: 30% hotels, 25% flights, 45% activities...` },
+                    { text: 'Optimizing costs...', details: `Ensuring maximum value for your ${budget} investment...` },
+                    { text: 'Finalizing allocation...', details: `Fine-tuning budget distribution for optimal experience...` },
+                    { text: 'Budget optimized!', details: `Perfect budget allocation ensuring best value for your money!` }
+                ];
+                return statuses;
+            }
+
+            generateDestinationStatuses(destination, duration, interests) {
+                const interestText = interests.length > 0 ? interests.join(', ') : 'general travel';
+                const statuses = [
+                    { text: 'Researching attractions...', details: `Discovering must-see attractions and hidden gems in ${destination}...` },
+                    { text: 'Creating schedule...', details: `Building day-by-day itinerary for your ${duration} trip...` },
+                    { text: 'Adding local insights...', details: `Incorporating local tips and cultural experiences...` },
+                    { text: 'Personalizing experience...', details: `Tailoring activities to your interests: ${interestText}...` },
+                    { text: 'Itinerary complete!', details: `Your personalized ${destination} adventure is perfectly planned!` }
+                ];
+                return statuses;
+            }
+
+            showFinalAssemblyMessage(tripData) {
+                const completionMessage = document.getElementById('completionMessage');
+                if (completionMessage) {
+                    const messages = [
+                        `🎉 All systems ready! Compiling your personalized ${tripData.destination} experience... This will be amazing!`,
+                        `🤖 All agents completed! Assembling your perfect ${tripData.duration} trip... Almost there!`,
+                        `✨ Finalizing your ${tripData.destination} adventure... Get ready for something incredible!`,
+                        `🚀 All data collected! Creating your personalized itinerary... This is going to be epic!`
+                    ];
+                    
+                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                    
+                    completionMessage.innerHTML = `
+                        <h3>${randomMessage}</h3>
+                        <p>Your ${tripData.destination} trip for ${tripData.travelers} is being crafted with love and precision...</p>
+                    `;
+                    completionMessage.style.display = 'block';
+                }
             }
 
             updateAgentStatus(agentId, step) {
@@ -1970,7 +2116,27 @@
                 const progressBar = document.getElementById(agentId.replace('Agent', 'Progress'));
                 const details = document.getElementById(agentId.replace('Agent', 'Details'));
 
-                if (!agentCard || !statusIndicator || !statusText || !progressBar || !details) return;
+                // Debug logging to help identify missing elements
+                if (!agentCard) {
+                    console.warn(`Agent card not found: ${agentId}`);
+                    return;
+                }
+                if (!statusIndicator) {
+                    console.warn(`Status indicator not found: ${agentId.replace('Agent', 'Status')}`);
+                    return;
+                }
+                if (!statusText) {
+                    console.warn(`Status text not found: ${agentId.replace('Agent', 'StatusText')}`);
+                    return;
+                }
+                if (!progressBar) {
+                    console.warn(`Progress bar not found: ${agentId.replace('Agent', 'Progress')}`);
+                    return;
+                }
+                if (!details) {
+                    console.warn(`Details not found: ${agentId.replace('Agent', 'Details')}`);
+                    return;
+                }
 
                 // Update status indicator
                 statusIndicator.className = `status-indicator ${step.status}`;
@@ -2048,7 +2214,7 @@
                             const statusText = document.getElementById(agentId.replace('Agent', 'StatusText'));
                             const details = document.getElementById(agentId.replace('Agent', 'Details'));
                             
-                            if (agentCard) {
+                            if (agentCard && statusIndicator && statusText && details) {
                                 // Show error state
                                 statusIndicator.className = 'status-indicator error';
                                 statusText.textContent = 'Error occurred';
@@ -2056,6 +2222,8 @@
                                 
                                 agentCard.classList.remove('active');
                                 agentCard.classList.add('error');
+                            } else {
+                                console.warn(`Could not find elements for agent ${agentId} during error completion`);
                             }
                         }, index * 100);
                     });
@@ -2071,9 +2239,19 @@
             showSuccessCompletionMessage() {
                 const completionMessage = document.getElementById('completionMessage');
                 if (completionMessage) {
+                    const tripData = this.getTripDataFromConversationState();
+                    const successMessages = [
+                        `🎉 Your Perfect ${tripData.destination} Trip is Ready!`,
+                        `✨ Your Dream ${tripData.destination} Adventure Awaits!`,
+                        `🚀 Your Personalized ${tripData.destination} Experience is Complete!`,
+                        `🌟 Your Amazing ${tripData.destination} Journey is Ready!`
+                    ];
+                    
+                    const randomMessage = successMessages[Math.floor(Math.random() * successMessages.length)];
+                    
                     completionMessage.innerHTML = `
-                        <h3>🎉 Your Perfect Trip is Ready!</h3>
-                        <p>All agents have completed their tasks successfully. Your personalized itinerary is being prepared...</p>
+                        <h3>${randomMessage}</h3>
+                        <p>All agents have completed their tasks successfully. Your personalized ${tripData.destination} itinerary is being prepared...</p>
                     `;
                     completionMessage.style.display = 'block';
                 }
@@ -2095,6 +2273,21 @@
                 const agenticElements = this.chatArea.querySelectorAll('.agentic-workflow');
                 loadingElements.forEach(el => el.remove());
                 agenticElements.forEach(el => el.remove());
+                
+                // Re-enable input and send button after planning is complete
+                this.enableInput();
+            }
+
+            disableInput() {
+                this.input.disabled = true;
+                this.sendBtn.disabled = true;
+                this.input.placeholder = "AI agents are working on your trip...";
+            }
+
+            enableInput() {
+                this.input.disabled = false;
+                this.sendBtn.disabled = false;
+                this.input.placeholder = "Tell me about your dream trip... 🌍";
             }
 
             async processMessage(message) {
@@ -2130,16 +2323,20 @@
                 console.log('Response missing_info:', response.missing_info);
                 console.log('Response conversation_state:', response.conversation_state);
                 
-                // Update conversation state
+                // Update conversation state - preserve existing state if response doesn't have one
                 if (response.conversation_state) {
                     this.conversationState = response.conversation_state;
                     console.log('Updated conversation state:', this.conversationState);
+                } else if (this.conversationState) {
+                    // Preserve existing conversation state if response doesn't have one
+                    console.log('Preserving existing conversation state:', this.conversationState);
                 } else {
-                    console.log('No conversation_state in response!');
+                    console.log('No conversation_state in response and no existing state!');
                 }
                 
                 // Ensure missing_info is preserved in conversation state
                 if (response.missing_info) {
+                    if (!this.conversationState) this.conversationState = {};
                     this.conversationState.missing_info = response.missing_info;
                     console.log('Updated missing_info in conversation state:', this.conversationState.missing_info);
                 }
@@ -2169,9 +2366,19 @@
                 if (response.state === 'planning') {
                     // System says it has all information and is ready to plan
                     if (response.can_start_planning) {
-                        // We have a planning result - display it directly
+                        // Check if we have a successful planning result
                         if (response.planning_result && response.planning_result.success) {
                             this.displayItinerary(response.planning_result);
+                        } else if (response.planning_result && !response.planning_result.success) {
+                            // Planning failed - show agentic animation and then error
+                            console.log('Planning failed, showing agentic animation and error');
+                            this.showLoading(); // Create the agent cards first
+                            this.startAgenticAnimation();
+                            // Show error after animation completes
+                            setTimeout(() => {
+                                this.completeAnimationWithError();
+                                this.showErrorMessage('Our AI service is currently experiencing high demand. Please try again in a few moments.');
+                            }, 8000); // Wait for animation to complete
                         } else if (response.trip_request) {
                             // Fallback: start trip planning if no planning result
                             this.startTripPlanning(response.trip_request);
@@ -2267,8 +2474,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ trip_request: tripRequest, session_id: this.sessionId })
                     });
+                    
                     if (!response.ok) {
-                        throw new Error('Failed to start trip planning');
+                        // Try to parse error response
+                        let errorData;
+                        try {
+                            errorData = await response.json();
+                        } catch (parseError) {
+                            errorData = { detail: 'Failed to start trip planning' };
+                        }
+                        const error = new Error(errorData.detail || 'Failed to start trip planning');
+                        error.response = { json: () => Promise.resolve(errorData) };
+                        throw error;
                     }
                     const result = await response.json();
                     
@@ -2280,7 +2497,23 @@
                     // Complete animation with error and show error message
                     await this.completeAnimationWithError();
                     this.hideLoading();
-                    this.showErrorMessage();
+                    
+                    // Try to parse error response for better error handling
+                    let errorMessage = 'Something went wrong while planning your trip. Please try again.';
+                    try {
+                        if (error.response) {
+                            const errorData = await error.response.json();
+                            if (errorData.detail && errorData.detail.includes('AI service temporarily overloaded')) {
+                                errorMessage = 'Our AI service is currently experiencing high demand. Please try again in a few minutes.';
+                            } else if (errorData.detail) {
+                                errorMessage = errorData.detail;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.log('Could not parse error response:', parseError);
+                    }
+                    
+                    this.showErrorMessage(errorMessage);
                     console.error("Error in startTripPlanning:", error);
                 }
             }
@@ -2313,8 +2546,18 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ trip_request: tripRequest, session_id: this.sessionId })
                     });
+                    
                     if (!response.ok) {
-                        throw new Error('Failed to start trip planning');
+                        // Try to parse error response
+                        let errorData;
+                        try {
+                            errorData = await response.json();
+                        } catch (parseError) {
+                            errorData = { detail: 'Failed to start trip planning' };
+                        }
+                        const error = new Error(errorData.detail || 'Failed to start trip planning');
+                        error.response = { json: () => Promise.resolve(errorData) };
+                        throw error;
                     }
                     const result = await response.json();
                     
@@ -2326,7 +2569,23 @@
                     // Complete animation with error and show error message
                     await this.completeAnimationWithError();
                     this.hideLoading();
-                    this.showErrorMessage();
+                    
+                    // Try to parse error response for better error handling
+                    let errorMessage = 'Something went wrong while planning your trip. Please try again.';
+                    try {
+                        if (error.response) {
+                            const errorData = await error.response.json();
+                            if (errorData.detail && errorData.detail.includes('AI service temporarily overloaded')) {
+                                errorMessage = 'Our AI service is currently experiencing high demand. Please try again in a few minutes.';
+                            } else if (errorData.detail) {
+                                errorMessage = errorData.detail;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.log('Could not parse error response:', parseError);
+                    }
+                    
+                    this.showErrorMessage(errorMessage);
                     console.error("Error in startTripPlanningFromConversationState:", error);
                 }
             }
@@ -3113,8 +3372,8 @@ Now let me craft your complete itinerary with real flights and hotels! 🚀`;
                 this.input.value = message;
                 this.sendMessage();
                 
-                // Clear conversation state for next use
-                this.conversationState = null;
+                // Don't clear conversation state - preserve it for potential retries
+                // this.conversationState = null;
             }
 
             handleDatesResponse(response) {
@@ -3196,8 +3455,8 @@ Now let me craft your complete itinerary with real flights and hotels! 🚀`;
                 this.input.value = message;
                 this.sendMessage();
                 
-                // Clear conversation state for next use
-                this.conversationState = null;
+                // Don't clear conversation state - preserve it for potential retries
+                // this.conversationState = null;
             }
 
             // Quick action methods for conversational flow
@@ -3593,8 +3852,8 @@ Now let me craft your perfect personalized itinerary! 🚀`;
                 this.input.value = message;
                 this.sendMessage();
                 
-                // Clear conversation state for next use
-                this.conversationState = null;
+                // Don't clear conversation state - preserve it for potential retries
+                // this.conversationState = null;
             }
         }
 

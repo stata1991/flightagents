@@ -77,8 +77,9 @@ class EnhancedAITripProvider(TripPlannerProvider):
             if not content_is_valid:
                 logger.warning("AI generated placeholder content instead of real data")
             
-            itinerary = self._normalize_ai_response(itinerary)
+            itinerary, is_incomplete = self._normalize_ai_response(itinerary)
             logger.info(f"[DEFENSIVE] Output of _parse_ai_response before normalization: {itinerary}")
+            logger.info(f"[DEFENSIVE] Is incomplete response: {is_incomplete}")
             # Enhance with real booking links
             itinerary = self._enhance_with_real_booking_links(itinerary, hotel_data, flight_data, request, original_ai_response=itinerary.copy())
             # Create metadata
@@ -163,8 +164,11 @@ class EnhancedAITripProvider(TripPlannerProvider):
                     "Some fields may be missing"
                 ]
             
+            # Set success based on whether response is incomplete
+            success = not is_incomplete
+            
             return TripPlanResponse(
-                success=True,
+                success=success,
                 itinerary=itinerary_merged,
                 estimated_costs=itinerary_merged.get("estimated_costs", {}),
                 metadata=TripPlanMetadata(
@@ -174,7 +178,7 @@ class EnhancedAITripProvider(TripPlannerProvider):
                     data_freshness="real_time",
                     last_updated=datetime.now().isoformat(),
                     source_notes=source_notes,
-                    fallback_used=False
+                    fallback_used=is_incomplete  # Mark as fallback if incomplete
                 )
             )
         except Exception as e:
@@ -459,7 +463,7 @@ class EnhancedAITripProvider(TripPlannerProvider):
         """Calculate budget allocation with 30-35% for hotels"""
         try:
             # Get total budget
-            total_budget = request.total_budget or self._get_budget_amount(request.budget_range)
+            total_budget = getattr(request, 'total_budget', None) or self._get_budget_amount(request.budget_range)
             if not total_budget:
                 total_budget = 300  # Default moderate budget
             
@@ -652,7 +656,10 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
             "please try again",
             "service will be back",
             "overloaded",
-            "TBD"
+            "TBD",
+            "trip planning incomplete",
+            "incomplete ai response",
+            "please retry"
         ]
         
         response_lower = response.lower()
@@ -727,6 +734,45 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
 }
 ```"""
     
+    def _extract_largest_valid_json(self, text: str) -> dict:
+        """Extract the largest valid JSON object from text, trying progressively smaller chunks"""
+        import json
+        import logging
+        logger = logging.getLogger("api.enhanced_ai_provider")
+        
+        # Try to find the largest valid JSON by progressively removing content from the end
+        for i in range(len(text), 0, -100):  # Try every 100 characters
+            try:
+                chunk = text[:i]
+                # Find the last complete closing brace
+                brace_count = 0
+                last_brace_pos = -1
+                for j, char in enumerate(chunk):
+                    if char == '{':
+                        brace_count += 1
+                    elif char == '}':
+                        brace_count -= 1
+                        if brace_count == 0:
+                            last_brace_pos = j
+                
+                if last_brace_pos > 0:
+                    valid_chunk = chunk[:last_brace_pos + 1]
+                    parsed = json.loads(valid_chunk)
+                    logger.info(f"[DEFENSIVE] Found valid JSON at position {last_brace_pos}")
+                    return parsed
+            except:
+                continue
+        
+        # If nothing works, return a minimal fallback
+        logger.warning("[DEFENSIVE] Could not extract any valid JSON, returning fallback")
+        return {
+            "trip_summary": {
+                "title": "JSON Parsing Error",
+                "overview": "Unable to parse the AI response. Please try again.",
+                "highlights": ["Please retry the request"]
+            }
+        }
+
     def _extract_largest_json_object(self, text: str) -> str:
         """Extract the largest (outermost) JSON object from a string, robust to whitespace and extra text."""
         import logging
@@ -814,7 +860,35 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
                     if start_idx != -1:
                         cleaned_response = response[start_idx:]
                         logger.info("[DEFENSIVE] Attempting to parse cleaned response (removed text before first {).")
-                        return json.loads(cleaned_response)
+                        
+                        # Try to fix unterminated strings by finding the last complete JSON structure
+                        try:
+                            return json.loads(cleaned_response)
+                        except json.JSONDecodeError as json_err:
+                            if "Unterminated string" in str(json_err):
+                                logger.warning("[DEFENSIVE] Found unterminated string, attempting to fix...")
+                                # Find the last complete closing brace
+                                brace_count = 0
+                                last_complete_pos = -1
+                                for i, char in enumerate(cleaned_response):
+                                    if char == '{':
+                                        brace_count += 1
+                                    elif char == '}':
+                                        brace_count -= 1
+                                        if brace_count == 0:
+                                            last_complete_pos = i
+                                
+                                if last_complete_pos > 0:
+                                    # Truncate at the last complete JSON structure
+                                    fixed_response = cleaned_response[:last_complete_pos + 1]
+                                    logger.info(f"[DEFENSIVE] Truncated response at position {last_complete_pos}")
+                                    try:
+                                        return json.loads(fixed_response)
+                                    except json.JSONDecodeError as final_err:
+                                        logger.warning(f"[DEFENSIVE] Even truncated response failed to parse: {final_err}")
+                                        # Try to find a smaller complete JSON structure
+                                        return self._extract_largest_valid_json(fixed_response)
+                            raise json_err
                 except Exception as e3:
                     logger.warning(f"[DEFENSIVE] Failed to parse cleaned response: {e3}")
             
@@ -913,7 +987,7 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
         logger.info("[VALIDATION] AI content appears to be real (no placeholders detected)")
         return True
 
-    def _normalize_ai_response(self, ai_data: dict) -> dict:
+    def _normalize_ai_response(self, ai_data: dict) -> tuple[dict, bool]:
         import logging
         logger = logging.getLogger("api.enhanced_ai_provider")
         
@@ -938,6 +1012,25 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
         logger.info(f"[DEFENSIVE] _normalize_ai_response processing ai_data with keys: {list(ai_data.keys())}")
         logger.info(f"[DEFENSIVE] ai_data content: {ai_data}")
         normalized = {}
+        
+        # Check if we have a complete response or just a partial one
+        has_complete_structure = all(key in ai_data for key in ['outbound', 'return', 'hotels', 'itinerary'])
+        if not has_complete_structure:
+            logger.warning("[DEFENSIVE] Incomplete AI response detected, creating fallback structure")
+            # Return a minimal valid structure for incomplete responses
+            return {
+                "trip_summary": ai_data.get("trip_summary", {
+                    "title": "Trip Planning Incomplete",
+                    "overview": "The AI response was incomplete. Please try again.",
+                    "highlights": ["Please retry the request"]
+                }),
+                "transportation": {"fastest": [], "cheapest": [], "optimal": []},
+                "accommodation": {"moderate": []},
+                "itinerary": {},
+                "estimated_costs": {"total": "$0"},
+                "practical_info": {"currency": "USD", "language": "English"},
+                "notes": "Incomplete AI response - please retry"
+            }, True  # Return True to indicate this is an incomplete response
 
         # Process daily_itinerary first, as it's a common new format
         if 'daily_itinerary' in ai_data and isinstance(ai_data['daily_itinerary'], list):
@@ -1149,9 +1242,8 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
         logger.info(f"[DEFENSIVE] Contents of 'trip_summary' after normalization: {normalized.get('trip_summary', 'N/A')}")
         logger.info(f"[DEFENSIVE] Contents of 'practical_info' after normalization: {normalized.get('practical_info', 'N/A')}")
 
-        return normalized
         logger.info(f"[DEFENSIVE] Contents of 'itinerary' after normalization: {normalized['itinerary']}")
-        return normalized
+        return normalized, False  # Return False to indicate this is a complete response
     
     def _enhance_with_real_booking_links(self, itinerary: Dict[str, Any], 
                                        hotel_data: Dict[str, Any], 
