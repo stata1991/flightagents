@@ -1931,6 +1931,28 @@
                 // Note: Animation is now started by the planning methods, not here
             }
 
+            async startAgenticAnimationWithSuccess(planningResult) {
+                // Start with normal progressive animation, then show success and display itinerary
+                await this.startAgenticAnimation();
+                
+                // After the progressive animation completes, show success state and display itinerary
+                setTimeout(async () => {
+                    await this.completeAnimationWithSuccess();
+                    this.displayItinerary(planningResult);
+                }, 2000); // Wait 2 seconds after progressive animation completes
+            }
+
+            async startAgenticAnimationWithError() {
+                // Start with normal progressive animation, then transition to error
+                await this.startAgenticAnimation();
+                
+                // After the progressive animation completes, show error state
+                setTimeout(async () => {
+                    await this.completeAnimationWithError();
+                    this.showErrorMessage('Our AI service is currently experiencing high demand. Please try again in a few moments.');
+                }, 2000); // Wait 2 seconds after progressive animation completes
+            }
+
             startAgenticAnimation() {
                 // Wait for DOM elements to be ready before starting animation
                 const checkAndStart = () => {
@@ -1960,7 +1982,7 @@
                         // Show final assembly message after all agents complete
                         setTimeout(() => {
                             this.showFinalAssemblyMessage(tripData);
-                        }, 6000);
+                        }, 2000);
                     } else {
                         console.log('Agent cards not ready yet, retrying...');
                         setTimeout(checkAndStart, 100);
@@ -2001,7 +2023,7 @@
                         id: 'flightAgent',
                         name: 'Flight Search Agent',
                         steps: flightStatuses.map((status, index) => ({
-                            delay: 500 + (index * 800),
+                            delay: 100 + (index * 300),
                             status: index === flightStatuses.length - 1 ? 'completed' : 'working',
                             text: status.text,
                             progress: Math.min(15 + (index * 20), 100),
@@ -2012,7 +2034,7 @@
                         id: 'hotelAgent',
                         name: 'Hotel Search Agent',
                         steps: hotelStatuses.map((status, index) => ({
-                            delay: 1000 + (index * 800),
+                            delay: 200 + (index * 300),
                             status: index === hotelStatuses.length - 1 ? 'completed' : 'working',
                             text: status.text,
                             progress: Math.min(20 + (index * 20), 100),
@@ -2023,7 +2045,7 @@
                         id: 'budgetAgent',
                         name: 'Budget Analyst',
                         steps: budgetStatuses.map((status, index) => ({
-                            delay: 800 + (index * 800),
+                            delay: 300 + (index * 300),
                             status: index === budgetStatuses.length - 1 ? 'completed' : 'working',
                             text: status.text,
                             progress: Math.min(25 + (index * 18), 100),
@@ -2034,7 +2056,7 @@
                         id: 'destinationAgent',
                         name: 'Destination Specialist',
                         steps: destinationStatuses.map((status, index) => ({
-                            delay: 1200 + (index * 800),
+                            delay: 400 + (index * 300),
                             status: index === destinationStatuses.length - 1 ? 'completed' : 'working',
                             text: status.text,
                             progress: Math.min(20 + (index * 20), 100),
@@ -2368,17 +2390,21 @@
                     if (response.can_start_planning) {
                         // Check if we have a successful planning result
                         if (response.planning_result && response.planning_result.success) {
-                            this.displayItinerary(response.planning_result);
-                        } else if (response.planning_result && !response.planning_result.success) {
-                            // Planning failed - show agentic animation and then error
-                            console.log('Planning failed, showing agentic animation and error');
+                            // Planning successful - show agentic animation then display itinerary
+                            console.log('Planning successful, showing agentic animation then itinerary');
                             this.showLoading(); // Create the agent cards first
-                            this.startAgenticAnimation();
-                            // Show error after animation completes
+                            // Small delay to ensure DOM elements are ready
                             setTimeout(() => {
-                                this.completeAnimationWithError();
-                                this.showErrorMessage('Our AI service is currently experiencing high demand. Please try again in a few moments.');
-                            }, 8000); // Wait for animation to complete
+                                this.startAgenticAnimationWithSuccess(response.planning_result);
+                            }, 100);
+                        } else if (response.planning_result && !response.planning_result.success) {
+                            // Planning failed - show agentic animation with error progression
+                            console.log('Planning failed, showing agentic animation with error progression');
+                            this.showLoading(); // Create the agent cards first
+                            // Small delay to ensure DOM elements are ready
+                            setTimeout(() => {
+                                this.startAgenticAnimationWithError();
+                            }, 100);
                         } else if (response.trip_request) {
                             // Fallback: start trip planning if no planning result
                             this.startTripPlanning(response.trip_request);

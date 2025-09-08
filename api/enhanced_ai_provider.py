@@ -165,7 +165,15 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 ]
             
             # Set success based on whether response is incomplete
-            success = not is_incomplete
+            # But also check if we have meaningful content even if structure is incomplete
+            has_meaningful_content = (
+                itinerary_merged.get('trip_summary', {}).get('title', '') not in ['Trip Planning Incomplete', 'Trip Planning Error'] or
+                len(itinerary_merged.get('itinerary', {})) > 0 or
+                len(itinerary_merged.get('transportation', {}).get('fastest', [])) > 0 or
+                len(itinerary_merged.get('accommodation', {}).get('moderate', [])) > 0
+            )
+            
+            success = not is_incomplete or has_meaningful_content
             
             return TripPlanResponse(
                 success=success,
@@ -584,7 +592,7 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
         try:
             response = self.client.messages.create(
                 model="claude-opus-4-1-20250805",
-                max_tokens=4000,
+                max_tokens=8000,
                 temperature=0.7,
                 messages=[
                     {
@@ -1014,7 +1022,16 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
         normalized = {}
         
         # Check if we have a complete response or just a partial one
-        has_complete_structure = all(key in ai_data for key in ['outbound', 'return', 'hotels', 'itinerary'])
+        # AI can generate different structures, so check for the most common complete structures
+        has_complete_structure = (
+            # Structure 1: Traditional structure
+            all(key in ai_data for key in ['outbound', 'return', 'hotels', 'itinerary']) or
+            # Structure 2: New structure with trip_summary
+            all(key in ai_data for key in ['trip_summary', 'transportation', 'accommodation', 'itinerary']) or
+            # Structure 3: Just trip_summary with detailed content
+            ('trip_summary' in ai_data and 'itinerary' in ai_data and 
+             isinstance(ai_data.get('itinerary'), dict) and len(ai_data['itinerary']) > 0)
+        )
         if not has_complete_structure:
             logger.warning("[DEFENSIVE] Incomplete AI response detected, creating fallback structure")
             # Return a minimal valid structure for incomplete responses
