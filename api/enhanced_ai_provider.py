@@ -23,6 +23,7 @@ from .models import HotelSearchRequest
 from services.budget_allocation_service import BudgetAllocationService
 from services.price_display_service import price_display_service
 from services.location_detection_service import LocationDetectionService
+from services.maps_weather_service import MapsWeatherService
 
 load_dotenv()
 
@@ -37,6 +38,7 @@ class EnhancedAITripProvider(TripPlannerProvider):
         self.hotel_client = HotelClient()
         self.budget_service = BudgetAllocationService()
         self.location_service = LocationDetectionService()
+        self.maps_weather_service = MapsWeatherService()
     
     def get_provider_type(self) -> ProviderType:
         return ProviderType.AI
@@ -57,8 +59,10 @@ class EnhancedAITripProvider(TripPlannerProvider):
             hotel_data = await self._get_hotel_recommendations(request, budget_allocation)
             # Get real flight data
             flight_data = await self._get_flight_recommendations(request)
+            # Get weather data for destination
+            weather_data = await self._get_weather_data(request)
             # Create enhanced AI prompt with real data and budget allocation
-            prompt = self._create_enhanced_planning_prompt(request, hotel_data, flight_data, budget_allocation)
+            prompt = self._create_enhanced_planning_prompt(request, hotel_data, flight_data, budget_allocation, weather_data)
             logger.info(f"[DEBUG] Claude prompt being sent:\n{prompt}")
             # Call Claude
             response = await self._call_claude(prompt)
@@ -102,7 +106,7 @@ class EnhancedAITripProvider(TripPlannerProvider):
                 estimated_costs.update(budget_allocation.get("budget_breakdown", {}))
             logger.info(f"[DEBUG] plan_trip returning success with itinerary and estimated_costs.")
             logger.info(f"[DEFENSIVE] Raw AI itinerary before merging: {itinerary}")
-            itinerary_merged = self._enhance_with_real_booking_links(itinerary, hotel_data, flight_data, request, original_ai_response=itinerary.copy())
+            itinerary_merged = self._enhance_with_real_booking_links(itinerary, hotel_data, flight_data, request, weather_data, original_ai_response=itinerary.copy())
             logger.info(f"[DEFENSIVE] Merged itinerary to be returned: {itinerary_merged}")
             # Check if we have any useful data (flights, hotels, or other content)
             has_flights = bool(itinerary_merged.get('outbound') or itinerary_merged.get('return') or itinerary_merged.get('transportation'))
@@ -333,6 +337,37 @@ class EnhancedAITripProvider(TripPlannerProvider):
             logger.error(f"Hotel search failed: {str(e)}")
             return {"success": False, "hotels": []}
     
+    async def _get_weather_data(self, request: TripPlanRequest) -> Dict[str, Any]:
+        """Get weather data for the destination"""
+        try:
+            # Get destination coordinates
+            coords = await self.maps_weather_service.get_destination_coordinates(request.destination)
+            if not coords:
+                logger.warning(f"Could not get coordinates for {request.destination}")
+                return {}
+            
+            # Get weather forecast for the trip duration
+            weather = await self.maps_weather_service.get_weather_forecast(
+                coords["lat"], 
+                coords["lng"], 
+                days=request.duration_days
+            )
+            
+            if weather:
+                logger.info(f"Weather data retrieved for {request.destination}")
+                return {
+                    "destination": request.destination,
+                    "coordinates": coords,
+                    "weather_forecast": weather
+                }
+            else:
+                logger.warning(f"No weather data available for {request.destination}")
+                return {}
+                
+        except Exception as e:
+            logger.error(f"Error getting weather data: {e}")
+            return {}
+
     async def _get_flight_recommendations(self, request: TripPlanRequest) -> Dict[str, Any]:
         """Get real flight recommendations using the flight API"""
         try:
@@ -500,7 +535,8 @@ class EnhancedAITripProvider(TripPlannerProvider):
     def _create_enhanced_planning_prompt(self, request: TripPlanRequest,
                                          hotel_data: Dict[str, Any],
                                          flight_data: Dict[str, Any],
-                                         budget_allocation: Dict[str, Any] = None) -> str:
+                                         budget_allocation: Dict[str, Any] = None,
+                                         weather_data: Dict[str, Any] = None) -> str:
         """Create a production-ready trip planning prompt with optimal token usage"""
 
         interests_text = ", ".join(request.interests) if request.interests else "general exploration"
@@ -521,7 +557,13 @@ You MUST return this EXACT JSON structure with real content:
   "trip_summary": {{
     "title": "Real title for {request.destination}",
     "overview": "Real overview for {request.destination}",
-    "highlights": ["Real highlight 1", "Real highlight 2", "Real highlight 3"]
+    "highlights": ["Real highlight 1", "Real highlight 2", "Real highlight 3"],
+    "weather_summary": {{
+      "avg_temp_f": 75,
+      "avg_temp_c": 24,
+      "conditions": "Mostly sunny with occasional rain",
+      "packing_tip": "Pack light layers and rain gear"
+    }}
   }},
   "outbound": [
     {{"category": "budget", "airline": "Real airline", "price": 500, "departure": "10:00", "arrival": "18:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
@@ -559,6 +601,13 @@ You MUST return this EXACT JSON structure with real content:
   "itinerary": {{
     "day_1": {{
       "theme": "Real theme for {request.destination}",
+      "weather": {{
+        "temperature_f": 75,
+        "temperature_c": 24,
+        "condition": "sunny",
+        "rain_chance": 10,
+        "wind_speed": 5
+      }},
       "morning": {{"activity": "Real activity", "location": "Real location", "cost": 0}},
       "afternoon": {{"activity": "Real activity", "location": "Real location", "cost": 0}},
       "evening": {{"activity": "Real activity", "location": "Real location", "cost": 50}}
@@ -582,7 +631,16 @@ You MUST return this EXACT JSON structure with real content:
   ]
 }}
 
-Replace all "Real" placeholders with actual content for {request.destination}. Return ONLY this JSON structure."""
+Replace all "Real" placeholders with actual content for {request.destination}. 
+
+IMPORTANT WEATHER REQUIREMENTS:
+- Include daily weather for each day with temperature in both Fahrenheit and Celsius
+- Specify weather conditions (sunny, rainy, cloudy, stormy, etc.)
+- Include rain/snow/storm timing if applicable
+- Add weather-based activity recommendations
+- Include weather summary in trip_summary with average temperatures and conditions
+
+Return ONLY this JSON structure."""
 
         return prompt
     
@@ -1266,6 +1324,7 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
                                        hotel_data: Dict[str, Any], 
                                        flight_data: Dict[str, Any],
                                        request: TripPlanRequest,
+                                       weather_data: Dict[str, Any] = None,
                                        original_ai_response: Dict[str, Any] = None) -> Dict[str, Any]:
         """Enhance the AI-generated itinerary with real booking links and data, preserving all AI fields."""
         import logging
@@ -1276,8 +1335,78 @@ Replace all "Real" placeholders with actual content for {request.destination}. R
             if field not in itinerary and original_ai_response and field in original_ai_response:
                 itinerary[field] = original_ai_response[field]
                 logger.warning(f"[DEFENSIVE] Field '{field}' was missing after merging, restored from AI response.")
+        
+        # Enhance with weather data if available
+        if weather_data and weather_data.get("weather_forecast"):
+            itinerary = self._enhance_with_weather_data(itinerary, weather_data)
+        
         logger.info(f"[DEFENSIVE] Final itinerary keys: {list(itinerary.keys())}")
         return itinerary
+    
+    def _enhance_with_weather_data(self, itinerary: Dict[str, Any], weather_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhance itinerary with real weather data"""
+        try:
+            weather_forecast = weather_data.get("weather_forecast", {})
+            forecasts = weather_forecast.get("forecasts", [])
+            
+            if not forecasts:
+                return itinerary
+            
+            # Add weather summary to trip_summary
+            if "trip_summary" in itinerary:
+                # Calculate average temperature
+                temps_c = [f.get("temp_max", 0) for f in forecasts if f.get("temp_max")]
+                if temps_c:
+                    avg_temp_c = sum(temps_c) / len(temps_c)
+                    avg_temp_f = (avg_temp_c * 9/5) + 32
+                    
+                    # Get weather conditions
+                    conditions = [f.get("weather", "").lower() for f in forecasts]
+                    unique_conditions = list(set(conditions))
+                    
+                    itinerary["trip_summary"]["weather_summary"] = {
+                        "avg_temp_f": round(avg_temp_f, 1),
+                        "avg_temp_c": round(avg_temp_c, 1),
+                        "conditions": ", ".join(unique_conditions),
+                        "packing_tip": self._get_weather_packing_tip(avg_temp_c, conditions)
+                    }
+            
+            # Add daily weather to itinerary
+            if "itinerary" in itinerary:
+                for i, forecast in enumerate(forecasts, 1):
+                    day_key = f"day_{i}"
+                    if day_key in itinerary["itinerary"]:
+                        temp_c = forecast.get("temp_max", 0)
+                        temp_f = (temp_c * 9/5) + 32
+                        
+                        itinerary["itinerary"][day_key]["weather"] = {
+                            "temperature_f": round(temp_f, 1),
+                            "temperature_c": round(temp_c, 1),
+                            "condition": forecast.get("weather", "unknown"),
+                            "description": forecast.get("description", ""),
+                            "humidity": forecast.get("humidity", 0),
+                            "wind_speed": forecast.get("wind_speed", 0)
+                        }
+            
+            logger.info("Weather data successfully integrated into itinerary")
+            return itinerary
+            
+        except Exception as e:
+            logger.error(f"Error enhancing itinerary with weather data: {e}")
+            return itinerary
+    
+    def _get_weather_packing_tip(self, avg_temp_c: float, conditions: List[str]) -> str:
+        """Generate packing tip based on weather conditions"""
+        if avg_temp_c < 10:
+            return "Pack warm clothing, layers, and winter gear"
+        elif avg_temp_c > 25:
+            return "Pack light, breathable clothing and sun protection"
+        elif any("rain" in c for c in conditions):
+            return "Pack rain gear and waterproof shoes"
+        elif any("snow" in c for c in conditions):
+            return "Pack winter gear and check road conditions"
+        else:
+            return "Pack comfortable layers for variable weather"
     
     def _format_hotel_price(self, price: Any) -> str:
         """Format hotel price to be user-friendly and consistent"""

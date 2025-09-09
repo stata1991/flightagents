@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TripPlanner.ai - Ultimate Travel Experience</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * {
             margin: 0;
@@ -532,6 +534,106 @@
         .travel-itinerary-subtitle {
             font-size: 14px;
             opacity: 0.9;
+        }
+
+        /* Travel Route Animation */
+        .travel-route-animation {
+            background: linear-gradient(135deg, #F0F9FF, #E0F2FE);
+            padding: 20px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .world-map-container {
+            position: relative;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .travel-map {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Custom map markers */
+        .custom-marker {
+            background: #3B82F6;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .origin-marker {
+            background: #10B981;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .destination-marker {
+            background: #F59E0B;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .flight-path {
+            stroke: #F59E0B;
+            stroke-width: 3;
+            stroke-dasharray: 10, 5;
+            fill: none;
+            animation: dash 2s linear infinite;
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -15;
+            }
+        }
+
+        .airplane-marker {
+            background: #EF4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .route-info {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .route-text {
+            color: #1E40AF;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .origin-city, .destination-city {
+            color: #3B82F6;
+            font-weight: 700;
         }
 
         .travel-itinerary-tabs {
@@ -2628,6 +2730,9 @@
                         this.scrollToBottom();
                         // Attach tab switching using event delegation
                         this.attachTabDelegation();
+                        
+                        // Initialize the travel map
+                        this.initializeTravelMap();
                     } else {
                         this.showErrorMessage();
                     }
@@ -2666,6 +2771,14 @@
                             <div class="travel-itinerary-title">${itinerary.trip_summary?.title || 'Your Perfect Trip'}</div>
                             <div class="travel-itinerary-subtitle">Crafted with love by your travel expert</div>
                         </div>
+                        <div class="travel-route-animation">
+                            <div class="world-map-container">
+                                <div id="travelMap" class="travel-map"></div>
+                                <div class="route-info">
+                                    <div class="route-text">Your journey from <span class="origin-city">${this.conversationState?.origin || 'Origin'}</span> to <span class="destination-city">${this.conversationState?.destination || 'Destination'}</span></div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="travel-itinerary-tabs">
                             <button class="travel-tab-btn active" data-tab="summary">📋 Summary</button>
                             <button class="travel-tab-btn" data-tab="itinerary">🗓️ Itinerary</button>
@@ -2690,6 +2803,150 @@
                         </div>
                     </div>
                 `;
+            }
+
+            async initializeTravelMap() {
+                try {
+                    // Wait for the map container to be available
+                    const mapContainer = document.getElementById('travelMap');
+                    if (!mapContainer) {
+                        console.warn('Map container not found');
+                        return;
+                    }
+
+                    // Get origin and destination from conversation state
+                    const origin = this.conversationState?.origin || 'Dallas';
+                    const destination = this.conversationState?.destination || 'Las Vegas';
+
+                    // Get coordinates for origin and destination
+                    const originCoords = await this.getCoordinates(origin);
+                    const destinationCoords = await this.getCoordinates(destination);
+
+                    if (!originCoords || !destinationCoords) {
+                        console.warn('Could not get coordinates for map');
+                        return;
+                    }
+
+                    // Initialize the map
+                    const map = L.map('travelMap').setView([0, 0], 2);
+
+                    // Add OpenStreetMap tiles
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(map);
+
+                    // Create custom markers
+                    const originIcon = L.divIcon({
+                        className: 'origin-marker',
+                        html: '',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+
+                    const destinationIcon = L.divIcon({
+                        className: 'destination-marker',
+                        html: '',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+
+                    // Add markers
+                    const originMarker = L.marker([originCoords.lat, originCoords.lng], { icon: originIcon })
+                        .addTo(map)
+                        .bindPopup(`<strong>Origin:</strong> ${origin}`);
+
+                    const destinationMarker = L.marker([destinationCoords.lat, destinationCoords.lng], { icon: destinationIcon })
+                        .addTo(map)
+                        .bindPopup(`<strong>Destination:</strong> ${destination}`);
+
+                    // Create flight path (great circle route)
+                    const flightPath = this.createFlightPath(originCoords, destinationCoords);
+                    const polyline = L.polyline(flightPath, {
+                        color: '#F59E0B',
+                        weight: 3,
+                        opacity: 0.8,
+                        dashArray: '10, 5'
+                    }).addTo(map);
+
+                    // Add animated airplane along the path
+                    this.animateAirplaneAlongPath(map, flightPath, originCoords, destinationCoords);
+
+                    // Fit map to show both markers
+                    const group = new L.featureGroup([originMarker, destinationMarker]);
+                    map.fitBounds(group.getBounds().pad(0.1));
+
+                } catch (error) {
+                    console.error('Error initializing travel map:', error);
+                }
+            }
+
+            async getCoordinates(city) {
+                try {
+                    // Use Nominatim (free geocoding service)
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
+                    const data = await response.json();
+                    
+                    if (data && data.length > 0) {
+                        return {
+                            lat: parseFloat(data[0].lat),
+                            lng: parseFloat(data[0].lon)
+                        };
+                    }
+                    return null;
+                } catch (error) {
+                    console.error('Error getting coordinates:', error);
+                    return null;
+                }
+            }
+
+            createFlightPath(origin, destination) {
+                // Create a great circle path between two points
+                const path = [];
+                const steps = 50;
+                
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const lat = origin.lat + (destination.lat - origin.lat) * t;
+                    const lng = origin.lng + (destination.lng - origin.lng) * t;
+                    path.push([lat, lng]);
+                }
+                
+                return path;
+            }
+
+            animateAirplaneAlongPath(map, path, origin, destination) {
+                let currentStep = 0;
+                const totalSteps = path.length;
+                
+                // Create airplane marker
+                const airplaneIcon = L.divIcon({
+                    className: 'airplane-marker',
+                    html: '✈️',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                const airplane = L.marker([origin.lat, origin.lng], { icon: airplaneIcon }).addTo(map);
+
+                // Animate airplane along the path
+                const animate = () => {
+                    if (currentStep < totalSteps) {
+                        const [lat, lng] = path[currentStep];
+                        airplane.setLatLng([lat, lng]);
+                        currentStep++;
+                        setTimeout(animate, 100); // Adjust speed as needed
+                    } else {
+                        // Reset animation after a delay
+                        setTimeout(() => {
+                            currentStep = 0;
+                            airplane.setLatLng([origin.lat, origin.lng]);
+                            setTimeout(animate, 2000); // Wait 2 seconds before restarting
+                        }, 2000);
+                    }
+                };
+
+                // Start animation after a short delay
+                setTimeout(animate, 1000);
             }
 
             createSummaryTab(itinerary) {
@@ -2722,8 +2979,18 @@
                         </div>
                         
                         <div style="background: #FEF3C7; padding: 16px; border-radius: 12px;">
-                            <div style="font-weight: 700; color: #92400E; margin-bottom: 8px;">Weather & Best Time</div>
-                            <div style="color: #4B5563;">${summary?.weather_info || 'Check local weather before your trip'}</div>
+                            <div style="font-weight: 700; color: #92400E; margin-bottom: 8px;">🌤️ Weather Forecast</div>
+                            ${summary?.weather_summary ? `
+                                <div style="color: #4B5563; margin-bottom: 8px;">
+                                    <strong>Average Temperature:</strong> ${summary.weather_summary.avg_temp_f}°F (${summary.weather_summary.avg_temp_c}°C)
+                                </div>
+                                <div style="color: #4B5563; margin-bottom: 8px;">
+                                    <strong>Conditions:</strong> ${summary.weather_summary.conditions}
+                                </div>
+                                <div style="color: #4B5563;">
+                                    <strong>Packing Tip:</strong> ${summary.weather_summary.packing_tip}
+                                </div>
+                            ` : '<div style="color: #4B5563;">Check local weather before your trip</div>'}
                         </div>
                     </div>
                 `;
@@ -2739,10 +3006,17 @@
                     html += `<div class="travel-day-card">
                         <div class="travel-day-header">
                             <div class="travel-day-icon">${dayNum}</div>
-                            <div>
+                            <div style="flex: 1;">
                                 <div class="travel-day-title">Day ${dayNum}${day.theme ? ' – ' + day.theme.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : ''}${day.date ? ' (' + day.date + ')' : ''}</div>
                                 ${day.cultural_context ? `<div class="travel-day-theme">${day.cultural_context}</div>` : ''}
                             </div>
+                            ${day.weather ? `
+                                <div style="background: #F0F9FF; padding: 8px 12px; border-radius: 8px; text-align: center; min-width: 80px;">
+                                    <div style="font-size: 12px; color: #1E40AF; font-weight: 600;">${day.weather.condition}</div>
+                                    <div style="font-size: 14px; color: #1E40AF; font-weight: 700;">${day.weather.temperature_f}°F</div>
+                                    <div style="font-size: 10px; color: #64748B;">${day.weather.temperature_c}°C</div>
+                                </div>
+                            ` : ''}
                         </div>`;
                     // Time blocks
                     const blocks = [
@@ -3886,5 +4160,8 @@ Now let me craft your perfect personalized itinerary! 🚀`;
         // Initialize the enhanced travel interface
         const enhancedTravelInterface = new EnhancedTravelInterface();
     </script>
+    
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
 </html>
