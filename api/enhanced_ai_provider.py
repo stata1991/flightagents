@@ -566,9 +566,9 @@ You MUST return this EXACT JSON structure with real content:
     }}
   }},
   "outbound": [
-    {{"category": "budget", "airline": "Real airline", "price": 500, "departure": "10:00", "arrival": "18:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
-    {{"category": "budget", "airline": "Real airline", "price": 550, "departure": "14:00", "arrival": "22:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
-    {{"category": "budget", "airline": "Real airline", "price": 600, "departure": "16:00", "arrival": "00:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
+    {{"category": "budget", "airline": "Real airline", "price": 500, "departure": "10:00", "arrival": "18:00", "duration": "8h 0m", "stops": 1, "layover_time": "2h 30m", "layover_airport": "DEN", "origin": "{request.origin}", "destination": "{request.destination}", "flight_number": "AA1234", "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
+    {{"category": "budget", "airline": "Real airline", "price": 550, "departure": "14:00", "arrival": "22:00", "duration": "8h 0m", "stops": 1, "layover_time": "1h 45m", "layover_airport": "PHX", "origin": "{request.origin}", "destination": "{request.destination}", "flight_number": "WN5678", "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
+    {{"category": "budget", "airline": "Real airline", "price": 600, "departure": "16:00", "arrival": "00:00", "duration": "8h 0m", "stops": 1, "layover_time": "3h 15m", "layover_airport": "LAX", "origin": "{request.origin}", "destination": "{request.destination}", "flight_number": "DL9012", "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
     {{"category": "standard", "airline": "Real airline", "price": 700, "departure": "09:00", "arrival": "17:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
     {{"category": "standard", "airline": "Real airline", "price": 750, "departure": "11:00", "arrival": "19:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
     {{"category": "standard", "airline": "Real airline", "price": 800, "departure": "13:00", "arrival": "21:00", "duration": "8h 0m", "stops": 1, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.origin}%20to%20{request.destination}%20on%20{request.start_date}"}},
@@ -588,15 +588,15 @@ You MUST return this EXACT JSON structure with real content:
     {{"category": "premium", "airline": "Real airline", "price": 1200, "departure": "15:00", "arrival": "23:00", "duration": "8h 0m", "stops": 0, "booking_link": "https://www.google.com/travel/flights/search?q=Flights%20from%20{request.destination}%20to%20{request.origin}%20on%20{end_date_str}"}}
   ],
   "hotels": [
-    {{"category": "budget", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 100, "total_cost": 500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "budget", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 110, "total_cost": 550, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "budget", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 120, "total_cost": 600, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "moderate", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 200, "total_cost": 1000, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "moderate", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 220, "total_cost": 1100, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "moderate", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 240, "total_cost": 1200, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "luxury", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 400, "total_cost": 2000, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "luxury", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 450, "total_cost": 2250, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
-    {{"category": "luxury", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 500, "total_cost": 2500, "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}}
+    {{"category": "budget", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 100, "total_cost": 500, "rating": 3.5, "amenities": ["wifi", "parking", "restaurant"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "budget", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 110, "total_cost": 550, "rating": 3.8, "amenities": ["wifi", "parking", "gym"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "budget", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 120, "total_cost": 600, "rating": 4.0, "amenities": ["wifi", "parking", "pool"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "moderate", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 200, "total_cost": 1000, "rating": 4.2, "amenities": ["wifi", "parking", "restaurant", "gym", "pool"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "moderate", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 220, "total_cost": 1100, "rating": 4.3, "amenities": ["wifi", "parking", "restaurant", "spa", "business center"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "moderate", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 240, "total_cost": 1200, "rating": 4.4, "amenities": ["wifi", "parking", "restaurant", "gym", "room service"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "luxury", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 400, "total_cost": 2000, "rating": 4.6, "amenities": ["wifi", "parking", "restaurant", "spa", "gym", "pool", "concierge", "room service"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "luxury", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 450, "total_cost": 2250, "rating": 4.7, "amenities": ["wifi", "parking", "restaurant", "spa", "gym", "pool", "concierge", "business center", "airport shuttle"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}},
+    {{"category": "luxury", "name": "Real hotel name", "area": "Real neighborhood", "price_per_night": 500, "total_cost": 2500, "rating": 4.8, "amenities": ["wifi", "parking", "restaurant", "spa", "gym", "pool", "concierge", "room service", "business center", "laundry"], "booking_link": "https://www.google.com/travel/hotels/search?q=Hotel%20Name%20in%20{request.destination}%20from%20{request.start_date}%20to%20{end_date_str}"}}
   ],
   "itinerary": {{
     "day_1": {{
@@ -639,6 +639,19 @@ IMPORTANT WEATHER REQUIREMENTS:
 - Include rain/snow/storm timing if applicable
 - Add weather-based activity recommendations
 - Include weather summary in trip_summary with average temperatures and conditions
+
+IMPORTANT FLIGHT REQUIREMENTS:
+- Include layover_time and layover_airport for flights with stops
+- Add flight_number for each flight
+- Include origin and destination airport codes
+- For direct flights (stops: 0), omit layover information
+- Use realistic layover times (1h-4h) and major airport codes
+
+IMPORTANT HOTEL REQUIREMENTS:
+- Include realistic ratings (3.0-4.8) for each hotel
+- Add relevant amenities array for each hotel (wifi, parking, pool, gym, spa, restaurant, etc.)
+- Use real hotel names and areas for the destination
+- Ensure amenities match the hotel category (budget: basic, luxury: premium)
 
 Return ONLY this JSON structure."""
 
